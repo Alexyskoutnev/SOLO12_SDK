@@ -54,6 +54,7 @@ Interface::Interface(const std::string &if_name, bool listener_mode)
   this->if_name_ = if_name;
   this->listener_mode = listener_mode;
 }
+
 Interface::Interface(const Interface &to_be_copied) : Interface::Interface(to_be_copied.if_name_, to_be_copied.listener_mode)
 {
 }
@@ -115,13 +116,13 @@ Interface::~Interface()
 //   return 0;
 // }
 
-// int Interface::Stop()
-// {
-//   printf("Shutting down connection (%s)\n", if_name_.c_str());
-//   if (link_handler_ != NULL)
-//     link_handler_->stop();
-//   return 0;
-// }
+int Interface::Stop()
+{
+  printf("Shutting down connection (%s)\n", if_name_.c_str());
+  if (link_handler_ != NULL)
+    link_handler_->stop();
+  return 0;
+}
 
 // void Interface::KeyboardStop(int /*signum*/)
 // {
@@ -258,115 +259,10 @@ Interface::~Interface()
 //   return 0; // Return 0 since the command has been sent.
 // }
 
-// void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
-// {
-//   if ((listener_mode || (init_sent && !ack_received)) && len == sizeof(ack_packet_t))
-//   {
-//     if (listener_mode)
-//     {
-//       // ack packets are used to set up the session id in listener mode
-//       session_id = ((ack_packet_t *)data)->session_id;
-//     }
-//     else
-//     {
-//       // ensuring that session id is right if in normal mode
-//       if (((ack_packet_t *)data)->session_id != session_id)
-//       {
-//         //printf("Wrong session id in ack msg, got %d instead of %d ignoring packet\n", ((ack_packet_t *)data)->session_id, session_id);
-//         return; // ignoring the packet
-//       }
-//     }
-
-//     // reset variables for feedback on packet loss
-//     ResetPacketLossStats();
-
-//     received_packet_mutex.lock();
-//     memcpy(&ack_packet, data, sizeof(ack_packet_t));
-//     received_packet_mutex.unlock();
-
-//     // parse ack data
-//     for (int i = 0; i < N_SLAVES; i++)
-//     {
-//       motor_drivers[i].is_connected = (ack_packet.spi_connected & (1 << i)) >> i;
-//     }
-
-//     ack_received = true;
-//   }
-
-//   else if ((listener_mode || (init_sent && ack_received)) && len == sizeof(sensor_packet_t))
-//   {
-//     // if the interface session id is not set in listener mode
-//     if (listener_mode && session_id == -1)
-//     {
-//       session_id = ((sensor_packet_t *)data)->session_id; // if we launch the interface in listener mode while the masterboard is running
-//                                                           // session_id is set to the one of the first sensor packet received
-//     }
-
-//     // ensuring that session id is right
-//     if (((sensor_packet_t *)data)->session_id != session_id)
-//     {
-//       //printf("Wrong session id in sensor msg, got %d instead of %d, ignoring packet\n", ((sensor_packet_t *)data)->session_id, session_id);
-//       return; // ignoring the packet
-//     }
-
-//     // Update time point of the latest received packet
-//     t_last_packet = std::chrono::high_resolution_clock::now();
-
-//     nb_sensors_recv++;
-
-//     received_packet_mutex.lock();
-//     memcpy(&sensor_packet, data, sizeof(sensor_packet_t));
-//     received_packet_mutex.unlock();
-
-//     struct sensor_packet_t *packet_recv = (struct sensor_packet_t *)data;
-
-//     if (!first_sensor_received)
-//     {
-//       first_sensor_received = true;
-//       last_sensor_index = static_cast<uint16_t>(packet_recv->sensor_index - 1); //initialisation of last_sensor_index at first reception
-//       last_cmd_packet_loss = packet_recv->packet_loss;
-//     }
-
-//     //Sensor_loss. Ignore case where packet_recv->sensor_index is overflowing.
-//     if (packet_recv->sensor_index - last_sensor_index - 1 > 0)
-//     {
-//       if ((packet_recv->sensor_index - last_sensor_index - 2) >= MAX_HIST)
-//       {
-//         histogram_lost_sensor_packets[MAX_HIST - 1]++; //add all sequence too big at the end of the histogram
-//       }
-//       else
-//       {
-//         histogram_lost_sensor_packets[packet_recv->sensor_index - last_sensor_index - 2]++; // index 0 -> 1 packet lost !
-//       }
-//     }
-
-//     //Command_loss
-//     if (packet_recv->packet_loss != last_cmd_packet_loss)
-//     {
-//       if ((packet_recv->packet_loss - last_cmd_packet_loss - 1) >= MAX_HIST)
-//       {
-//         histogram_lost_cmd_packets[MAX_HIST - 1]++; //add all sequence too big at the end of the histogram
-//       }
-//       else
-//       {
-//         histogram_lost_cmd_packets[packet_recv->packet_loss - last_cmd_packet_loss - 1]++; // index 0 -> 1 packet lost !
-//       }
-//     }
-
-//     nb_cmd_lost += uint16_t(packet_recv->packet_loss - last_cmd_packet_loss);
-//     last_cmd_packet_loss = packet_recv->packet_loss;
-
-//     nb_sensors_lost += uint16_t(packet_recv->sensor_index - last_sensor_index - 1);
-//     nb_sensors_sent += uint16_t(packet_recv->sensor_index - last_sensor_index);
-//     last_sensor_index = packet_recv->sensor_index;
-
-//     last_recv_cmd_index = packet_recv->last_cmd_index;
-//   }
-//   else
-//   {
-//     // packet not the right size for the situation
-//   }
-// }
+void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
+{
+  ; 
+}
 
 // void Interface::ParseSensorData()
 // {
