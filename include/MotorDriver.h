@@ -14,7 +14,7 @@ class MotorDriver{
         int GetDriverStatus();
         bool isEnable = false;
         int timeout;
-        uint16_t error_code;
+        int error_code;
         Motor* motor1;
         Motor* motor2;
 };
