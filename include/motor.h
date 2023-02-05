@@ -3,30 +3,31 @@
 
 class MotorDriver;
 class Motor {
-    Motor();
-    void SetCurrentReference(double);
-    void SetVelocityReference(double);
-    void SetPositionReference(double);
-    void SetPositionOffset(double);
-    void SetKp(double);
-    void SetKd(double);
-    void SetMaxAmps(double);
-    void SetDriver(MotorDriver *driver);
-    void Print();
-    void Enable();
-    void Disable();
+    public:
+        Motor();
+        void SetCurrentReference(double);
+        void SetVelocityReference(double);
+        void SetPositionReference(double);
+        void SetPositionOffset(double);
+        void SetKp(double);
+        void SetKd(double);
+        void SetMaxAmps(double);
+        void SetDriver(MotorDriver *driver);
+        void Print();
+        void Enable();
+        void Disable();
 
-    bool isReady();
-    bool isEnabled();
-    bool IndexDectected();
-    bool GetIndexToggleBit();
-    
-    double getCurrent();
-    double getVelocity();
-    double getPosition();
-    double getOffset();
+        bool isReady();
+        bool isEnabled();
+        bool IndexDectected();
+        bool GetIndexToggleBit();
+        
+        double getCurrent();
+        double getVelocity();
+        double getPosition();
+        double getOffset();
 
-    MotorDriver *driver;
+        MotorDriver *driver;
 
     private:
         double position;
