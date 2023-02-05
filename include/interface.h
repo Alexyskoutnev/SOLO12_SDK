@@ -45,7 +45,7 @@ class Interface : public LINK_manager_callback
 
         void ResetPacketLossStats();
     private:
-        static Interface* instance;
+//        static Interface* instance;
         void callback(uint8_t src_mac[6], uint8_t *data, int len);
         uint8_t my_mac_[6];		// = {0xa0, 0x1d, 0x48, 0x12, 0xa0, 0xc5};	 //{0xF8, 0x1A, 0x67, 0xb7, 0xEB, 0x0B};
         uint8_t dest_mac_[6]; //Broatcast to prevent acknoledgment behaviour
