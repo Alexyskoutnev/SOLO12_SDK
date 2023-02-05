@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv){
     std::cout << "Main Script " << std::endl;
-    if (argc <= 2){
+    if (argc < 2){
         throw std::runtime_error("Please provide the Ethernet interface name");
     } else {
         if (argc == 4){
@@ -27,7 +27,9 @@ int main(int argc, char** argv){
     double iq_sat = 4.0;
     double init_joint_pos[N_DRIVER_CNT  * 2] = {0};
 
-//    Interface interface(argv[1]);
+   Interface interface(argv[1]);
+   
+
     // interface.init();
 
     return 0;

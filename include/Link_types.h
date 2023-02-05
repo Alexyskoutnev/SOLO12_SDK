@@ -1,3 +1,5 @@
+//Third party library from Open Dynamic Robot Initiative
+
 #ifndef LINK_TYPES_H
 #define LINK_TYPES_H
 

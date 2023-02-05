@@ -1,3 +1,4 @@
+//Third party library from Open Dynamic Robot Initiative
 #ifndef DEFINES_H
 #define DEFINES_H
 

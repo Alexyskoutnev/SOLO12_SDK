@@ -1,3 +1,5 @@
+//Third party library from Open Dynamic Robot Initiative
+
 #include <assert.h>
 #include <string.h>
 #include "ETHERNET_types.h"

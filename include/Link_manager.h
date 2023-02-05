@@ -1,3 +1,4 @@
+//Third party library from Open Dynamic Robot Initiative
 #ifndef LINK_MANAGER_H
 #define LINK_MANAGER_H
 

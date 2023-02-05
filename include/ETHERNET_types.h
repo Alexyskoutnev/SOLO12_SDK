@@ -1,3 +1,4 @@
+//Third party library from Open Dynamic Robot Initiative
 #ifndef ETHERNET_TYPES_H
 #define ETHERNET_TYPES_H
 

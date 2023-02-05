@@ -1,3 +1,4 @@
+//Third party library from Open Dynamic Robot Initiative
 #ifndef ETHERNET_MANAGER_H
 #define ETHERNET_MANAGER_H
 

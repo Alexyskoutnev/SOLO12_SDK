@@ -32,7 +32,7 @@ class Interface : public LINK_manager_callback
 
         bool IsAckMsgReceived();
 
-        int GetSessionId();
+        void GenerateSessionID();
         int GetProtocolVersion();
 
         uint32_t GetSensorsSent();
@@ -103,7 +103,7 @@ class Interface : public LINK_manager_callback
         struct init_packet_t init_packet;
         struct ack_packet_t ack_packet;
 
-        int session_id = -1; // -1 means not set
+        int session_id = -1; //identifer for current session
 
         void GenerateSessionId();
 

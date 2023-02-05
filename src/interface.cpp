@@ -19,13 +19,46 @@ Interface::Interface(const std::string &if_name)
   this->listener_mode = listener_mode;
 }
 
-// Interface::Interface(const Interface &to_be_copied) : Interface::Interface(to_be_copied.if_name_, to_be_copied.listener_mode)
-// {
-// }
-
 Interface::~Interface()
 {
   delete (link_handler_);
+}
+
+int Interface::Init()
+{
+    std::cout << "if_name -> " << if_name_ << std::endl;
+    memset(&command_packet, 0, sizeof(command_packet_t));
+    memset(&sensor_packet, 0, sizeof(sensor_packet_t));
+    memset(&init_packet, 0, sizeof(init_packet_t));
+    memset(&ack_packet, 0, sizeof(ack_packet_t));
+
+    timeout = false; //We set interface time out to false at start
+    first_command_sent_ = false; //Indicator if we sent a command
+    init_sent = false; //indicator if we sent init command
+    ack_received = false; 
+    try 
+    { 
+        if (if_name_[0] == 'e'){
+            std::cout << "Using Ethernet Connection" << std::endl;
+            link_handler_ = new ETHERNET_manager(if_name_, my_mac_, dest_mac_); //Test if mac address is needed?
+            link_handler_->set_recv_callback(this);
+            link_handler_->start();
+
+        } else {
+            return -1;
+        }
+    } 
+    catch(std::bad_alloc & exception){
+        throw std::runtime_error("Error in allocating link_handler");
+    }
+    ParseSensorData();
+    return 0;
+}
+
+void Interface::ParseSensorData(){
+
+
+
 }
 
 // void Interface::GenerateSessionId()
@@ -83,10 +116,22 @@ Interface::~Interface()
 int Interface::Stop()
 {
   printf("Shutting down connection (%s)\n", if_name_.c_str());
-  if (link_handler_ != NULL)
-    link_handler_->stop();
-  return 0;
+  try 
+  { 
+    if (link_handler_ != NULL)
+        link_handler_->stop();
+    return 0;
+  } 
+  catch(std::exception& e) {
+    throw std::runtime_error("Error with creating link_handler -> ");
+    throw std::runtime_error(e.what());
+  }
 }
+
+void Interface::GenerateSessionID(){
+    session_id = (uint16_t)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+
 
 // void Interface::KeyboardStop(int /*signum*/)
 // {
