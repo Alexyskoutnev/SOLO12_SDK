@@ -9,8 +9,8 @@
 class Interface : public LINK_manager_callback
 {
     public:
-        Interface(const std::string &if_name, bool listener_mode = false);
-        Interface(const Interface&);
+        Interface(const std::string &if_name);
+        // Interface(const Interface&);
         ~Interface();
         int Init();
         int Stop();
