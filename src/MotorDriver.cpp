@@ -4,7 +4,7 @@
 
 MotorDriver::MotorDriver()
 {
-    enable  = false;
+    isEnable  = false;
     timeout = 0;
 }
 
@@ -13,19 +13,15 @@ MotorDriver::~MotorDriver(){
 }
 
 void MotorDriver::Enable(){
-    enable = true;
+    isEnable = true;
 }
 
 void MotorDriver::Disable(){
-    enable = false;
+    isEnable = false;
 }
 
 void MotorDriver::SetTimeout(int time){
     timeout = time;
-}
-
-void MotorDriver::SetEnableFlag(){
-    ;
 }
 
 void MotorDriver::SetMotors(Motor* motor1, Motor* motor2){
@@ -34,7 +30,7 @@ void MotorDriver::SetMotors(Motor* motor1, Motor* motor2){
 }
 
 int MotorDriver::GetDriverStatus(){
-    if (enable){
+    if (isEnable){
         std::cout << "MotorDriver Status: True" << std::endl; 
         return 0;
     } else {

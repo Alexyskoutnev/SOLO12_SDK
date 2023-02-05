@@ -3,7 +3,6 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
-#include <vector>
 
 #include "interface.h"
 
