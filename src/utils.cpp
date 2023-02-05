@@ -11,7 +11,7 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
     std::vector<std::vector<T>> rows {};
     std::ifstream file(file_name, std::ifstream::in);
     while (getline(file, line)){
-        int tmpChar;
+        char tmpChar;
         std::vector<T> tmpVec;
         std::stringstream ss(line);
         while (ss >> tmpChar){
