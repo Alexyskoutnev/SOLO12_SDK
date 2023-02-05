@@ -8,6 +8,7 @@
 #include "motor.h"
 #include "MotorDriver.h"
 #include "define.h"
+#include "util.h"
 
 #define MAX_HIST 20
 
@@ -100,8 +101,7 @@ class Interface : public LINK_manager_callback
         std::chrono::milliseconds t_before_shutdown_control{50};
 
         // Time point that is updated each time a packet is received
-        std::chrono::high_resolution_clock::time_point t_last_packet =
-                std::chrono::high_resolution_clock::now();
+        std::chrono::high_resolution_clock::time_point t_last_packet = std::chrono::high_resolution_clock::now();
         // We initialize this value only upon the first call of SendCommand
         bool first_command_sent_ = false;
 

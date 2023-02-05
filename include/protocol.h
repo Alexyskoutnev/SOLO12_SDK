@@ -139,4 +139,5 @@
 #define FLOAT_TO_D8QN(a,n)        ((int8_t)  std::min(std::max(((a) * (1<<(n))), -127.0, +127.0)))
 
 
+
 #endif

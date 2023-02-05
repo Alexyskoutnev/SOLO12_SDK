@@ -4,6 +4,7 @@
 
 #include "protocol.h"
 #define N_DRIVER_CNT 6
+#define PI 3.141592653589793
 
 struct dual_motor_driver_sensor_packet_t
 {

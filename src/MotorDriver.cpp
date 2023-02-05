@@ -9,7 +9,7 @@ MotorDriver::MotorDriver()
 }
 
 MotorDriver::~MotorDriver(){
-    std::cout << "Motordrivers are disconnected";
+    // std::cout << "Motordrivers are disconnected";
 }
 
 void MotorDriver::Enable(){
@@ -22,6 +22,10 @@ void MotorDriver::Disable(){
 
 void MotorDriver::SetTimeout(int time){
     timeout = time;
+}
+
+void MotorDriver::SetEnableFlag(){
+    ;
 }
 
 void MotorDriver::SetMotors(Motor* motor1, Motor* motor2){

@@ -12,9 +12,9 @@ class MotorDriver{
         void SetTimeout(int);
         void SetMotors(Motor*, Motor*);
         int GetDriverStatus();
-        int enable = false;
+        bool isEnable = false;
         int timeout;
-    private:
+        uint16_t error_code;
         Motor* motor1;
         Motor* motor2;
 };

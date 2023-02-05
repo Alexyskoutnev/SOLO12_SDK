@@ -29,7 +29,6 @@ class Motor {
 
         MotorDriver *driver;
 
-    private:
         double position;
         double velocity;
         double current;
