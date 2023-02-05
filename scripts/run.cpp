@@ -50,7 +50,7 @@ int main(int argc, char** argv){
 
     //CSV data reader
     std::string file_name = "./data/joint_trajectory_jan_23.csv";
-    std::vector<std::vector<double>> joint_traj_vec = csv_reader(file_name);
+    std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
 
     //main run loop
     while (!interface.IsTimeout()){
