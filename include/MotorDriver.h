@@ -6,11 +6,11 @@ class MotorDriver{
         MotorDriver();
         ~MotorDriver();
         void EnableMotorDriver();
-        void MotorDriver::Enable();
-        void MotorDriver::Disable();
-        void MotorDriver::SetTimeout(int);
+        void Enable();
+        void Disable();
+        void SetTimeout(int);
         // void DisableMotorDriver();
-        void MotorDriver::SetMotors(Motor*, Motor*);
+        void SetMotors(Motor*, Motor*);
         int GetDriverStatus();
 
 
