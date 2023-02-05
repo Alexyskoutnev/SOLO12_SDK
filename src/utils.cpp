@@ -1,5 +1,4 @@
-#include <vector>
-#include <string>
+
 
 #include "utils.h"
 
@@ -14,16 +13,12 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
         char tmpChar;
         std::vector<T> tmpVec;
         std::stringstream ss(line);
-        while (ss >> tmpChar){
-            std::string tmpstr;
-            // std::cout << "tmp: " << tmpstr << std::endl;
-            std::cout << "tmp: " << tmpChar << std::endl;
-            // tmpVec.push_back(tmpNum);
-            if (!getline(ss, tmpstr, DELIMITER)){
-                break;
-            }
+        std::string tmpstr;
+        rows.push_back(tmpVec);
+        while (getline(ss, tmpstr, DELIMITER)){
+            std::cout << "tmpstr " << tmpstr << std::endl;
+            rows.back().push_back(std::stod(tmpstr));
         }
-        rows.append(tmpVec);
     }
     return rows;
 }
