@@ -10,7 +10,7 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
     std::string line;
     std::vector<std::vector<T>> rows {};
     std::ifstream file(file_name, std::ifstream::in);
-    while (getline(f, line)){
+    while (getline(file, line)){
         double tmpNum;
         std::vector<T> tmpVec;
         std::stringstream ss(line);
