@@ -1,4 +1,6 @@
 //Edited version of master_board_interface from Open Dynamic Robot Initiative
+#ifndef MOTOR_HEADER
+#define MOTOR_HEADER
 #include <mutex>
 #include <chrono>
 
@@ -119,3 +121,5 @@ class Interface : public LINK_manager_callback
 
 
 };
+
+#endif

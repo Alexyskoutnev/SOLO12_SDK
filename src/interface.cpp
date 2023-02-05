@@ -1,3 +1,6 @@
+#ifndef INTERFACE_HEADER
+#define INTERFACE_HEADER
+
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -88,3 +91,5 @@ void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
 {
   ; 
 }
+
+#endif
