@@ -1,7 +1,10 @@
+//Edited version of master_board_interface from Open Dynamic Robot Initiative
 #include <mutex>
 #include <chrono>
 
 #include "ETHERNET_manager.h"
+#include "motor.h"
+#include "MotorDriver.h"
 #include "define.h"
 
 #define MAX_HIST 20
@@ -45,6 +48,10 @@ class Interface : public LINK_manager_callback
         int GetCmdHistogram(int index);
 
         void ResetPacketLossStats();
+
+        Motor motors[N_DRIVER_CNT * 2];
+        MotorDriver motor_driver[N_DRIVER_CNT];
+
     private:
 //        static Interface* instance;
         void callback(uint8_t src_mac[6], uint8_t *data, int len);
@@ -57,7 +64,7 @@ class Interface : public LINK_manager_callback
                                     // doesn't allow to send commands
         struct command_packet_t command_packet;
         struct sensor_packet_t sensor_packet;
-        struct dual_motor_driver_sensor_data_t dual_motor_driver_sensor_data[N_SLAVES];
+        struct dual_motor_driver_sensor_data_t dual_motor_driver_sensor_data[N_DRIVER_CNT];
         struct imu_data_t imu_data;
 
         bool first_sensor_received = false;
@@ -109,4 +116,6 @@ class Interface : public LINK_manager_callback
 
         bool init_sent = false;
         bool ack_received = false;
+
+
 };

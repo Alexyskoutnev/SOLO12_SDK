@@ -3,7 +3,7 @@
 #define DEFINES_H
 
 #include "protocol.h"
-#define N_SLAVES 6
+#define N_DRIVER_CNT 6
 
 struct dual_motor_driver_sensor_packet_t
 {
@@ -63,7 +63,7 @@ struct dual_motor_driver_sensor_data_t
 struct sensor_packet_t
 {
 	uint16_t session_id;
-	struct dual_motor_driver_sensor_packet_t dual_motor_driver_sensor_packets[N_SLAVES];
+	struct dual_motor_driver_sensor_packet_t dual_motor_driver_sensor_packets[N_DRIVER_CNT];
 	struct imu_packet_t imu;
 	uint16_t sensor_index;
 	uint16_t packet_loss;
@@ -74,7 +74,7 @@ struct command_packet_t
 {
 	//uint16_t command[N_SLAVES][UD_LENGTH];
 	uint16_t session_id;
-	struct dual_motor_driver_command_packet_t dual_motor_driver_command_packets[N_SLAVES];
+	struct dual_motor_driver_command_packet_t dual_motor_driver_command_packets[N_DRIVER_CNT];
 	uint16_t command_index;
 } __attribute__((packed));
 
