@@ -11,6 +11,8 @@
 
 #include "interface.h"
 
+#define t_shutdown_diff std::chrono::milliseconds{100}
+
 
 Interface::Interface(const std::string &if_name)
 {
@@ -135,6 +137,14 @@ void Interface::GenerateSessionID(){
     session_id = (uint16_t)std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
+bool Interface::IsTimeout(){
+    return timeout;
+}
+
+bool Interface::IsAckMsgReceived(){
+    return ack_received;
+}
+
 
 void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
 {
@@ -143,8 +153,81 @@ void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
 
 int Interface::SendCommand()
 {
+    if (listener_mode){
+        std::cerr << "Trying to send in listen mode" << std::endl;
+        return -1;
+    }
 
-    ;
+    if (!first_command_sent_){
+        t_last_packet = std::chrono::high_resolution_clock::now();
+        first_command_sent_ = true;
+    }
+    if (timeout){
+        std::cerr << "Interface has timed out " << std::endl;
+        return -1;
+    }
+
+    command_packet.session_id = static_cast<u_int16_t>(session_id);
+    //Sending the command packets to controller
+    for (int i = 0; i < N_DRIVER_CNT; i++){
+        uint16_t mode = 0;
+        if (motor_driver[i].isEnable){
+            mode |= UD_COMMAND_MODE_ES;
+        }
+        if (motor_driver[i].motor1->isEnabledFlag){
+            mode |= UD_COMMAND_MODE_EM1;
+        }
+        if (motor_driver[i].motor2->isEnabledFlag){
+            mode |= UD_COMMAND_MODE_EM2;
+        } 
+        if (motor_driver[i].position_rollover_error_flag)
+        {
+            mode |= UD_COMMAND_MODE_EPRE;
+        }
+        if (motor_driver[i].motor1->position_index_offset_compensation_flag){
+            mode |= UD_COMMAND_MODE_EI1OC;
+        }
+        if (motor_driver[i].motor2->position_index_offset_compensation_flag){
+            mode |= UD_COMMAND_MODE_EI2OC;
+        }
+        mode |= static_cast<uint16_t>(UD_COMMAND_MODE_TIMEOUT & motor_driver[i].timeout);
+        //Sending Pos, Vel, Current, Kp, Kd, I_max cmds
+        command_packet.dual_motor_driver_command_packets[i].mode = mode;
+        command_packet.dual_motor_driver_command_packets[i].position_ref[0] = FLOAT_TO_D32QN((motor_driver[i].motor1->position_cmd - motor_driver[i].motor1->offsetPosition) / (2.0 * PI), UD_QN_POS);
+        command_packet.dual_motor_driver_command_packets[i].position_ref[1] = FLOAT_TO_D32QN((motor_driver[i].motor2->position_cmd - motor_driver[i].motor2->offsetPosition) / (2.0 * PI), UD_QN_POS);
+        command_packet.dual_motor_driver_command_packets[i].velocity_ref[0] = FLOAT_TO_D16QN((motor_driver[i].motor1->velocity_cmd) / (2.0 * PI * 1000.0), UD_QN_VEL);
+        command_packet.dual_motor_driver_command_packets[i].velocity_ref[1] = FLOAT_TO_D16QN((motor_driver[i].motor2->velocity_cmd ) / (2.0 * PI * 1000.0), UD_QN_VEL);
+        command_packet.dual_motor_driver_command_packets[i].current_ref[0] = FLOAT_TO_D16QN((motor_driver[i].motor1->current_cmd - motor_driver[i].motor2->offsetPosition), UD_QN_IQ);
+        command_packet.dual_motor_driver_command_packets[i].current_ref[1] = FLOAT_TO_D16QN((motor_driver[i].motor2->current_cmd - motor_driver[i].motor2->offsetPosition), UD_QN_IQ);
+        command_packet.dual_motor_driver_command_packets[i].kp[0] = FLOAT_TO_uD16QN(2.0 * PI * motor_driver[i].motor1->kp, UD_QN_KP);
+        command_packet.dual_motor_driver_command_packets[i].kp[1] = FLOAT_TO_uD16QN(2.0 * PI * motor_driver[i].motor2->kp, UD_QN_KP);
+        command_packet.dual_motor_driver_command_packets[i].kd[0] = FLOAT_TO_uD16QN(((2.0 * PI * 1000.0) / 60.0) * motor_driver[i].motor1->kd, UD_QN_KD);
+        command_packet.dual_motor_driver_command_packets[i].kd[1] = FLOAT_TO_uD16QN(((2.0 * PI * 1000.0) / 60.0) * motor_driver[i].motor2->kd, UD_QN_KD);
+        command_packet.dual_motor_driver_command_packets[i].i_sat[0] = FLOAT_TO_uD8QN(motor_driver[i].motor1->current_max, UD_QN_ISAT);
+        command_packet.dual_motor_driver_command_packets[i].i_sat[1] = FLOAT_TO_uD8QN(motor_driver[i].motor2->current_max, UD_QN_ISAT);
+    }
+
+    std::chrono::high_resolution_clock::time_point t_send_packet = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> t_diff = t_send_packet - t_last_packet;
+
+    if (t_shutdown_diff < t_diff){
+        timeout = true;
+        throw std::runtime_error("Runtime error in sending packets");
+        Stop();
+        return -1;
+    }
+    command_packet.command_index = cmd_packet_index;
+    try {
+        link_handler_->send((uint8_t *)&command_packet, sizeof(command_packet_t));
+    } 
+    catch(std::exception& err){
+        std::cerr << "Error in sending command: " << err.what() << std::endl;   
+        timeout = true;
+        Stop();
+        return -1;
+    }
+    return 0;
 }
+
 
 #endif

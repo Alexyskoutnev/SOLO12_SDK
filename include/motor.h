@@ -1,4 +1,4 @@
-#include "MotorDriver.h"
+#include "motor_driver.h"
 
 
 class MotorDriver;
@@ -38,6 +38,8 @@ class Motor {
         bool isReadyFlag;
         bool indexToggleBitFlag;
         bool indexDectectedFlag;
+        bool position_index_offset_compensation_flag;
+        bool enable_position_rollover_error_flag;
 
         double position_cmd;
         double velocity_cmd;

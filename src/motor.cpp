@@ -10,6 +10,8 @@ Motor::Motor(){
     isReadyFlag = false;
     indexToggleBitFlag = false;
     indexDectectedFlag = false;
+    position_index_offset_compensation_flag = false;
+    enable_position_rollover_error_flag = false;
 }
 
 void Motor::SetDriver(MotorDriver* driver){

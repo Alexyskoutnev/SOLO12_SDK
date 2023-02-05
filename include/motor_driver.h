@@ -17,6 +17,11 @@ class MotorDriver{
         int error_code;
         Motor* motor1;
         Motor* motor2;
+
+
+        bool position_rollover_error_flag;
+        // bool position_index_offset_compensation_flag;
+
 };
 
 #endif

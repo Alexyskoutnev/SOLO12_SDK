@@ -1,5 +1,3 @@
-
-
 #include "utils.h"
 
 #define DELIMITER ','
