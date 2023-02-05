@@ -1,6 +1,10 @@
 // #include <string>
 // #include <stdlib.h>
 // #include <stdio.h>
+// 
+#include <cstdint>
+#include <cstring>
+#include <iostream>
 
 #include "interface.h"
 
@@ -45,17 +49,10 @@ Interface::Interface(const std::string &if_name, bool listener_mode)
 {
   uint8_t my_mac[6] = {0xa0, 0x1d, 0x48, 0x12, 0xa0, 0xc5}; //take it as an argument?
   uint8_t dest_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-  memcpy(this->my_mac_, my_mac, 6);
-  memcpy(this->dest_mac_, dest_mac, 6);
+  std::memcpy(this->my_mac_, my_mac, 6);
+  std::memcpy(this->dest_mac_, dest_mac, 6);
   this->if_name_ = if_name;
   this->listener_mode = listener_mode;
-  for (int i = 0; i < N_SLAVES; i++)
-  {
-    motors[2 * i].SetDriver(&motor_drivers[i]);
-    motors[2 * i + 1].SetDriver(&motor_drivers[i]);
-    motor_drivers[i].SetMotors(&motors[2 * i], &motors[2 * i + 1]);
-  }
-//   instance = this;
 }
 Interface::Interface(const Interface &to_be_copied) : Interface::Interface(to_be_copied.if_name_, to_be_copied.listener_mode)
 {
