@@ -9,7 +9,6 @@ run : scripts/run.cpp
 
 app: run.o
 	mkdir -p bin
-	${CC} $()
 
 all : clean run
 
