@@ -82,36 +82,45 @@ int main(int argc, char** argv){
     // assert((file_name.empty() != NULL));
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
     int joint_traj_idx = 0;
+    int motor_idx = 0;
     int state = 0;
     
 
     for (int j = 0; j < 100; j++){
-        for (int i = 0; i < N_DRIVER_CNT * 2; i++){
-                    for (auto cmd : joint_traj_vec[joint_traj_idx]) {
-                        std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
-                        if (joint_traj_idx == 0)
-                            continue;
-                        switch (state)
-                        {
-                        case 1:
-                            // interface.motors[i].SetPositionReference(cmd);
-                            state++;
-                            break;
-                        case 13:
-                            // interface.motors[i].SetVelocityReference(cmd);
-                            state++;    
-                            break;
-                        case 25:
-                            // interface.motors[i].SetCurrentReference(cmd);
-                            state++;
-                            break;
-                        default:
-                            state++;
-                            break;
-                        }  
-                }
-            }
+        for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+                std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
+                std::cout << "state: " << state << std::endl;
+                if (joint_traj_idx == 0)
+                    continue;
+                switch (state)
+                {
+                case 1:
+                    // interface.motors[i].SetPositionReference(cmd);
+                    std::cout << "pos" << std::endl;
+                    state++;
+                    motor_idx++;
+                    break;
+                case 13:
+                    // interface.motors[i].SetVelocityReference(cmd);
+                    std::cout << "velocity" << std::endl;
+                    state++;   
+                    motor_idx++; 
+                    break;
+                case 25:
+                    // interface.motors[i].SetCurrentReference(cmd);
+                    std::cout << "current" << std::endl;
+                    state++;
+                    motor_idx++;
+                    break;
+                default:
+                    state++;
+                    motor_idx++;
+                    break;
+                }  
+        }
         joint_traj_idx++;
+        motor_idx = 0;
+        state = 0;
     }
 
 
@@ -161,6 +170,6 @@ int main(int argc, char** argv){
     //         }
     //     }
     // }
-    interface.Stop();
+    // interface.Stop();
     return 0;
 }
