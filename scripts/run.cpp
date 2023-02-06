@@ -3,9 +3,9 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
+#include <vector>
 
-
-#include "interface.h"
+// #include "interface.h"
 
 #define N_DRIVER_CNT 6
 #define TIMEOUT 5
@@ -83,7 +83,7 @@ int main(int argc, char** argv){
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
     int joint_traj_idx = 0;
     int motor_idx = 0;
-    int state = 0;
+    int state = 1;
     
 
     for (int j = 0; j < 100; j++){
@@ -92,31 +92,21 @@ int main(int argc, char** argv){
                 std::cout << "state: " << state << std::endl;
                 if (joint_traj_idx == 0)
                     continue;
-                switch (state)
+                if (state >= 0 and state < 12)
                 {
-                case 1:
-                    // interface.motors[i].SetPositionReference(cmd);
                     std::cout << "pos" << std::endl;
                     state++;
                     motor_idx++;
-                    break;
-                case 13:
-                    // interface.motors[i].SetVelocityReference(cmd);
+                } else if (state >= 12 and state < 24){ 
                     std::cout << "velocity" << std::endl;
                     state++;   
                     motor_idx++; 
-                    break;
-                case 25:
-                    // interface.motors[i].SetCurrentReference(cmd);
+                } else if (state >= 24 and state < 36){
                     std::cout << "current" << std::endl;
                     state++;
                     motor_idx++;
                     break;
-                default:
-                    state++;
-                    motor_idx++;
-                    break;
-                }  
+                }
         }
         joint_traj_idx++;
         motor_idx = 0;
