@@ -33,7 +33,7 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
 
 int main(int argc, char** argv){
     std::cout << "Main Script " << std::endl;
-    std::string file_name = NULL;
+    std::string file_name;
     if (argc < 2){
         throw std::runtime_error("Please provide the Ethernet interface name");
     } else {
@@ -76,57 +76,91 @@ int main(int argc, char** argv){
         }
     }
 
+    
+
     //CSV data reader
-    // std::string file_name = "./data/joint_trajectory_jan_23.csv";
     // assert((file_name.empty() != NULL));
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
     int joint_traj_idx = 0;
     int state = 0;
-    //main run loop
-    while (!interface.IsTimeout()){
-        std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
-        if (diff.count() > dt){
-            t_last_update = std::chrono::system_clock::now();
-            t += dt;
-            interface.ParseSensorData();
-            for (int i = 0; i < N_DRIVER_CNT * 2; i++){
-                if (interface.motors[i].isEnabled()){
+    
+
+    for (int j = 0; j < 100; j++){
+        for (int i = 0; i < N_DRIVER_CNT * 2; i++){
                     for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+                        std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
                         if (joint_traj_idx == 0)
                             continue;
                         switch (state)
                         {
                         case 1:
-                            interface.motors[i].SetPositionReference(cmd);
+                            // interface.motors[i].SetPositionReference(cmd);
                             state++;
                             break;
                         case 13:
-                            interface.motors[i].SetVelocityReference(cmd);
+                            // interface.motors[i].SetVelocityReference(cmd);
                             state++;    
                             break;
                         case 25:
-                            interface.motors[i].SetCurrentReference(cmd);
+                            // interface.motors[i].SetCurrentReference(cmd);
                             state++;
                             break;
                         default:
                             state++;
                             break;
-                        }
-                    }    
+                        }  
                 }
             }
-            joint_traj_idx++;
-            try
-            {
-                interface.SendCommand();
-            }
-            catch(std::exception& e)
-            {
-                std::cerr << "interface failed to send command" << std::endl;
-                std::cerr << e.what() << '\n';
-            }
-        }
+        joint_traj_idx++;
     }
+
+
+
+    // //main run loop
+    // while (!interface.IsTimeout()){
+    //     std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
+    //     if (diff.count() > dt){
+    //         t_last_update = std::chrono::system_clock::now();
+    //         t += dt;
+    //         interface.ParseSensorData();
+    //         for (int i = 0; i < N_DRIVER_CNT * 2; i++){
+    //             if (interface.motors[i].isEnabled()){
+    //                 for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+    //                     if (joint_traj_idx == 0)
+    //                         continue;
+    //                     switch (state)
+    //                     {
+    //                     case 1:
+    //                         interface.motors[i].SetPositionReference(cmd);
+    //                         state++;
+    //                         break;
+    //                     case 13:
+    //                         interface.motors[i].SetVelocityReference(cmd);
+    //                         state++;    
+    //                         break;
+    //                     case 25:
+    //                         interface.motors[i].SetCurrentReference(cmd);
+    //                         state++;
+    //                         break;
+    //                     default:
+    //                         state++;
+    //                         break;
+    //                     }
+    //                 }    
+    //             }
+    //         }
+    //         joint_traj_idx++;
+    //         try
+    //         {
+    //             interface.SendCommand();
+    //         }
+    //         catch(std::exception& e)
+    //         {
+    //             std::cerr << "interface failed to send command" << std::endl;
+    //             std::cerr << e.what() << '\n';
+    //         }
+    //     }
+    // }
     interface.Stop();
     return 0;
 }
