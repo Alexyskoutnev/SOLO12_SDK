@@ -55,26 +55,7 @@ int main(int argc, char** argv){
     double init_joint_pos[N_DRIVER_CNT  * 2] = {0};
     
 
-    // Interface interface(argv[1]);
-    // interface.Init();
-
-    // for (int i  = 0; i < N_DRIVER_CNT; i++){
-    //     interface.motor_driver[i].motor1->SetCurrentReference(0.0);
-    //     interface.motor_driver[i].motor2->SetCurrentReference(0.0);
-    //     interface.motor_driver->Enable();
-    //     interface.motor_driver[i].motor1->Enable();
-    //     interface.motor_driver[i].motor2->Enable();
-    //     interface.motor_driver->SetTimeout(TIMEOUT);
-    // }
-
-    // std::chrono::time_point<std::chrono::system_clock> t_last_update = std::chrono::system_clock::now();
-    // while (!interface.IsTimeout() && !interface.IsAckMsgReceived()){
-    //     std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
-    //     if (diff.count() > dt){
-    //         t_last_update = std::chrono::system_clock::now();
-    //         interface.SendInit();
-    //     }
-    // }
+   
 
     
 
@@ -89,75 +70,30 @@ int main(int argc, char** argv){
     for (int j = 0; j < 10; j++){
         
         for (auto cmd : joint_traj_vec[joint_traj_idx]) {
-                std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
-                std::cout << "state: " << state << std::endl;
-                if (joint_traj_idx == 0)
-                    continue;
-                if (state >= 0 and state < 12)
+                if (state == 1 or state == 13 or state == 25)
                 {
-                    std::cout << "pos" << std::endl;
-                    state++;
-                    motor_idx++;
-                } else if (state >= 12 and state < 24){ 
-                    std::cout << "velocity" << std::endl;
-                    state++;   
-                    motor_idx++; 
-                } else if (state >= 24 and state < 36){
-                    std::cout << "current" << std::endl;
-                    state++;
-                    motor_idx++;
-                    break;
+                    motor_idx = 0;
                 }
-        }
-        joint_traj_idx++;
-        motor_idx = 0;
-        state = 0;
-    }
-
-
-
-    // //main run loop
-    while (!interface.IsTimeout()){
-        std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
-        if (diff.count() > dt){
-            t_last_update = std::chrono::system_clock::now();
-            t += dt;
-            interface.ParseSensorData();
-            for (auto cmd : joint_traj_vec[joint_traj_idx]) {
-                std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
-                std::cout << "state: " << state << std::endl;
-                if (joint_traj_idx == 0)
-                    continue;
-                if (state >= 0 and state < 12)
+                std::cout << "state -> " << state << " motor index " << motor_idx << std::endl; 
+                if (state >= 1 and state < 13)
                 {
-                    std::cout << "pos" << std::endl;
+                    std::cout << "pos -> " << cmd << std::endl;
                     state++;
                     motor_idx++;
-                } else if (state >= 12 and state < 24){ 
-                    std::cout << "velocity" << std::endl;
+                } else if (state >= 13 and state < 25){ 
+                    std::cout << "vel -> " << cmd << std::endl;
                     state++;   
                     motor_idx++; 
-                } else if (state >= 24 and state < 36){
-                    std::cout << "current" << std::endl;
+                } else if (state >= 25 and state < 37){
+                    std::cout << "cur -> " << cmd << std::endl;
                     state++;
                     motor_idx++;
                     break;
                 }
                 }
-                joint_traj_idx++;
-                motor_idx = 0;
-                state = 0;
-            try
-            {
-                interface.SendCommand();
-            }
-            catch(std::exception& e)
-            {
-                std::cerr << "interface failed to send command" << std::endl;
-                std::cerr << e.what() << '\n';
-            }
-        }
+            joint_traj_idx++;
+            motor_idx = 0;
+            state = 0;
     }
-    interface.Stop();
     return 0;
 }

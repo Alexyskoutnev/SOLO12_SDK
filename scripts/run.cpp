@@ -93,22 +93,20 @@ int main(int argc, char** argv){
             t += dt;
             interface.ParseSensorData();
             for (auto cmd : joint_traj_vec[joint_traj_idx]) {
-                if (joint_traj_idx == 0)
-                    continue;
-                if (state == 0 or state == 12 or state == 24)
+                if (state == 1 or state == 13 or state == 25)
                 {
                     motor_idx = 0;
                 }
-                if (state >= 0 and state < 12)
+                if (state >= 1 and state < 13)
                 {
                     interface.motors[motor_idx].SetPositionReference(cmd);
                     state++;
                     motor_idx++;
-                } else if (state >= 12 and state < 24){ 
+                } else if (state >= 13 and state < 25){ 
                     interface.motors[motor_idx].SetVelocityReference(cmd);
                     state++;   
                     motor_idx++; 
-                } else if (state >= 24 and state < 36){
+                } else if (state >= 25 and state < 37){
                    interface.motors[motor_idx].SetCurrentReference(cmd);
                     state++;
                     motor_idx++;
