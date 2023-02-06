@@ -148,7 +148,71 @@ bool Interface::IsAckMsgReceived(){
 
 void Interface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int len)
 {
-  ; 
+   if ((listener_mode || (init_sent && !ack_received)) && len == sizeof(ack_packet_t))
+  {
+    if (listener_mode)
+    {
+      // ack packets are used to set up the session id in listener mode
+      session_id = ((ack_packet_t *)data)->session_id;
+    }
+    else
+    {
+      // ensuring that session id is right if in normal mode
+      if (((ack_packet_t *)data)->session_id != session_id)
+      {
+        //printf("Wrong session id in ack msg, got %d instead of %d ignoring packet\n", ((ack_packet_t *)data)->session_id, session_id);
+        return; // ignoring the packet
+      }
+    }
+
+
+    received_packet_mutex.lock();
+    memcpy(&ack_packet, data, sizeof(ack_packet_t));
+    received_packet_mutex.unlock();
+
+    // parse ack data
+    for (int i = 0; i < N_DRIVER_CNT; i++)
+    {
+      motor_driver[i].is_connected = (ack_packet.spi_connected & (1 << i)) >> i;
+    }
+
+    ack_received = true;
+  }
+
+  else if ((listener_mode || (init_sent && ack_received)) && len == sizeof(sensor_packet_t))
+  {
+    // if the interface session id is not set in listener mode
+    if (listener_mode && session_id == -1)
+    {
+      session_id = ((sensor_packet_t *)data)->session_id; // if we launch the interface in listener mode while the masterboard is running
+                                                          // session_id is set to the one of the first sensor packet received
+    }
+
+    // ensuring that session id is right
+    if (((sensor_packet_t *)data)->session_id != session_id)
+    {
+      //printf("Wrong session id in sensor msg, got %d instead of %d, ignoring packet\n", ((sensor_packet_t *)data)->session_id, session_id);
+      return; // ignoring the packet
+    }
+
+    // Update time point of the latest received packet
+    t_last_packet = std::chrono::high_resolution_clock::now();
+
+    nb_sensors_recv++;
+
+    received_packet_mutex.lock();
+    memcpy(&sensor_packet, data, sizeof(sensor_packet_t));
+    received_packet_mutex.unlock();
+
+    struct sensor_packet_t *packet_recv = (struct sensor_packet_t *)data;
+
+    if (!first_sensor_received)
+    {
+      first_sensor_received = true;
+      last_sensor_index = static_cast<uint16_t>(packet_recv->sensor_index - 1); //initialisation of last_sensor_index at first reception
+      last_cmd_packet_loss = packet_recv->packet_loss;
+    }
+    }
 }
 
 int Interface::SendCommand()

@@ -20,6 +20,7 @@ class MotorDriver{
 
 
         bool position_rollover_error_flag;
+        bool is_connected = 1;
         // bool position_index_offset_compensation_flag;
 
 };

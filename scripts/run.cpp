@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <cassert>
 
+
 #include "interface.h"
 
 #define N_DRIVER_CNT 6
@@ -11,12 +12,14 @@
 
 int main(int argc, char** argv){
     std::cout << "Main Script " << std::endl;
+    std::string file_name = NULL;
     if (argc < 2){
         throw std::runtime_error("Please provide the Ethernet interface name");
     } else {
-        if (argc == 4){
+        if (argc == 5){
             double kp = std::atof(argv[2]);
             double kd = std::atof(argv[3]);
+            file_name = argv[5];
             assert(kp > 0);
             assert(kd > 0);
         }
@@ -25,6 +28,7 @@ int main(int argc, char** argv){
     double t = 0;
     double iq_sat = 4.0;
     double init_joint_pos[N_DRIVER_CNT  * 2] = {0};
+    
 
     Interface interface(argv[1]);
     interface.Init();
@@ -48,9 +52,11 @@ int main(int argc, char** argv){
     }
 
     //CSV data reader
-    std::string file_name = "./data/joint_trajectory_jan_23.csv";
+    // std::string file_name = "./data/joint_trajectory_jan_23.csv";
+    // assert((file_name.empty() != NULL));
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
-
+    int joint_traj_idx = 0;
+    int state = 0;
     //main run loop
     while (!interface.IsTimeout()){
         std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
@@ -60,11 +66,41 @@ int main(int argc, char** argv){
             interface.ParseSensorData();
             for (int i = 0; i < N_DRIVER_CNT * 2; i++){
                 if (interface.motors[i].isEnabled()){
-                    ;    
+                    for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+                        if (joint_traj_idx == 0)
+                            continue;
+                        switch (state)
+                        {
+                        case 1:
+                            interface.motors[i].SetPositionReference(cmd);
+                            state++;
+                            break;
+                        case 13:
+                            interface.motors[i].SetVelocityReference(cmd);
+                            state++;    
+                            break;
+                        case 25:
+                            interface.motors[i].SetCurrentReference(cmd);
+                            state++;
+                            break;
+                        default:
+                            state++;
+                            break;
+                        }
+                    }    
                 }
             }
+            joint_traj_idx++;
+            try
+            {
+                interface.SendCommand();
+            }
+            catch(std::exception& e)
+            {
+                std::cerr << "interface failed to send command" << std::endl;
+                std::cerr << e.what() << '\n';
+            }
         }
-
     }
     interface.Stop();
     return 0;
