@@ -24,7 +24,6 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
         std::string tmpstr;
         rows.push_back(tmpVec);
         while (getline(ss, tmpstr, DELIMITER)){
-            std::cout << "tmpstr " << tmpstr << std::endl;
             rows.back().push_back(std::stod(tmpstr));
         }
     }
