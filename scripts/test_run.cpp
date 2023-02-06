@@ -64,7 +64,7 @@ int main(int argc, char** argv){
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
     int joint_traj_idx = 0;
     int motor_idx = 0;
-    int state = 1;
+    int state = 0;
     
 
     for (int j = 0; j < 10; j++){
@@ -78,18 +78,16 @@ int main(int argc, char** argv){
                 if (state >= 1 and state < 13)
                 {
                     std::cout << "pos -> " << cmd << std::endl;
-                    state++;
                     motor_idx++;
                 } else if (state >= 13 and state < 25){ 
-                    std::cout << "vel -> " << cmd << std::endl;
-                    state++;   
+                    std::cout << "velt -> " << cmd << std::endl;
                     motor_idx++; 
                 } else if (state >= 25 and state < 37){
                     std::cout << "cur -> " << cmd << std::endl;
-                    state++;
                     motor_idx++;
                     break;
                 }
+                state++;
                 }
             joint_traj_idx++;
             motor_idx = 0;
