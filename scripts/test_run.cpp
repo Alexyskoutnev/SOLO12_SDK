@@ -55,34 +55,65 @@ int main(int argc, char** argv){
     double init_joint_pos[N_DRIVER_CNT  * 2] = {0};
     
 
-    Interface interface(argv[1]);
-    interface.Init();
+    // Interface interface(argv[1]);
+    // interface.Init();
 
-    for (int i  = 0; i < N_DRIVER_CNT; i++){
-        interface.motor_driver[i].motor1->SetCurrentReference(0.0);
-        interface.motor_driver[i].motor2->SetCurrentReference(0.0);
-        interface.motor_driver->Enable();
-        interface.motor_driver[i].motor1->Enable();
-        interface.motor_driver[i].motor2->Enable();
-        interface.motor_driver->SetTimeout(TIMEOUT);
-    }
+    // for (int i  = 0; i < N_DRIVER_CNT; i++){
+    //     interface.motor_driver[i].motor1->SetCurrentReference(0.0);
+    //     interface.motor_driver[i].motor2->SetCurrentReference(0.0);
+    //     interface.motor_driver->Enable();
+    //     interface.motor_driver[i].motor1->Enable();
+    //     interface.motor_driver[i].motor2->Enable();
+    //     interface.motor_driver->SetTimeout(TIMEOUT);
+    // }
 
-    std::chrono::time_point<std::chrono::system_clock> t_last_update = std::chrono::system_clock::now();
-    while (!interface.IsTimeout() && !interface.IsAckMsgReceived()){
-        std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
-        if (diff.count() > dt){
-            t_last_update = std::chrono::system_clock::now();
-            interface.SendInit();
-        }
-    }
+    // std::chrono::time_point<std::chrono::system_clock> t_last_update = std::chrono::system_clock::now();
+    // while (!interface.IsTimeout() && !interface.IsAckMsgReceived()){
+    //     std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
+    //     if (diff.count() > dt){
+    //         t_last_update = std::chrono::system_clock::now();
+    //         interface.SendInit();
+    //     }
+    // }
 
     
 
     //CSV data reader
+    // assert((file_name.empty() != NULL));
     std::vector<std::vector<double>> joint_traj_vec = csv_reader<double>(file_name);
     int joint_traj_idx = 0;
     int motor_idx = 0;
     int state = 1;
+    
+
+    for (int j = 0; j < 10; j++){
+        
+        for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+                std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
+                std::cout << "state: " << state << std::endl;
+                if (joint_traj_idx == 0)
+                    continue;
+                if (state >= 0 and state < 12)
+                {
+                    std::cout << "pos" << std::endl;
+                    state++;
+                    motor_idx++;
+                } else if (state >= 12 and state < 24){ 
+                    std::cout << "velocity" << std::endl;
+                    state++;   
+                    motor_idx++; 
+                } else if (state >= 24 and state < 36){
+                    std::cout << "current" << std::endl;
+                    state++;
+                    motor_idx++;
+                    break;
+                }
+        }
+        joint_traj_idx++;
+        motor_idx = 0;
+        state = 0;
+    }
+
 
 
     // //main run loop
@@ -93,23 +124,21 @@ int main(int argc, char** argv){
             t += dt;
             interface.ParseSensorData();
             for (auto cmd : joint_traj_vec[joint_traj_idx]) {
+                std::cout << "idx: " << joint_traj_idx << " Cmd: " << cmd << std::endl;
+                std::cout << "state: " << state << std::endl;
                 if (joint_traj_idx == 0)
                     continue;
-                if (state == 0 or state == 12 or state == 24)
-                {
-                    motor_idx = 0;
-                }
                 if (state >= 0 and state < 12)
                 {
-                    interface.motors[motor_idx].SetPositionReference(cmd);
+                    std::cout << "pos" << std::endl;
                     state++;
                     motor_idx++;
                 } else if (state >= 12 and state < 24){ 
-                    interface.motors[motor_idx].SetVelocityReference(cmd);
+                    std::cout << "velocity" << std::endl;
                     state++;   
                     motor_idx++; 
                 } else if (state >= 24 and state < 36){
-                   interface.motors[motor_idx].SetCurrentReference(cmd);
+                    std::cout << "current" << std::endl;
                     state++;
                     motor_idx++;
                     break;
