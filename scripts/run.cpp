@@ -33,7 +33,7 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
 int main(int argc, char** argv){
     std::cout << "Main Script " << std::endl;
     std::string file_name;
-    double kp;
+    double kd;
     double kp;
     if (argc < 2){
         throw std::runtime_error("Please provide the Ethernet interface name");
