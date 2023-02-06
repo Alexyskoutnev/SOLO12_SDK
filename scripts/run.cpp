@@ -34,16 +34,19 @@ std::vector<std::vector<T>> csv_reader(std::string file_name){
 int main(int argc, char** argv){
     std::cout << "Main Script " << std::endl;
     std::string file_name = NULL;
-    std::cout << "argv" << argv << std::endl;
     if (argc < 2){
         throw std::runtime_error("Please provide the Ethernet interface name");
     } else {
-        if (argc == 5){
-            double kp = std::atof(argv[2]);
-            double kd = std::atof(argv[3]);
-            file_name = argv[4];
+        if (argc == 4){
+            double kp = std::atof(argv[1]);
+            double kd = std::atof(argv[2]);
+            file_name = argv[3];
             assert(kp > 0);
             assert(kd > 0);
+        } else {
+            double kp = 1.0;
+            double kd = 0.1;
+            file_name = "./data/joint_trajectory_jan_23.csv";
         }
     }
     double dt = 0.001;
