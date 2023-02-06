@@ -1,0 +1,7 @@
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/SOLO12_SDK.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/edit_cache.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/rebuild_cache.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/list_install_components.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install/local.dir
+/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install/strip.dir
