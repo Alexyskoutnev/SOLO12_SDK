@@ -55,26 +55,26 @@ int main(int argc, char** argv){
     double init_joint_pos[N_DRIVER_CNT  * 2] = {0};
     
 
-    Interface interface(argv[1]);
-    interface.Init();
+    // Interface interface(argv[1]);
+    // interface.Init();
 
-    for (int i  = 0; i < N_DRIVER_CNT; i++){
-        interface.motor_driver[i].motor1->SetCurrentReference(0.0);
-        interface.motor_driver[i].motor2->SetCurrentReference(0.0);
-        interface.motor_driver->Enable();
-        interface.motor_driver[i].motor1->Enable();
-        interface.motor_driver[i].motor2->Enable();
-        interface.motor_driver->SetTimeout(TIMEOUT);
-    }
+    // for (int i  = 0; i < N_DRIVER_CNT; i++){
+    //     interface.motor_driver[i].motor1->SetCurrentReference(0.0);
+    //     interface.motor_driver[i].motor2->SetCurrentReference(0.0);
+    //     interface.motor_driver->Enable();
+    //     interface.motor_driver[i].motor1->Enable();
+    //     interface.motor_driver[i].motor2->Enable();
+    //     interface.motor_driver->SetTimeout(TIMEOUT);
+    // }
 
-    std::chrono::time_point<std::chrono::system_clock> t_last_update = std::chrono::system_clock::now();
-    while (!interface.IsTimeout() && !interface.IsAckMsgReceived()){
-        std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
-        if (diff.count() > dt){
-            t_last_update = std::chrono::system_clock::now();
-            interface.SendInit();
-        }
-    }
+    // std::chrono::time_point<std::chrono::system_clock> t_last_update = std::chrono::system_clock::now();
+    // while (!interface.IsTimeout() && !interface.IsAckMsgReceived()){
+    //     std::chrono::duration<double> diff = std::chrono::system_clock::now() - t_last_update;
+    //     if (diff.count() > dt){
+    //         t_last_update = std::chrono::system_clock::now();
+    //         interface.SendInit();
+    //     }
+    // }
 
     
 
