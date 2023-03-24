@@ -72,5 +72,6 @@
         "fstream": "cpp",
         "iomanip": "cpp",
         "stack": "cpp"
-    }
+	},
+	"autoHide.autoHideSideBar": false
 }

@@ -1,7 +1,10 @@
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/SOLO12_SDK.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/edit_cache.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/rebuild_cache.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/list_install_components.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install/local.dir
-/Users/alexy/Documents/Projects/SOLO12_SDK/build/CMakeFiles/install/strip.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/master_board.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/example.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/example_pd.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/example_imu_data_collection.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/test.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/edit_cache.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/CMakeFiles/rebuild_cache.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/_deps/matrix_rw-build/CMakeFiles/test.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/_deps/matrix_rw-build/CMakeFiles/edit_cache.dir
+/home/vm0/shared/github_workspace/SOLO12_SDK/build/_deps/matrix_rw-build/CMakeFiles/rebuild_cache.dir

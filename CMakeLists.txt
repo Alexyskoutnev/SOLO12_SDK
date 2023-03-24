@@ -1,2 +1,160 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
+project(
+	SOLO12_SDK
+	VERSION 0.0.0 
+	LANGUAGES CXX
+)
+
+#* dependencies
+Include(FetchContent)
+
+set(matrix_rw_VERSION 1.0.5) #* matrix_rw, used for testing
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	FetchContent_Declare(
+		matrix_rw 
+		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
+	)
+	FetchContent_MakeAvailable(matrix_rw)
+endif()
+
+
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	option(DEBUG_BUILD "Build everything in debug mode" ON)
+	option(BUILD_TESTS "Build tests" ON)
+	option(BUILD_EXAMPLES "Build examples" ON)
+	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
+
+	#* where to look for the project header and source files
+	set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
+	set(SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
+	set(TEST_DIR ${CMAKE_CURRENT_LIST_DIR}/test)
+	set(EXAMPLE_DIR ${CMAKE_CURRENT_LIST_DIR}/examples)
+
+	#* tests, examples, benchmarks to compile
+	set(TEST_NAMES
+	)
+	set(EXAMPLE_NAMES
+		example
+		example_pd
+		example_imu_data_collection
+	)
+
+	#* source files
+	file (GLOB_RECURSE MASTER_BOARD_SRC CONFIGURE_DEPENDS "${SRC_DIR}/master_board_sdk/*.cpp")
+	file (GLOB_RECURSE TRAJ_TRACK_SRC CONFIGURE_DEPENDS "${SRC_DIR}/traj_track/*.cpp")
+
+	#* set up output directories
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/dat)
+
+	#* project compile options
+	set(CMAKE_CXX_STANDARD 17)
+	set(CMAKE_CXX_STANDARD_REQUIRED ON)
+	set(CMAKE_CXX_EXTENSIONS OFF)
+
+	add_compile_options(
+		-fdiagnostics-color=always #* colored debug output
+		-fmessage-length=0 #* disable line wrapping (default=72 char) 
+		-Wall #* all warnings
+		-Wextra #* more warnings
+		-Wpedantic #* more warnings
+	)
+
+	if(DEBUG_BUILD)
+		add_compile_options(
+			-g #* debug symbols
+			-O0 #* no optimization, -Og may work better with some debuggers
+		)
+	else()
+		add_compile_options(
+			-O3 #* release optimization
+		)
+	endif()
+
+	if(USE_SINGLE_PRECISION)
+		add_compile_options(-DUSE_SINGLE_PRECISION) #* use single precision floats
+	endif()
+
+	#***********#
+	#* Libraries *#
+	#***********#
+	ADD_LIBRARY(master_board SHARED
+		${MASTER_BOARD_SRC}
+	)
+	TARGET_LINK_LIBRARIES(master_board pthread)
+	target_include_directories(
+		master_board PUBLIC 
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<INSTALL_INTERFACE:include>
+	)
+
+	#***************#
+	#* Executables *#
+	#***************#
+	#add_executable(
+	#	main
+	#	${SRC_DIR}/main.cpp		
+	#	${SOURCES}					
+	#)
+	#target_include_directories(
+	#	main PRIVATE 
+	#	${INCLUDE_DIR}
+	#)
+	#target_compile_options(
+	#	main PRIVATE
+	#)
+	
+	#***********#
+	#* Testing *#
+	#***********#
+	if(BUILD_TESTS)
+		enable_testing()
+
+		foreach(ELEMENT ${TEST_NAMES})
+			add_executable(
+				${ELEMENT}
+				${TEST_DIR}/${ELEMENT}.cpp						
+			)
+			target_include_directories(
+				${ELEMENT} PRIVATE 
+				${INCLUDE_DIR}
+				${matrix_rw_SOURCE_DIR}/include
+				${matrix_op_SOURCE_DIR}/include
+			)
+			target_compile_options(
+				${ELEMENT} PRIVATE
+			)
+			add_test(
+				NAME ${ELEMENT} 
+				COMMAND ${ELEMENT}
+				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+			)
+		endforeach(ELEMENT ${TEST_NAMES})
+	endif()
+
+	#************#
+	#* Examples *#
+	#************#
+	if(BUILD_EXAMPLES)
+		foreach(ELEMENT ${EXAMPLE_NAMES})
+			add_executable(
+				${ELEMENT}
+				${EXAMPLE_DIR}/${ELEMENT}.cpp						
+			)
+			target_include_directories(
+				${ELEMENT} PRIVATE 
+				${INCLUDE_DIR}
+			)
+			target_compile_options(
+				${ELEMENT} PRIVATE
+			)
+			target_link_libraries(
+				${ELEMENT} master_board
+			)
+		endforeach(ELEMENT ${EXAMPLE_NAMES})
+	endif()
+endif()

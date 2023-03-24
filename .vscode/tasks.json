@@ -1,0 +1,65 @@
+{
+	"tasks": [
+		{
+			"label": "Configure",
+			"type": "shell",
+			"command": "./scripts/build/configure.sh",
+			"group": "build",
+		},
+		{
+			"label": "Clear",
+			"type": "shell",
+			"command": "./scripts/build/clear.sh",
+			"group": "build",
+		},
+		{
+			"label": "Clear and configure",
+			"type": "shell",	
+			"command": "./scripts/build/configure.sh",
+			"group": "build",
+			"dependsOn": [
+                "Clear"
+            ],
+		},
+		{
+			"label": "Build",
+			"type": "shell",
+			"group": "build",
+			"command": "./scripts/build/build.sh",
+		},
+		{
+			"label": "Test",
+			"type": "shell",
+			"group": "build",
+			"command": "./scripts/build/test.sh",
+		},
+		{
+			"label": "Build and test",
+			"type": "shell",
+			"command": "./scripts/build/test.sh",
+			"group": "build",
+			"dependsOn": [
+                "Build"
+            ],
+		},
+		{
+			"label": "Sync to shuksan",
+			"type": "shell",
+			"command": "./scripts/sync_to_shuksan.sh",
+			"group": "build",
+			"args": [
+				"cinaral@10.76.68.219:/home/cinaral/SOLO12_SDK" //* Change this to your remote user's address and where you want to sync to
+			],
+		}
+	],
+	"version": "2.0.0",
+	"type": "shell",
+	"presentation": {
+		"echo": true,
+		"clear": false,
+		"reveal": "always",
+		"focus": true,
+		"panel": "shared",
+		"showReuseMessage": false
+	}
+}
