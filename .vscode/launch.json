@@ -1,0 +1,13 @@
+{
+	"configurations": [
+		{
+			"name": "gdb",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceFolder}\\build\\bin\\${fileBasenameNoExtension}.exe",
+			"cwd": "${workspaceFolder}\\build\\bin",
+			//"preLaunchTask": "Build"
+		}
+	],
+	"version": "0.2.0"
+}

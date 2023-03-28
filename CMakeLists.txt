@@ -9,7 +9,9 @@ project(
 #* dependencies
 Include(FetchContent)
 
-set(matrix_rw_VERSION 1.0.5) #* matrix_rw, used for testing
+set(matrix_rw_VERSION 1.0.5) #* matrix_rw
+set(matrix_op_VERSION 1.0.7) #* matrix_op
+
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	FetchContent_Declare(
@@ -17,6 +19,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
 	)
 	FetchContent_MakeAvailable(matrix_rw)
+	
+	FetchContent_Declare(
+		matrix_op 
+		URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/src.zip
+	)
+	FetchContent_MakeAvailable(matrix_op)
 endif()
 
 
@@ -93,19 +101,23 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 	#***************#
 	#* Executables *#
-	#***************#
-	#add_executable(
-	#	main
-	#	${SRC_DIR}/main.cpp		
-	#	${SOURCES}					
-	#)
-	#target_include_directories(
-	#	main PRIVATE 
-	#	${INCLUDE_DIR}
-	#)
-	#target_compile_options(
-	#	main PRIVATE
-	#)
+	#***************#g
+	add_executable(
+		main
+		${TRAJ_TRACK_SRC}			
+	)
+	target_include_directories(
+		main PRIVATE 
+		${INCLUDE_DIR}
+		${matrix_rw_SOURCE_DIR}/include
+		${matrix_op_SOURCE_DIR}/include
+	)
+	target_compile_options(
+		main PRIVATE
+	)
+	target_link_libraries(
+		main master_board
+	)
 	
 	#***********#
 	#* Testing *#

@@ -30,7 +30,7 @@ else
 		examples/ \
 		data/ \
 		scripts/ \
-		$1/
+		$1/ --delete
 fi
 popd
 
