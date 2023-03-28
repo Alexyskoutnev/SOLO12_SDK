@@ -79,9 +79,9 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		add_compile_options(-DUSE_SINGLE_PRECISION) #* use single precision floats
 	endif()
 
-	#***********#
+	#*************#
 	#* Libraries *#
-	#***********#
+	#*************#
 	ADD_LIBRARY(master_board SHARED
 		${MASTER_BOARD_SRC}
 	)
@@ -89,7 +89,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	target_include_directories(
 		master_board PUBLIC 
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-		$<INSTALL_INTERFACE:include>
 	)
 
 	#***************#
@@ -155,6 +154,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 			target_link_libraries(
 				${ELEMENT} master_board
 			)
+
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
 	endif()
 endif()

@@ -43,7 +43,7 @@
             ],
 		},
 		{
-			"label": "Sync to shuksan",
+			"label": "Sync to cinaral@shuksan",
 			"type": "shell",
 			"command": "./scripts/sync_to_shuksan.sh",
 			"group": "build",
