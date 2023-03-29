@@ -33,7 +33,7 @@
 class ClInfo
 {
   public:
-	ClInfo(Interface &interface, Timer<Interface> &interface_timer);
+	ClInfo(Interface &interface, Timer<Interface> &interface_timer, size_t t_dim, size_t x_dim, double ref_traj[]);
 
 	void print();
 
@@ -41,6 +41,10 @@ class ClInfo
 	static constexpr size_t clinfo_length = 2;
 	Timer<Interface> &interface_timer;
 	Interface &interface;
+
+	const size_t t_dim;
+	const size_t x_dim;
+	double *ref_traj;
 };
 
 #endif

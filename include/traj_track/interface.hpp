@@ -28,6 +28,7 @@
 #define INTERFACE_HPP_CINARAL_230328_1323
 
 #include "master_board_sdk/master_board_interface.h"
+#include <map>
 
 class Interface
 {
@@ -38,8 +39,11 @@ class Interface
 	void update();
 	bool check_ready();
 	void print();
+	size_t get_step_count();
 
   private:
+	// size_t get_traj_idx(size_t motor_idx);
+
 	static constexpr size_t driver_count = 6;
 	static constexpr size_t motor_count = 2 * driver_count;
 	const size_t t_dim;
@@ -48,6 +52,10 @@ class Interface
 	const double kd;
 	const double current_sat;
 	const double timeout;
+	std::map<size_t, size_t> ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
+	                                    {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
+
+	static constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
 
 	MasterBoardInterface masterboard;
 	size_t step_counter = 0;

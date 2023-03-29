@@ -3,7 +3,7 @@
 #* project's relative path with respect to this script
 PROJECT_PATH=".."
 
-echo "Usage: copy_to_rasppi.sh <TargetFolderPath (Example: usr@192.168.1.1:~/project)>"
+echo "Usage: sync_to_shuksan.sh <TargetFolderPath (Example: usr@192.168.1.1:~/project)>"
 
 #* change the cwd to the script dir temporarily, and hide pushd popd output
 pushd () { 

@@ -57,10 +57,11 @@ Interface::update()
 
 			for (size_t i = 0; i < motor_count; ++i) {
 				//* select row of reference trajectory
+				//*
 				if (step_counter < t_dim) {
 					masterboard.motors[i].SetCurrentReference(0.);
-					masterboard.motors[i].SetPositionReference(
-					    ref_traj[step_counter * x_dim + i]);
+					masterboard.motors[ref_idx[i]].SetPositionReference(
+					    gear_ratio[ref_idx[i]] * ref_traj[step_counter * x_dim + i]);
 					masterboard.motors[i].SetVelocityReference(0.);
 				} else {
 					masterboard.motors[i].SetCurrentReference(0.);
@@ -110,4 +111,10 @@ Interface::print()
 	masterboard.PrintMotors();
 	masterboard.PrintMotorDrivers();
 	masterboard.PrintStats();
+}
+
+size_t
+Interface::get_step_count()
+{
+	return step_counter;
 }
