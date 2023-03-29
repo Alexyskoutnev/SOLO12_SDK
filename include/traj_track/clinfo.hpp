@@ -33,13 +33,14 @@
 class ClInfo
 {
   public:
-	ClInfo(Timer<Interface> &interface_timer);
+	ClInfo(Interface &interface, Timer<Interface> &interface_timer);
 
 	void print();
 
   private:
 	static constexpr size_t clinfo_length = 2;
 	Timer<Interface> &interface_timer;
+	Interface &interface;
 };
 
 #endif

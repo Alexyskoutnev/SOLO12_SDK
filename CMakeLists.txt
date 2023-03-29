@@ -10,7 +10,6 @@ project(
 Include(FetchContent)
 
 set(matrix_rw_VERSION 1.0.5) #* matrix_rw
-set(matrix_op_VERSION 1.0.7) #* matrix_op
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -19,12 +18,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
 	)
 	FetchContent_MakeAvailable(matrix_rw)
-	
-	FetchContent_Declare(
-		matrix_op 
-		URL https://github.com/cinaral/matrix_op/releases/download/v${matrix_op_VERSION}/src.zip
-	)
-	FetchContent_MakeAvailable(matrix_op)
 endif()
 
 
@@ -110,7 +103,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		main PRIVATE 
 		${INCLUDE_DIR}
 		${matrix_rw_SOURCE_DIR}/include
-		${matrix_op_SOURCE_DIR}/include
 	)
 	target_compile_options(
 		main PRIVATE
@@ -134,7 +126,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				${ELEMENT} PRIVATE 
 				${INCLUDE_DIR}
 				${matrix_rw_SOURCE_DIR}/include
-				${matrix_op_SOURCE_DIR}/include
 			)
 			target_compile_options(
 				${ELEMENT} PRIVATE
@@ -169,4 +160,14 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 		endforeach(ELEMENT ${EXAMPLE_NAMES})
 	endif()
+
+	#**************************#
+	#* Executable permissions *#
+	#**************************#
+	add_custom_command(
+		TARGET main
+		POST_BUILD
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND scripts/set_permissions.sh
+	)
 endif()

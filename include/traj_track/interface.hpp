@@ -28,39 +28,32 @@
 #define INTERFACE_HPP_CINARAL_230328_1323
 
 #include "master_board_sdk/master_board_interface.h"
-#include <string>
 
 class Interface
 {
   public:
-	Interface(char *name, double kp = 5.0, double kd = .1, double current_sat = 4.0,
-	          size_t timeout = 5);
+	Interface(char *name, size_t t_dim, size_t x_dim, double ref_traj[], double kp = 5.0,
+	          double kd = .1, double current_sat = 4.0, size_t timeout = 5);
 	~Interface();
-
 	void update();
 	bool check_ready();
+	void print();
 
   private:
-	//? fixed dimensions may be too restrictive
-	static constexpr size_t t_dim = 5010;
-	static constexpr size_t x_dim = 36;
 	static constexpr size_t driver_count = 6;
 	static constexpr size_t motor_count = 2 * driver_count;
-	const std::string data_dir = "../../data";
-	const std::string data_prefix = data_dir + "/";
-	const std::string data_fname = "joint_trajectory_jan_23.csv";
-
-	MasterBoardInterface masterboard;
-	double (&ref_traj)[t_dim * x_dim] = *(double (*)[t_dim * x_dim]) new double[t_dim * x_dim];
-	size_t step_counter = 0;
-
+	const size_t t_dim;
+	const size_t x_dim;
 	const double kp;
 	const double kd;
 	const double current_sat;
 	const double timeout;
 
-	bool is_ready = false;
+	MasterBoardInterface masterboard;
+	size_t step_counter = 0;
+	double *ref_traj;
 	double init_pos[motor_count];
+	bool is_ready = false;
 };
 
 #endif
