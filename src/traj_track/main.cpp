@@ -24,9 +24,10 @@ constexpr double clinfo_period = 1. / clinfo_rate; //* [Hz]
 const std::string data_dir = "../../data";
 const std::string data_prefix = data_dir + "/";
 const std::string data_fname = "gait.csv";
+char IP_NAME[16] = {'e', 'n', 'x', '6', '0', '6', 'd', '3', 'c', 'd', '5', '0', '4', 'b', 'f', '\n'};
 
 int
-main(int, char *argv[])
+main(int argc, char *argv[])
 {
 	//* give the process a high priority
 	nice(-20);

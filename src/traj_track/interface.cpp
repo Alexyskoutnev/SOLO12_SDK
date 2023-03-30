@@ -62,7 +62,10 @@ Interface::update()
 					masterboard.motors[i].SetCurrentReference(0.);
 					masterboard.motors[ref_idx[i]].SetPositionReference(
 					    gear_ratio[ref_idx[i]] * ref_traj[step_counter * x_dim + i]);
-					masterboard.motors[i].SetVelocityReference(0.);
+					// masterboard.motors[i].SetVelocityReference(0.);
+					masterboard.motors[ref_idx[i]].SetVelocityReference(
+						gear_ratio[ref_idx[i]] * ref_traj[step_counter * x_dim + (i + VELOCITY_SHIFT)]
+					);
 				} else {
 					masterboard.motors[i].SetCurrentReference(0.);
 					masterboard.motors[i].SetPositionReference(init_pos[i]);

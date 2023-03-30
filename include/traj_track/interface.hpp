@@ -62,6 +62,8 @@ class Interface
 	double *ref_traj;
 	double init_pos[motor_count];
 	bool is_ready = false;
+	size_t VELOCITY_SHIFT = 12;
+	size_t TORQUE_SHIFT = 24;
 };
 
 #endif
