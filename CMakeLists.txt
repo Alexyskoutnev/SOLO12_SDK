@@ -10,6 +10,7 @@ project(
 Include(FetchContent)
 
 set(matrix_rw_VERSION 1.0.5) #* matrix_rw
+set(rt_timer_VERSION 1.0.0) #* rt_timer
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -18,6 +19,13 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
 	)
 	FetchContent_MakeAvailable(matrix_rw)
+
+	Include(FetchContent)
+	FetchContent_Declare(
+		rt_timer 
+		URL https://github.com/cinaral/rt_timer/releases/download/v${rt_timer_VERSION}/src.zip
+	)
+	FetchContent_MakeAvailable(rt_timer)
 endif()
 
 
@@ -103,6 +111,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		main PRIVATE 
 		${INCLUDE_DIR}
 		${matrix_rw_SOURCE_DIR}/include
+		${rt_timer_SOURCE_DIR}/include
 	)
 	target_compile_options(
 		main PRIVATE
@@ -126,6 +135,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 				${ELEMENT} PRIVATE 
 				${INCLUDE_DIR}
 				${matrix_rw_SOURCE_DIR}/include
+				${rt_timer_SOURCE_DIR}/include
 			)
 			target_compile_options(
 				${ELEMENT} PRIVATE

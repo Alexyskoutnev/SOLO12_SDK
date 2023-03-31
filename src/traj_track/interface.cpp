@@ -54,19 +54,18 @@ Interface::update()
 		masterboard.ParseSensorData();
 
 		if (is_ready) {
-
 			for (size_t i = 0; i < motor_count; ++i) {
-				//* select row of reference trajectory
-				//*
-				if (step_counter < t_dim) {
+				if (is_executing && step_counter < t_dim) {
 					masterboard.motors[i].SetCurrentReference(0.);
 					masterboard.motors[ref_idx[i]].SetPositionReference(
-					    gear_ratio[ref_idx[i]] * ref_traj[step_counter * x_dim + i]);
+					    gear_ratio[ref_idx[i]] *
+					    ref_traj[step_counter * x_dim + i]);
 					// masterboard.motors[i].SetVelocityReference(0.);
 					masterboard.motors[ref_idx[i]].SetVelocityReference(
-						gear_ratio[ref_idx[i]] * ref_traj[step_counter * x_dim + (i + VELOCITY_SHIFT)]
-					);
+					    gear_ratio[ref_idx[i]] *
+					    ref_traj[step_counter * x_dim + (i + VELOCITY_SHIFT)]);
 				} else {
+					is_executing = false;
 					masterboard.motors[i].SetCurrentReference(0.);
 					masterboard.motors[i].SetPositionReference(init_pos[i]);
 					masterboard.motors[i].SetVelocityReference(0.);
@@ -75,7 +74,7 @@ Interface::update()
 			masterboard.SendCommand();
 			++step_counter;
 		} else {
-			is_ready = check_ready();
+			check_ready();
 		}
 	} else {
 		printf("Timeout while update.\n");
@@ -85,7 +84,7 @@ Interface::update()
 bool
 Interface::check_ready()
 {
-	bool is_ready = true;
+	is_ready = true;
 
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (!masterboard.motor_drivers[i / 2].is_connected) {
@@ -104,6 +103,12 @@ Interface::check_ready()
 	masterboard.SendCommand();
 
 	return is_ready;
+}
+
+void
+Interface::execute()
+{
+	is_executing = true;
 }
 
 void

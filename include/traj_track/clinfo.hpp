@@ -27,21 +27,37 @@
 #ifndef CLINFO_HPP_CINARAL_230328_1341
 #define CLINFO_HPP_CINARAL_230328_1341
 
+#include "rt_timer.hpp"
 #include "traj_track/interface.hpp"
-#include "traj_track/timer.hpp"
+
+#include <chrono>
+using std::chrono::duration;
+using std::chrono::steady_clock;
+using time_sc = steady_clock::time_point;
 
 class ClInfo
 {
   public:
-	ClInfo(Interface &interface, Timer<Interface> &interface_timer, size_t t_dim, size_t x_dim, double ref_traj[]);
+	ClInfo(Interface &interface, rt_timer::Timer<Interface> &interface_timer, size_t t_dim, size_t x_dim,
+	       double ref_traj[]);
 
 	void print();
 
   private:
-	static constexpr size_t clinfo_length = 2;
-	Timer<Interface> &interface_timer;
+	static constexpr size_t clinfo_length = 6;
+	bool never_sampled = true;
+	time_sc start_time;
+	double real_time;
+	double timer_time;
+	double call_lag_max;
+	double act_elapsed_max;
+	size_t call_count;
+	size_t rt_viol_count;
+	double rate_avg;
+	double call_lag_avg;
+	double act_elapsed_avg;
 	Interface &interface;
-
+	rt_timer::Timer<Interface> &interface_timer;
 	const size_t t_dim;
 	const size_t x_dim;
 	double *ref_traj;

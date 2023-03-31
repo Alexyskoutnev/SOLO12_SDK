@@ -37,6 +37,7 @@ class Interface
 	          double kd = .1, double current_sat = 4.0, size_t timeout = 5);
 	~Interface();
 	void update();
+	void execute();
 	bool check_ready();
 	void print();
 	size_t get_step_count();
@@ -46,6 +47,8 @@ class Interface
 
 	static constexpr size_t driver_count = 6;
 	static constexpr size_t motor_count = 2 * driver_count;
+	static constexpr size_t VELOCITY_SHIFT = 12;
+	static constexpr size_t TORQUE_SHIFT = 24;
 	const size_t t_dim;
 	const size_t x_dim;
 	const double kp;
@@ -55,15 +58,15 @@ class Interface
 	std::map<size_t, size_t> ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
 	                                    {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
 
-	static constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
+	static constexpr double gear_ratio[] = {9., 9.,  9.,  -9., -9., 9.,
+	                                        9., -9., -9., -9., 9.,  9.};
 
 	MasterBoardInterface masterboard;
 	size_t step_counter = 0;
 	double *ref_traj;
 	double init_pos[motor_count];
 	bool is_ready = false;
-	size_t VELOCITY_SHIFT = 12;
-	size_t TORQUE_SHIFT = 24;
+	bool is_executing = false;
 };
 
 #endif
