@@ -9,8 +9,8 @@ project(
 #* dependencies
 Include(FetchContent)
 
-set(matrix_rw_VERSION 1.0.5) #* matrix_rw
-set(rt_timer_VERSION 1.0.0) #* rt_timer
+set(matrix_rw_VERSION 1.2.0) #* matrix_rw
+set(rt_timer_VERSION 1.0.1) #* rt_timer
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -31,8 +31,8 @@ endif()
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
-	option(BUILD_TESTS "Build tests" ON)
-	option(BUILD_EXAMPLES "Build examples" ON)
+	option(BUILD_TESTS "Build tests" OFF)
+	option(BUILD_EXAMPLES "Build examples" OFF)
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 
 	#* where to look for the project header and source files
@@ -52,13 +52,13 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 	#* source files
 	file (GLOB_RECURSE MASTER_BOARD_SRC CONFIGURE_DEPENDS "${SRC_DIR}/master_board_sdk/*.cpp")
-	file (GLOB_RECURSE TRAJ_TRACK_SRC CONFIGURE_DEPENDS "${SRC_DIR}/traj_track/*.cpp")
+	file (GLOB_RECURSE COMMANDER_SRC CONFIGURE_DEPENDS "${SRC_DIR}/commander/*.cpp")
 
 	#* set up output directories
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/dat)
+	file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/data)
 
 	#* project compile options
 	set(CMAKE_CXX_STANDARD 17)
@@ -91,21 +91,21 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#*************#
 	#* Libraries *#
 	#*************#
-	ADD_LIBRARY(master_board SHARED
-		${MASTER_BOARD_SRC}
-	)
-	TARGET_LINK_LIBRARIES(master_board pthread)
-	target_include_directories(
-		master_board PUBLIC 
-		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	)
+	#ADD_LIBRARY(master_board SHARED
+	#	${MASTER_BOARD_SRC}
+	#)
+	#TARGET_LINK_LIBRARIES(master_board pthread)
+	#target_include_directories(
+	#	master_board PUBLIC 
+	#	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	#)
 
 	#***************#
 	#* Executables *#
 	#***************#g
 	add_executable(
 		main
-		${TRAJ_TRACK_SRC}			
+		${COMMANDER_SRC}			
 	)
 	target_include_directories(
 		main PRIVATE 
@@ -116,9 +116,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	target_compile_options(
 		main PRIVATE
 	)
-	target_link_libraries(
-		main master_board
-	)
+	#target_link_libraries(
+	#	main 
+	#	master_board
+	#)
 	
 	#***********#
 	#* Testing *#
@@ -174,10 +175,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#**************************#
 	#* Executable permissions *#
 	#**************************#
-	add_custom_command(
-		TARGET main
-		POST_BUILD
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		COMMAND scripts/set_permissions.sh
-	)
+	#add_custom_command(
+	#	TARGET main
+	#	POST_BUILD
+	#	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+	#	COMMAND scripts/set_permissions.sh
+	#)
 endif()

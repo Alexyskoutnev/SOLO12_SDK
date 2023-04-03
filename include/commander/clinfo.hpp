@@ -24,49 +24,43 @@
  * SOFTWARE.
  */
 
-#ifndef INTERFACE_HPP_CINARAL_230328_1323
-#define INTERFACE_HPP_CINARAL_230328_1323
+#ifndef CLINFO_HPP_CINARAL_230328_1341
+#define CLINFO_HPP_CINARAL_230328_1341
 
-#include "master_board_sdk/master_board_interface.h"
-#include <map>
+#include "rt_timer.hpp"
+//#include "traj_track/interface.hpp"
 
-class Interface
+#include <chrono>
+using std::chrono::duration;
+using std::chrono::steady_clock;
+using time_sc = steady_clock::time_point;
+
+class ClInfo
 {
   public:
-	Interface(char *name, size_t t_dim, size_t x_dim, double ref_traj[], double kp = 5.0,
-	          double kd = .1, double current_sat = 4.0, size_t timeout = 5);
-	~Interface();
-	void update();
-	void execute();
-	bool check_ready();
+	ClInfo(Interface &interface, rt_timer::Timer<Interface> &interface_timer, size_t t_dim, size_t x_dim,
+	       double ref_traj[]);
+
 	void print();
-	size_t get_step_count();
 
   private:
-	// size_t get_traj_idx(size_t motor_idx);
-
-	static constexpr size_t driver_count = 6;
-	static constexpr size_t motor_count = 2 * driver_count;
-	static constexpr size_t VELOCITY_SHIFT = 12;
-	static constexpr size_t TORQUE_SHIFT = 24;
+	static constexpr size_t clinfo_length = 6;
+	bool never_sampled = true;
+	time_sc start_time;
+	double real_time;
+	double timer_time;
+	double call_lag_max;
+	double act_elapsed_max;
+	size_t call_count;
+	size_t rt_viol_count;
+	double rate_avg;
+	double call_lag_avg;
+	double act_elapsed_avg;
+	Interface &interface;
+	rt_timer::Timer<Interface> &interface_timer;
 	const size_t t_dim;
 	const size_t x_dim;
-	const double kp;
-	const double kd;
-	const double current_sat;
-	const double timeout;
-	std::map<size_t, size_t> ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
-	                                    {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
-
-	static constexpr double gear_ratio[] = {9., 9.,  9.,  -9., -9., 9.,
-	                                        9., -9., -9., -9., 9.,  9.};
-
-	MasterBoardInterface masterboard;
-	size_t step_counter = 0;
 	double *ref_traj;
-	double init_pos[motor_count];
-	bool is_ready = false;
-	bool is_executing = false;
 };
 
 #endif

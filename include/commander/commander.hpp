@@ -1,5 +1,5 @@
 /*
- * SOLO12_SDK
+ * SOLO12_SDK commander
  *
  * MIT License
  *
@@ -24,43 +24,51 @@
  * SOFTWARE.
  */
 
-#ifndef CLINFO_HPP_CINARAL_230328_1341
-#define CLINFO_HPP_CINARAL_230328_1341
+#ifndef COMMANDER_HPP_CINARAL_230403_1507
+#define COMMANDER_HPP_CINARAL_230403_1507
 
+// #include "master_board_sdk/master_board_interface.h"
+#include "config.hpp"
+#include "matrix_rw.hpp"
 #include "rt_timer.hpp"
-#include "traj_track/interface.hpp"
+#include "types.hpp"
+#include <map>
+#include <string>
 
-#include <chrono>
-using std::chrono::duration;
-using std::chrono::steady_clock;
-using time_sc = steady_clock::time_point;
-
-class ClInfo
+namespace commander
 {
-  public:
-	ClInfo(Interface &interface, rt_timer::Timer<Interface> &interface_timer, size_t t_dim, size_t x_dim,
-	       double ref_traj[]);
 
-	void print();
+class Commander
+{
+	enum State { standby, hold, track };
+
+  public:
+	Commander(const std::string ref_traj_fname = ref_traj_fname_default,
+	          const char mb_hostname[] = mb_hostname_default, const double kp = kp_default,
+	          const double kd = kd_default);
+	~Commander();
+	void update();
+	// void execute();
+	//  bool check_ready();
+	//  void print();
+	//  size_t get_step_count();
 
   private:
-	static constexpr size_t clinfo_length = 6;
-	bool never_sampled = true;
-	time_sc start_time;
-	double real_time;
-	double timer_time;
-	double call_lag_max;
-	double act_elapsed_max;
-	size_t call_count;
-	size_t rt_viol_count;
-	double rate_avg;
-	double call_lag_avg;
-	double act_elapsed_avg;
-	Interface &interface;
-	rt_timer::Timer<Interface> &interface_timer;
-	const size_t t_dim;
-	const size_t x_dim;
-	double *ref_traj;
-};
+	matrix_rw::Reader<traj_dim> readmatrix;
+	matrix_rw::Reader<traj_dim> writematrix;
 
+	size_t t_dim;
+	State state = standby;
+	double kp;
+	double kd;
+	VarRowMat_T<traj_dim> traj;
+	VarRowMat_T<traj_dim> ref_traj;
+
+	// MasterBoardInterface mb;
+
+	// double init_pos[motor_count];
+	// bool is_ready = false;
+	// bool is_executing = false;
+};
+} // namespace commander
 #endif
