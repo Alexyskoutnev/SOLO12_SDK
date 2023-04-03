@@ -10,6 +10,8 @@ main(int argc, char *argv[])
 	// rt_timer::set_process_priority();
 
 	Commander com;
+
+	
 	// matrix_rw::Reader<traj_dim> readmatrix;
 	// VarRowMat_T<traj_dim> ref_traj;
 	// ref_traj.reserve(t_dim_expected);

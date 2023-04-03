@@ -33,7 +33,6 @@
 
 namespace commander
 {
-
 constexpr size_t t_dim_expected = 1e5;
 constexpr size_t traj_dim = 16;
 constexpr size_t masterboard_timeout = 5; /** [s] */
@@ -44,15 +43,12 @@ constexpr char mb_hostname_default[] = {'e', 'n', 'x', '6', '0', '6', 'd', '3',
 constexpr double kp_default = 5.;
 constexpr double kd_default = 1.;
 constexpr double max_current = 1.;
-
 constexpr size_t driver_count = 6;
 constexpr size_t motor_count = 2 * driver_count;
 constexpr size_t velocity_shift = 12;
 constexpr size_t torque_shift = 24;
-
 const std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
                                                 {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
 static constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
-
 } // namespace commander
 #endif

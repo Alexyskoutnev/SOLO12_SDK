@@ -54,6 +54,9 @@ class Commander
 	//  size_t get_step_count();
 
   private:
+	void initialize_mb();
+
+  private:
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Reader<traj_dim> writematrix;
 
@@ -63,6 +66,8 @@ class Commander
 	double kd;
 	VarRowMat_T<traj_dim> traj;
 	VarRowMat_T<traj_dim> ref_traj;
+
+	class MbInitSender;
 
 	// MasterBoardInterface mb;
 
