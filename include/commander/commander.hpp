@@ -27,53 +27,54 @@
 #ifndef COMMANDER_HPP_CINARAL_230403_1507
 #define COMMANDER_HPP_CINARAL_230403_1507
 
-// #include "master_board_sdk/master_board_interface.h"
 #include "config.hpp"
 #include "matrix_rw.hpp"
-#include "rt_timer.hpp"
 #include "types.hpp"
+#include <atomic>
 #include <map>
 #include <string>
+#include <vector>
+#ifndef DRY_BUILD
+	#include "master_board_sdk/master_board_interface.h"
+#endif
 
 namespace commander
 {
+enum State { standby, hold, track };
 
 class Commander
 {
-	enum State { standby, hold, track };
-
   public:
 	Commander(const std::string ref_traj_fname = ref_traj_fname_default,
 	          const char mb_hostname[] = mb_hostname_default, const double kp = kp_default,
 	          const double kd = kd_default);
 	~Commander();
-	void update();
-	// void execute();
-	//  bool check_ready();
-	//  void print();
-	//  size_t get_step_count();
-
-  private:
-	void initialize_mb();
+	void initialize();
+	void send_init();
+	void sample();
+	void log();
+	void standby();
+	void hold();
+	void track();
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Reader<traj_dim> writematrix;
-
-	size_t t_dim;
-	State state = standby;
+	bool is_ready = false;
+	Size t_index;
+	Size log_index;
+	Size t_size;
+	std::string ref_traj_fname;
 	double kp;
 	double kd;
-	VarRowMat_T<traj_dim> traj;
-	VarRowMat_T<traj_dim> ref_traj;
+	std::array<double, 1> imu_logs;
+	std::vector<Row<traj_dim>> traj;
+	std::vector<Row<traj_dim>> ref_traj;
+	std::vector<Row<traj_dim + 1>> logs;
 
-	class MbInitSender;
-
-	// MasterBoardInterface mb;
-
-	// double init_pos[motor_count];
-	// bool is_ready = false;
-	// bool is_executing = false;
+#ifndef DRY_BUILD
+	MasterBoardInterface mb;
+#endif
 };
 } // namespace commander
 #endif

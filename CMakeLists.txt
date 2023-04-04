@@ -9,8 +9,8 @@ project(
 #* dependencies
 Include(FetchContent)
 
-set(matrix_rw_VERSION 1.2.0) #* matrix_rw
-set(rt_timer_VERSION 1.0.1) #* rt_timer
+set(matrix_rw_VERSION 1.2.1) #* matrix_rw
+set(rt_timer_VERSION 1.0.2) #* rt_timer
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -34,6 +34,11 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(BUILD_TESTS "Build tests" OFF)
 	option(BUILD_EXAMPLES "Build examples" OFF)
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
+	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
+
+	if(WIN32) #* force dry build because masterboard sdk cannot be compiled on w*ndows
+		set(DRY_BUILD ON)
+	endif()
 
 	#* where to look for the project header and source files
 	set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
@@ -86,6 +91,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 	if(USE_SINGLE_PRECISION)
 		add_compile_options(-DUSE_SINGLE_PRECISION) #* use single precision floats
+	endif()
+
+	if(DRY_BUILD)
+		add_compile_options(-DDRY_BUILD) #* use single precision floats
 	endif()
 
 	#*************#

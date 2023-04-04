@@ -1,21 +1,70 @@
 #include "commander.hpp"
+#include "rt_timer.hpp"
+#include <iostream>
 
 using commander::Commander;
-
+// using commander::State;
+const size_t test_duration = 1;
 int
 main(int argc, char *argv[])
 {
-	//* give the process a high priority
-	// nice(-20);
-	// rt_timer::set_process_priority();
-
+#ifndef DRY_BUILD
+	/** not yet supported by rt_timer */
+	/** give the process a high priority */
+	nice(-20);
+#else
+	rt_timer::set_process_priority();
+#endif
+	// State state = State::standby;
 	Commander com;
 
-	
-	// matrix_rw::Reader<traj_dim> readmatrix;
-	// VarRowMat_T<traj_dim> ref_traj;
-	// ref_traj.reserve(t_dim_expected);
-	// readmatrix(fprefix + fname, ref_traj); /** read from file */
+	// com.send_init();
+	// com.hold();
+	// com.track();
 
+	//rt_timer::Timer init_timer(commander::send_init_freq, com, &Commander::send_init);
+	 rt_timer::Timer hold_timer(commander::hold_freq, com, &Commander::hold);
+	// rt_timer::Timer track_timer(commander::track_freq, com, &Commander::track);
+
+	// ClInfo clinfo(state, com, init_timer, hold_timer, track_timer);
+	// rt_timer::Timer clinfo_timer(commander::clinfo_freq, clinfo, &ClInfo::print);
+
+	//rt_timer::TimerThread init_thread(init_timer);
+	 rt_timer::TimerThread hold_thread(hold_timer);
+	// rt_timer::TimerThread track_thread(track_timer);
+	// rt_timer::TimerThread cli_thread(clinfo_timer);
+
+	/** block for the timer send init */
+	printf("Sending init...\n");
+	hold_thread.run_for(std::chrono::seconds(test_duration));
+	//init_thread.run_for(std::chrono::seconds(test_duration));
+	printf("Done!");
+	// cli_thread.start();
+
+	// while (true) {
+	//	/** on key press */
+	//	char in = std::getchar();
+
+	//	if (in == 'q') {
+	//		break;
+	//	}
+
+	//	switch (state) {
+	//	case State::standby:
+	//		state = State::hold;
+	//		hold_thread.start();
+	//		break;
+	//	case State::hold:
+	//		com.initialize();
+	//		hold_thread.stop();
+	//		state = State::track;
+	//		track_thread.start();
+	//		break;
+	//	case State::track:
+	//		state = State::standby;
+	//		track_thread.stop();
+	//		break;
+	//	}
+	//}
 	return 0;
 }

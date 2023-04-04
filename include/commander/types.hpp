@@ -29,13 +29,11 @@
 
 #include <array>
 #include <cstddef>
-#include <vector>
 
 namespace commander
 {
-
-template <size_t M_COL> using Row_T = std::array<double, M_COL>;
-template <size_t M_COL> using VarRowMat_T = std::vector<Row_T<M_COL>>;
+using Size = std::size_t;
+template <Size M_COL> using Row = std::array<double, M_COL>;
 } // namespace commander
 
 #endif

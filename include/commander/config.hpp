@@ -33,9 +33,14 @@
 
 namespace commander
 {
-constexpr size_t t_dim_expected = 1e5;
-constexpr size_t traj_dim = 16;
-constexpr size_t masterboard_timeout = 5; /** [s] */
+constexpr double clinfo_freq = 1;
+constexpr double send_init_freq = 1e1;
+constexpr double hold_freq = 1e2;
+constexpr double track_freq = 1e3;
+
+constexpr Size t_dim_expected = 1e5;
+constexpr Size traj_dim = 16;
+constexpr Size masterboard_timeout = 1; /** [s] */
 const std::string ref_traj_fprefix = "../../data/";
 const std::string ref_traj_fname_default = "gait.csv";
 constexpr char mb_hostname_default[] = {'e', 'n', 'x', '6', '0', '6', 'd', '3',
@@ -43,12 +48,15 @@ constexpr char mb_hostname_default[] = {'e', 'n', 'x', '6', '0', '6', 'd', '3',
 constexpr double kp_default = 5.;
 constexpr double kd_default = 1.;
 constexpr double max_current = 1.;
-constexpr size_t driver_count = 6;
-constexpr size_t motor_count = 2 * driver_count;
-constexpr size_t velocity_shift = 12;
-constexpr size_t torque_shift = 24;
-const std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
-                                                {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
+constexpr Size driver_count = 6;
+constexpr Size motor_count = 2 * driver_count;
+constexpr Size velocity_shift = 12;
+constexpr Size torque_shift = 24;
+constexpr Size log_size = 1e5;
+static std::map<Size, Size> motor2ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
+                                             {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
+static std::map<Size, Size> ref2motor_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
+                                             {6, 6}, {8, 7}, {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 static constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
 } // namespace commander
 #endif

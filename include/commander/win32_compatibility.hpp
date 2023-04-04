@@ -1,5 +1,5 @@
 /*
- * SOLO12_SDK commander
+ * rt_timer
  *
  * MIT License
  *
@@ -24,13 +24,18 @@
  * SOFTWARE.
  */
 
-#ifndef COMMANDER_HPP_CINARAL_230403_1524
-#define COMMANDER_HPP_CINARAL_230403_1524
+#ifndef WIN32_COMPATIBILITY_HPP_CINARAL_230330_0047
+#define WIN32_COMPATIBILITY_HPP_CINARAL_230330_0047
 
-#include "commander/clinfo.hpp"
-#include "commander/commander.hpp"
-#include "commander/config.hpp"
-#include "commander/types.hpp"
-#include "commander/win32_compatibility.hpp"
+#if defined(__WIN32__) || defined(__WIN32) || defined(_WIN32) || defined(WIN32) || \
+    defined(__CYGWIN__) || defined(__MINGW32__) || defined(__BORLANDC__)
+	#define WIN32
+#endif
+
+#include <cstdio>
+
+#ifdef WIN32
+	#include <windows.h>
+#endif
 
 #endif
