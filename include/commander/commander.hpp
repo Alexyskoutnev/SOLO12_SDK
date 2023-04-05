@@ -55,6 +55,7 @@ class Commander
 	void initialize();
 	void send_init();
 	void sample();
+	void command();
 	void log();
 	void standby();
 	void hold();
@@ -62,7 +63,9 @@ class Commander
 	void print();
 
   private:
-#ifndef DRY_BUILD
+#ifdef DRY_BUILD
+	DummyInterface mb;
+#else
 	MasterBoardInterface mb;
 #endif
 	matrix_rw::Reader<traj_dim> readmatrix;
@@ -78,7 +81,7 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
-	int state = 0;
+	// int state = 0;
 };
 } // namespace commander
 #endif

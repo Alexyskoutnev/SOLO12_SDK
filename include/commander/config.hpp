@@ -46,8 +46,8 @@ constexpr double track_period = 1. / track_freq;         /** [s] */
 constexpr Size t_dim_expected = 1e5;
 constexpr Size traj_dim = 36;
 constexpr Size masterboard_timeout = 1; /** [s] */
-const std::string ref_traj_fprefix = "../../data/";
-const std::string ref_traj_fname_default = "gait_1000hz_0.5step_per_sec.csv";
+const std::string ref_traj_fprefix = "../../data/active/";
+const std::string ref_traj_fname_default = "gait.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
