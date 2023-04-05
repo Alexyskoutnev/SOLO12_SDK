@@ -10,7 +10,7 @@ project(
 Include(FetchContent)
 
 set(matrix_rw_VERSION 1.2.1) #* matrix_rw
-set(rt_timer_VERSION 1.0.3) #* rt_timer
+set(rt_timer_VERSION 1.0.4) #* rt_timer
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)

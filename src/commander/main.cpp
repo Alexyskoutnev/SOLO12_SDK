@@ -1,10 +1,8 @@
 #include "commander.hpp"
 #include "rt_timer.hpp"
-// #include <iostream>
 
 using commander::Commander;
 using commander::State;
-const size_t test_duration = 1;
 
 int
 main(int argc, char *argv[])
@@ -71,8 +69,12 @@ main(int argc, char *argv[])
 		case State::track:
 			state = State::standby;
 			track_thread.stop();
+			com.log();
 			break;
 		}
 	}
+	cli_thread.stop();
+	hold_thread.stop();
+	track_thread.stop();
 	return 0;
 }

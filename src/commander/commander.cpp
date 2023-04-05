@@ -32,7 +32,6 @@ Commander::Commander(const std::string ref_traj_fname, const char mb_hostname[],
 		mb.motor_drivers[i].Enable();
 	}
 #endif
-	ref_traj.reserve(t_dim_expected);
 	initialize();
 }
 
@@ -41,8 +40,13 @@ Commander::~Commander(){};
 void
 Commander::initialize()
 {
+	ref_traj.clear();
+	traj.clear();
+
+	ref_traj.reserve(t_dim_expected);
 	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
 	t_size = ref_traj.size(); /** determine t_dim */
+	
 	traj.reserve(t_size);
 	t_index = 0;
 }
@@ -59,6 +63,7 @@ void
 Commander::log()
 {
 	sample();
+	writematrix(fprefix + traj_fname, traj);
 }
 
 void
@@ -121,6 +126,7 @@ Commander::track()
 			mb.motors[i].SetVelocityReference(ref_vel);
 		}
 	}
+	traj.push_back(state);
 #endif
 	++t_index;
 };

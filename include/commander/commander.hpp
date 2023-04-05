@@ -59,7 +59,7 @@ class Commander
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
-	matrix_rw::Reader<traj_dim> writematrix;
+	matrix_rw::Writer<traj_dim> writematrix;
 	bool is_ready = false;
 	Size t_index;
 	Size log_index;
