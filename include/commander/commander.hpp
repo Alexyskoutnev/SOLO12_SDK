@@ -35,6 +35,9 @@
 #include <string>
 #include <vector>
 #ifndef DRY_BUILD
+	#include <sys/stat.h>
+	#include <unistd.h>
+	#include "master_board_sdk/defines.h"
 	#include "master_board_sdk/master_board_interface.h"
 #endif
 
@@ -46,7 +49,7 @@ class Commander
 {
   public:
 	Commander(const std::string ref_traj_fname = ref_traj_fname_default,
-	          const char mb_hostname[] = mb_hostname_default, const double kp = kp_default,
+	          const std::string mb_hostname = mb_hostname_default, const double kp = kp_default,
 	          const double kd = kd_default);
 	~Commander();
 	void initialize();
@@ -56,8 +59,12 @@ class Commander
 	void standby();
 	void hold();
 	void track();
+	void print();
 
   private:
+#ifndef DRY_BUILD
+	MasterBoardInterface mb;
+#endif
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
 	bool is_ready = false;
@@ -71,10 +78,6 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
-
-#ifndef DRY_BUILD
-	MasterBoardInterface mb;
-#endif
 };
 } // namespace commander
 #endif

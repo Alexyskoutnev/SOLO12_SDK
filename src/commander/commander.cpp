@@ -4,15 +4,16 @@
 namespace commander
 {
 
-Commander::Commander(const std::string ref_traj_fname, const char mb_hostname[], const double kp,
-                     const double kd)
+Commander::Commander(const std::string ref_traj_fname, const std::string mb_hostname,
+                     const double kp, const double kd)
     : ref_traj_fname(ref_traj_fname), kp(kp), kd(kd)
-{
-
 #ifndef DRY_BUILD
-	/** not yet supported by rt_timer */
-	nice(-20);
-	mb(mb_hostname);
+      ,
+      mb(mb_hostname)
+#endif
+{
+#ifndef DRY_BUILD
+	mb.Init();
 
 	for (size_t i = 0; i < driver_count; ++i) {
 		mb.motor_drivers[i].motor1->SetCurrentReference(0);
@@ -25,17 +26,19 @@ Commander::Commander(const std::string ref_traj_fname, const char mb_hostname[],
 		mb.motor_drivers[i].motor1->set_kd(kd);
 		mb.motor_drivers[i].motor2->set_kd(kd);
 		//* Set the maximum current controlled by the card.
-		mb.motor_drivers[i].motor1->set_current_sat(current_sat);
-		mb.motor_drivers[i].motor2->set_current_sat(current_sat);
+		mb.motor_drivers[i].motor1->set_current_sat(max_current);
+		mb.motor_drivers[i].motor2->set_current_sat(max_current);
 		mb.motor_drivers[i].EnablePositionRolloverError();
-		mb.motor_drivers[i].SetTimeout(timeout);
+		mb.motor_drivers[i].SetTimeout(masterboard_timeout);
 		mb.motor_drivers[i].Enable();
 	}
 #endif
 	initialize();
 }
 
-Commander::~Commander(){};
+Commander::~Commander()
+{
+}
 
 void
 Commander::initialize()
@@ -46,16 +49,31 @@ Commander::initialize()
 	ref_traj.reserve(t_dim_expected);
 	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
 	t_size = ref_traj.size(); /** determine t_dim */
-	
+
 	traj.reserve(t_size);
 	t_index = 0;
+}
+
+void
+Commander::print()
+{
+	sample();
+#ifndef DRY_BUILD
+	mb.PrintIMU();
+	mb.PrintADC();
+	mb.PrintMotors();
+	mb.PrintMotorDrivers();
+	mb.PrintStats();
+#endif
 }
 
 void
 Commander::sample()
 {
 #ifndef DRY_BUILD
-	mb.ParseSensorData();
+	if (!mb.IsTimeout()) {
+		mb.ParseSensorData();
+	}
 #endif
 }
 
@@ -71,6 +89,7 @@ Commander::send_init()
 {
 #ifndef DRY_BUILD
 	if (!mb.IsTimeout() && !mb.IsAckMsgReceived()) {
+		// printf("1\n");
 		mb.SendInit();
 	}
 #endif
@@ -79,6 +98,10 @@ Commander::send_init()
 void
 Commander::standby()
 {
+	if (mb.IsTimeout()) {
+		printf("Timeout while waiting for ack.\n");
+	}
+	//mb.SendCommand();
 	/** do nothing */
 }
 
@@ -87,17 +110,25 @@ Commander::hold()
 {
 	sample();
 	is_ready = true;
-	for (Size i = 0; i < motor_count; ++i) {
+	double init_pos[motor_count];
+
+	if (!mb.IsTimeout()) {
+		// printf("1\n");
+		for (Size i = 0; i < motor_count; ++i) {
 #ifndef DRY_BUILD
-		if (!(mb.motors[i].IsEnabled() && mb.motors[i].IsReady())) {
-			is_ready = false;
-		}
-		mb.motors[i].SetCurrentReference(0.);
-		mb.motors[i].SetPositionReference(0.);
-		mb.motors[i].SetVelocityReference(0.);
+			if (!(mb.motors[i].IsEnabled() && mb.motors[i].IsReady())) {
+				is_ready = false;
+				// printf("%d\n", i);
+			}
+			init_pos[i] = mb.motors[i].GetPosition();
+			mb.motors[i].SetCurrentReference(0.);
+			mb.motors[i].SetPositionReference(0.);
+			mb.motors[i].SetVelocityReference(0.);
 #endif
+		}
+		mb.SendCommand();
 	}
-};
+}
 
 void
 Commander::track()
@@ -110,24 +141,29 @@ Commander::track()
 	}
 
 #ifndef DRY_BUILD
-	Row<traj_dim> state;
+	if (!mb.IsTimeout()) {
+		Row<traj_dim> state;
 
-	for (Size i = 0; i < motor_count; ++i) {
-		const double pos = mb.motors[i].GetPosition();
-		const double vel = mb.motors[i].GetVelocity();
-		state[ref2motor_idx[i]] = pos;
-		state[ref2motor_idx[velocity_shift + i]] = vel;
+		for (Size i = 0; i < motor_count; ++i) {
+			if (mb.motors[i].IsEnabled()) {
+				const double pos = mb.motors[i].GetPosition();
+				const double vel = mb.motors[i].GetVelocity();
+				state[ref2motor_idx[i]] = pos;
+				state[ref2motor_idx[velocity_shift + i]] = vel;
 
-		const double ref_pos = ref_traj[t_index][motor2ref_idx[i]];
-		const double ref_vel = ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
-		if (mb.motors[i].IsEnabled()) {
-			mb.motors[i].SetCurrentReference(0.);
-			mb.motors[i].SetPositionReference(ref_pos);
-			mb.motors[i].SetVelocityReference(ref_vel);
+				const double ref_pos = ref_traj[t_index][motor2ref_idx[i]];
+				const double ref_vel =
+				    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+
+				mb.motors[i].SetCurrentReference(0.);
+				mb.motors[i].SetPositionReference(ref_pos);
+				mb.motors[i].SetVelocityReference(ref_vel);
+			}
 		}
+		mb.SendCommand();
+		traj.push_back(state);
 	}
-	traj.push_back(state);
 #endif
 	++t_index;
-};
+}
 } // namespace commander

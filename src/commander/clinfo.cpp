@@ -15,7 +15,7 @@ ClInfo::ClInfo(State &state, Commander &com, rt_timer::Timer<Commander> &init_ti
 	SetConsoleMode(hStdout,
 	               l_mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
 #endif
-};
+}
 
 void
 ClInfo::print()
@@ -23,7 +23,7 @@ ClInfo::print()
 	printf("\33[H\33[2J"); //* clear screen
 	printf("Enter to cycle through states, enter 'q' to quit.\n");
 
-		printf("Status: ");
+	printf("Status: ");
 	switch (state) {
 	case State::standby:
 		printf("Standby\n");
@@ -35,8 +35,6 @@ ClInfo::print()
 		printf("Track\n");
 		break;
 	}
-
-	// interface.print();
 
 	if (never_printed) {
 		never_printed = false;
@@ -55,14 +53,8 @@ ClInfo::print()
 
 	printf("Track timer:\n");
 	ClInfo::print_timer_stats(track_timer);
-	
-	// const int step = interface.get_step_count();
-	// for (size_t i = 0; i < 12; ++i) {
-	//	if (step < 10000) {
-	//		printf("%6.3g ", ref_traj[interface.get_step_count() * 36 + i]);
-	//	}
-	// }
-	// printf("\n");
+
+	com.print();
 }
 
 void

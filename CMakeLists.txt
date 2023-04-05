@@ -32,7 +32,7 @@ endif()
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
 	option(BUILD_TESTS "Build tests" ON)
-	option(BUILD_EXAMPLES "Build examples" OFF)
+	option(BUILD_EXAMPLES "Build examples" ON)
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
 
@@ -101,14 +101,16 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#*************#
 	#* Libraries *#
 	#*************#
-	#ADD_LIBRARY(master_board SHARED
-	#	${MASTER_BOARD_SRC}
-	#)
-	#TARGET_LINK_LIBRARIES(master_board pthread)
-	#target_include_directories(
-	#	master_board PUBLIC 
-	#	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	#)
+	if(NOT DRY_BUILD)
+		ADD_LIBRARY(master_board SHARED
+			${MASTER_BOARD_SRC}
+		)
+		TARGET_LINK_LIBRARIES(master_board pthread)
+		target_include_directories(
+			master_board PUBLIC 
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		)
+	endif()
 
 	#***************#
 	#* Executables *#
@@ -126,10 +128,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	target_compile_options(
 		main PRIVATE
 	)
-	#target_link_libraries(
-	#	main 
-	#	master_board
-	#)
+	if(NOT DRY_BUILD)
+		target_link_libraries(
+			main 
+			master_board
+		)
+	endif()
 	
 	#***********#
 	#* Testing *#
@@ -185,10 +189,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#**************************#
 	#* Executable permissions *#
 	#**************************#
-	#add_custom_command(
-	#	TARGET main
-	#	POST_BUILD
-	#	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-	#	COMMAND scripts/set_permissions.sh
-	#)
+	add_custom_command(
+		TARGET main
+		POST_BUILD
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND scripts/set_permissions.sh
+	)
 endif()

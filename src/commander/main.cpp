@@ -7,6 +7,7 @@ using commander::State;
 int
 main(int argc, char *argv[])
 {
+
 #ifndef DRY_BUILD
 	/** not yet supported by rt_timer */
 	/** give the process a high priority */
@@ -14,7 +15,12 @@ main(int argc, char *argv[])
 #else
 	rt_timer::set_process_priority();
 #endif
-	State state = State::standby;
+	State state = State::hold;
+
+	//if (argc != 2) {
+	//	throw std::runtime_error("Please provide the interface name "
+	//	                         "(i.e. using 'ifconfig' on linux");
+	//}
 	Commander com;
 
 	//
