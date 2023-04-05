@@ -5,7 +5,7 @@ namespace commander
 {
 Commander::Commander(const std::string ref_traj_fname, const std::string mb_hostname,
                      const double kp, const double kd)
-    : ref_traj_fname(ref_traj_fname), kp(kp), kd(kd), mb(mb_hostname)
+    : ref_traj_fname(ref_traj_fname), mb(mb_hostname), kp(kp), kd(kd)
 {
 	initialize();
 }

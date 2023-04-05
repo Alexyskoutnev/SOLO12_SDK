@@ -50,7 +50,7 @@ main(int, char *[])
 			break;
 		}
 
-		/** on key press */
+		/** change state on key press */
 		char in = std::getchar();
 
 		switch (state) {

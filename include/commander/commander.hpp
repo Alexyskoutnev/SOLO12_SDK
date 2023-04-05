@@ -63,11 +63,6 @@ class Commander
 	void print();
 
   private:
-#ifdef DRY_BUILD
-	DummyInterface mb;
-#else
-	MasterBoardInterface mb;
-#endif
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
 	bool is_ready = false;
@@ -75,6 +70,11 @@ class Commander
 	Size log_index;
 	Size t_size;
 	std::string ref_traj_fname;
+#ifdef DRY_BUILD
+	DummyInterface mb;
+#else
+	MasterBoardInterface mb;
+#endif
 	double kp;
 	double kd;
 	std::array<double, 1> imu_logs;
