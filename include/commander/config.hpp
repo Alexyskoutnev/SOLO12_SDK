@@ -35,7 +35,7 @@ namespace commander
 {
 constexpr double clinfo_freq = 1;    /** [hz] */
 constexpr double send_init_freq = 10; /** [hz] */
-constexpr double hold_freq = 1e1;    /** [hz] */
+constexpr double hold_freq = 1e3;    /** [hz] */
 constexpr double track_freq = 1e3;   /** [hz] */
 
 constexpr double clinfo_period = 1. / clinfo_freq;       /** [s] */

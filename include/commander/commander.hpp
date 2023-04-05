@@ -78,6 +78,7 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
+	int state = 0;
 };
 } // namespace commander
 #endif

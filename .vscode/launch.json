@@ -4,7 +4,7 @@
 			"name": "gdb",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}\\build\\bin\\${fileBasenameNoExtension}.exe",
+			"program": "${workspaceFolder}\\build\\bin\\${fileBasenameNoExtension}",
 			"cwd": "${workspaceFolder}\\build\\bin",
 			//"preLaunchTask": "Build"
 		}

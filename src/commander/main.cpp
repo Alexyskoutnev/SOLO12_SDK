@@ -38,7 +38,7 @@ main(int argc, char *argv[])
 
 	/** block for the timer send init */
 	printf("Sending init...\n");
-	init_thread.run_for(std::chrono::seconds(commander::masterboard_timeout));
+	//init_thread.run_for(std::chrono::seconds(commander::masterboard_timeout));
 	printf("Done!");
 
 	cli_thread.start();

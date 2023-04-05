@@ -34,6 +34,21 @@ Commander::Commander(const std::string ref_traj_fname, const std::string mb_host
 	}
 #endif
 	initialize();
+
+	auto last = std::chrono::system_clock::now();
+	auto try_wait = 0.1;
+
+	while (!mb.IsTimeout() && !mb.IsAckMsgReceived()) {
+		if (((std::chrono::duration<double>)(std::chrono::system_clock::now() - last))
+		        .count() > try_wait) {
+			last = std::chrono::system_clock::now();
+			mb.SendInit();
+		}
+	}
+
+	if (mb.IsTimeout()) {
+		printf("Timeout while waiting for ack.\n");
+	}
 }
 
 Commander::~Commander()
@@ -101,33 +116,62 @@ Commander::standby()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
-	//mb.SendCommand();
+	// mb.SendCommand();
 	/** do nothing */
 }
 
 void
 Commander::hold()
 {
-	sample();
-	is_ready = true;
+	mb.ParseSensorData();
 	double init_pos[motor_count];
 
-	if (!mb.IsTimeout()) {
-		// printf("1\n");
-		for (Size i = 0; i < motor_count; ++i) {
-#ifndef DRY_BUILD
-			if (!(mb.motors[i].IsEnabled() && mb.motors[i].IsReady())) {
-				is_ready = false;
-				// printf("%d\n", i);
+	is_ready = true;
+	switch (state) {
+			case 0: // check the end of calibration (are the all controlled motor
+			        // enabled and ready?)
+				//state = 1;
+				for (int i = 0; i < motor_count; i++) {
+					if (!mb.motor_drivers[i / 2].is_connected)
+						continue; // ignoring the motors of a disconnected
+						          // slave
+
+					if (!(mb.motors[i].IsEnabled() &&
+					      mb.motors[i].IsReady())) {
+						state = 0;
+					}
+					init_pos[i] =
+					    mb.motors[i].GetPosition(); // initial position
+
+					// Use the current state as target for the PD controller.
+					mb.motors[i].SetCurrentReference(0.);
+					mb.motors[i].SetPositionReference(init_pos[i]);
+					mb.motors[i].SetVelocityReference(0.);
+				}
+				break;
+			case 1:
+				// closed loop, position
+				for (int i = 0; i < motor_count; i++) {
+					if (i % 2 == 0) {
+						if (!mb.motor_drivers[i / 2].is_connected)
+							continue; // ignoring the motors of a
+							          // disconnected slave
+
+						// making sure that the transaction with the
+						// corresponding µdriver board succeeded
+						if (mb.motor_drivers[i / 2].error_code ==
+						    0xf) {
+							// printf("Transaction with SPI%d failed\n",
+							// i / 2);
+							continue; // user should decide what to do
+							          // in that case, here we ignore
+							          // that motor
+						}
+					}
+				}
+				break;
 			}
-			init_pos[i] = mb.motors[i].GetPosition();
-			mb.motors[i].SetCurrentReference(0.);
-			mb.motors[i].SetPositionReference(0.);
-			mb.motors[i].SetVelocityReference(0.);
-#endif
-		}
-		mb.SendCommand();
-	}
+	mb.SendCommand();
 }
 
 void
@@ -135,7 +179,7 @@ Commander::track()
 {
 	sample();
 
-	if (is_ready && t_index >= t_size) {
+	if (!is_ready || t_index >= t_size) {
 		hold();
 		return;
 	}
