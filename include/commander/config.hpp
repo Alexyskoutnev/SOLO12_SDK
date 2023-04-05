@@ -33,10 +33,15 @@
 
 namespace commander
 {
-constexpr double clinfo_freq = 1;
-constexpr double send_init_freq = 1e1;
-constexpr double hold_freq = 1e2;
-constexpr double track_freq = 1e3;
+constexpr double clinfo_freq = 1;    /** [hz] */
+constexpr double send_init_freq = 1; /** [hz] */
+constexpr double hold_freq = 1e2;    /** [hz] */
+constexpr double track_freq = 1e3;   /** [hz] */
+
+constexpr double clinfo_period = 1. / clinfo_freq;       /** [s] */
+constexpr double send_init_period = .1 /  send_init_freq; /** [s] */
+constexpr double hold_period = .1 /  hold_freq;           /** [s] */
+constexpr double track_period = .1 /  track_freq;         /** [s] */
 
 constexpr Size t_dim_expected = 1e5;
 constexpr Size traj_dim = 16;

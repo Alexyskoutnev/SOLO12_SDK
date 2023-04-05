@@ -21,17 +21,18 @@ void
 ClInfo::print()
 {
 	printf("\33[H\33[2J"); //* clear screen
-	printf("Press 'q' to quit, press any other key to cycle through states.\n");
+	printf("Enter to cycle through states, enter 'q' to quit.\n");
 
+		printf("Status: ");
 	switch (state) {
 	case State::standby:
-		printf("Standby...\n");
+		printf("Standby\n");
 		break;
 	case State::hold:
-		printf("Hold...\n");
+		printf("Hold\n");
 		break;
 	case State::track:
-		printf("Track....\n");
+		printf("Track\n");
 		break;
 	}
 
@@ -45,10 +46,16 @@ ClInfo::print()
 	printf("| %-16s |\n", "Real Time:");
 	printf("| %14.4g s |\n", real_time);
 
-	ClInfo::print_timer_stats(init_timer);
-	ClInfo::print_timer_stats(hold_timer);
-	ClInfo::print_timer_stats(track_timer);
+	/** debug only */
+	// printf("Init timer:\n");
+	// ClInfo::print_timer_stats(init_timer);
 
+	printf("Hold timer:\n");
+	ClInfo::print_timer_stats(hold_timer);
+
+	printf("Track timer:\n");
+	ClInfo::print_timer_stats(track_timer);
+	
 	// const int step = interface.get_step_count();
 	// for (size_t i = 0; i < 12; ++i) {
 	//	if (step < 10000) {
@@ -56,7 +63,6 @@ ClInfo::print()
 	//	}
 	// }
 	// printf("\n");
-	fflush(stdout);
 }
 
 void

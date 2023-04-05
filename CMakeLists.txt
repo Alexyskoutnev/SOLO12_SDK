@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 project(
 	SOLO12_SDK
-	VERSION 0.0.0 
+	VERSION 0.1.0 
 	LANGUAGES CXX
 )
 
@@ -10,7 +10,7 @@ project(
 Include(FetchContent)
 
 set(matrix_rw_VERSION 1.2.1) #* matrix_rw
-set(rt_timer_VERSION 1.0.2) #* rt_timer
+set(rt_timer_VERSION 1.0.3) #* rt_timer
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -31,13 +31,14 @@ endif()
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
-	option(BUILD_TESTS "Build tests" OFF)
+	option(BUILD_TESTS "Build tests" ON)
 	option(BUILD_EXAMPLES "Build examples" OFF)
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
 
 	if(WIN32) #* force dry build because masterboard sdk cannot be compiled on w*ndows
 		set(DRY_BUILD ON)
+		set(BUILD_EXAMPLES OFF)
 	endif()
 
 	#* where to look for the project header and source files
