@@ -44,17 +44,17 @@ constexpr double hold_period = 1. / hold_freq;           /** [s] */
 constexpr double track_period = 1. / track_freq;         /** [s] */
 
 constexpr Size t_dim_expected = 1e5;
-constexpr Size traj_dim = 16;
-constexpr Size masterboard_timeout = 5; /** [s] */
+constexpr Size traj_dim = 36;
+constexpr Size masterboard_timeout = 1; /** [s] */
 const std::string ref_traj_fprefix = "../../data/";
-const std::string ref_traj_fname_default = "gait.csv";
+const std::string ref_traj_fname_default = "gait_1000hz_0.5step_per_sec.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
 //static char mb_hostname_default[] = {'e', 'n', 'x', '6', '0', '6', 'd', '3',
                                         //'c', 'd', '5', '0', '4', 'b', 'f'};
-constexpr double kp_default = 1.;
+constexpr double kp_default = 5.;
 constexpr double kd_default = 1.;
 constexpr double max_current = 4.; /** [A] */
 constexpr Size driver_count = 6;

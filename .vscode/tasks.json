@@ -51,6 +51,15 @@
 				"cinaral@10.76.68.219:/home/cinaral/SOLO12_SDK" //* Change this to your remote user's address and where you want to sync to
 			],
 		}
+		{
+			"label": "Sync from cinaral@shuksan",
+			"type": "shell",
+			"command": "./scripts/sync_from_shuksan.sh",
+			"group": "build",
+			"args": [
+				"cinaral@10.76.68.219:/home/cinaral/SOLO12_SDK/build/data" //* Change this to your remote user's address and where you want to sync to
+			],
+		}
 	],
 	"version": "2.0.0",
 	"type": "shell",

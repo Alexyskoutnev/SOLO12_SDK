@@ -79,7 +79,7 @@ main(int argc, char **argv)
 			switch (state) {
 			case 0: // check the end of calibration (are the all controlled motor
 			        // enabled and ready?)
-				state = 1;
+				//state = 1;
 				for (int i = 0; i < N_SLAVES_CONTROLED * 2; i++) {
 					if (!robot_if.motor_drivers[i / 2].is_connected)
 						continue; // ignoring the motors of a disconnected
@@ -94,7 +94,7 @@ main(int argc, char **argv)
 
 					// Use the current state as target for the PD controller.
 					robot_if.motors[i].SetCurrentReference(0.);
-					robot_if.motors[i].SetPositionReference(init_pos[i]);
+					robot_if.motors[i].SetPositionReference(0.);
 					robot_if.motors[i].SetVelocityReference(0.);
 
 					t = 0; // to start sin at 0
