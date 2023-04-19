@@ -34,11 +34,14 @@
 #include <map>
 #include <string>
 #include <vector>
+
 #ifndef DRY_BUILD
 	#include <sys/stat.h>
 	#include <unistd.h>
 	#include "master_board_sdk/defines.h"
 	#include "master_board_sdk/master_board_interface.h"
+#else
+	#include "dummy_interface.hpp"
 #endif
 
 namespace commander

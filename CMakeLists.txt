@@ -102,10 +102,10 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#* Libraries *#
 	#*************#
 	if(NOT DRY_BUILD)
-		ADD_LIBRARY(master_board SHARED
+		add_library(master_board SHARED
 			${MASTER_BOARD_SRC}
 		)
-		TARGET_LINK_LIBRARIES(master_board pthread)
+		target_link_libraries(master_board pthread)
 		target_include_directories(
 			master_board PUBLIC 
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -189,10 +189,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#**************************#
 	#* Executable permissions *#
 	#**************************#
-	add_custom_command(
-		TARGET main
-		POST_BUILD
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		COMMAND scripts/set_permissions.sh
-	)
+	if(NOT DRY_BUILD)
+		add_custom_command(
+			TARGET main
+			POST_BUILD
+			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+			COMMAND scripts/set_permissions.sh
+		)
+	endif()
 endif()

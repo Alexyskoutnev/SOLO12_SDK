@@ -111,8 +111,6 @@ Commander::track()
 		hold();
 		return;
 	}
-
-#ifndef DRY_BUILD
 	Row<traj_dim> state;
 	sample();
 
@@ -135,7 +133,6 @@ Commander::track()
 	}
 	command();
 	traj.push_back(state);
-#endif
 	++t_index;
 }
 } // namespace commander
