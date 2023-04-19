@@ -33,27 +33,32 @@
 
 namespace commander
 {
-constexpr double clinfo_freq = 1;    /** [hz] */
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+
+constexpr double clinfo_freq = 1;     /** [hz] */
 constexpr double send_init_freq = 10; /** [hz] */
-constexpr double hold_freq = 1e3;    /** [hz] */
-constexpr double track_freq = 1e3;   /** [hz] */
+constexpr double hold_freq = 1e3;     /** [hz] */
+constexpr double track_freq = 1e3;    /** [hz] */
 
 constexpr double clinfo_period = 1. / clinfo_freq;       /** [s] */
 constexpr double send_init_period = 1. / send_init_freq; /** [s] */
 constexpr double hold_period = 1. / hold_freq;           /** [s] */
 constexpr double track_period = 1. / track_freq;         /** [s] */
 
+constexpr Size calibrate_duration = 5;           /** [s] */
+constexpr double calibrate_amplitude = M_PI / 4; /** [rad] */
+
 constexpr Size t_dim_expected = 1e5;
 constexpr Size traj_dim = 36;
-constexpr Size masterboard_timeout = 1; /** [s] */
+constexpr Size masterboard_timeout = 5; /** [s] */
 const std::string ref_traj_fprefix = "../../data/active/";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-//static char mb_hostname_default[] = {'e', 'n', 'x', '6', '0', '6', 'd', '3',
-                                        //'c', 'd', '5', '0', '4', 'b', 'f'};
 constexpr double kp_default = 5.;
 constexpr double kd_default = 1.;
 constexpr double max_current = 4.; /** [A] */

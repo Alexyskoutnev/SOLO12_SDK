@@ -56,6 +56,7 @@ class Commander
 	          const double kd = kd_default);
 	~Commander();
 	void initialize();
+	void calibrate();
 	void send_init();
 	void sample();
 	void command();
@@ -73,18 +74,14 @@ class Commander
 	Size log_index;
 	Size t_size;
 	std::string ref_traj_fname;
-#ifdef DRY_BUILD
-	DummyInterface mb;
-#else
+
 	MasterBoardInterface mb;
-#endif
 	double kp;
 	double kd;
 	std::array<double, 1> imu_logs;
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
-	// int state = 0;
 };
 } // namespace commander
 #endif

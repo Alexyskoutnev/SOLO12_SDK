@@ -30,10 +30,10 @@
 #include "config.hpp"
 
 /** dummy interface to debug on WIN32 without MasterBoardInterface */
-class DummyInterface
+class MasterBoardInterface
 {
   public:
-	DummyInterface(const std::string){};
+	MasterBoardInterface(const std::string){};
 	void Init(){};
 	bool
 	IsTimeout()
@@ -66,6 +66,12 @@ class DummyInterface
 			void set_kp(double){};
 			void set_kd(double){};
 			void set_current_sat(double){};
+			void set_enable_index_offset_compensation(bool){};
+			bool
+			HasIndexBeenDetected()
+			{
+				return false;
+			};
 			bool
 			IsEnabled()
 			{

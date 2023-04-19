@@ -1,5 +1,6 @@
 
 #include "commander/commander.hpp"
+#include <math.h>
 
 namespace commander
 {
@@ -33,7 +34,7 @@ Commander::initialize()
 		mb.motor_drivers[i].motor1->set_current_sat(max_current);
 		mb.motor_drivers[i].motor2->set_current_sat(max_current);
 		mb.motor_drivers[i].EnablePositionRolloverError();
-		mb.motor_drivers[i].SetTimeout(5);
+		mb.motor_drivers[i].SetTimeout(masterboard_timeout);
 		mb.motor_drivers[i].Enable();
 	}
 
@@ -46,6 +47,53 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
+}
+
+ void
+ Commander::calibrate()
+{
+	if (is_ready) {
+		hold();
+		return;
+	}
+
+	constexpr Size t_size_calibrate = static_cast<Size>(calibrate_duration / hold_period);
+	double des_pos = 0.;
+	double des_vel = 0.;
+	is_ready = true;
+
+	if (t_index >= t_size) {
+		t_index = 0;
+	}
+
+	sample();
+
+	if (t_index < t_size_calibrate) {
+		for (Size i = 0; i < motor_count; i++) {
+			if (!mb.motors[i].IsEnabled()) {
+				continue;
+			}
+
+			if (mb.motors[i].HasIndexBeenDetected()) {
+				des_pos = mb.motors[i].GetPosition();
+				mb.motors[i].set_enable_index_offset_compensation(true);
+			} else {
+				is_ready = false;
+				const double t =
+				    static_cast<double>(t_index) / (t_size_calibrate - 1);
+				des_pos = calibrate_amplitude * sin(2 * M_PI * t);
+				des_vel = 2 * M_PI * calibrate_amplitude * cos(2 * M_PI * t);
+			}
+			const double ref_pos = gear_ratio[motor2ref_idx[i]] * des_pos;
+			const double ref_vel = gear_ratio[motor2ref_idx[i]] * des_vel;
+
+			mb.motors[i].SetCurrentReference(0.);
+			mb.motors[i].SetPositionReference(ref_pos);
+			mb.motors[i].SetVelocityReference(ref_vel);
+		}
+	}
+	command();
+	++t_index;
 }
 
 void
@@ -94,14 +142,15 @@ Commander::standby()
 void
 Commander::hold()
 {
-	sample();
+	 sample();
 
-	for (Size i = 0; i < motor_count; ++i) {
+	 for (Size i = 0; i < motor_count; ++i) {
 		mb.motors[i].SetCurrentReference(0.);
-		mb.motors[i].SetPositionReference(0.);
+		const double ref_pos = gear_ratio[motor2ref_idx[i]] * mb.motors[i].GetPosition();
+		mb.motors[i].SetPositionReference(ref_pos);
 		mb.motors[i].SetVelocityReference(0.);
-	}
-	command();
+	 }
+	 command();
 }
 
 void
@@ -114,22 +163,23 @@ Commander::track()
 	Row<traj_dim> state;
 	sample();
 
-	for (Size i = 0; i < motor_count; i++) {
-		if (mb.motors[i].IsEnabled()) {
-			const double pos = mb.motors[i].GetPosition();
-			const double vel = mb.motors[i].GetVelocity();
-			state[ref2motor_idx[i]] = pos;
-			state[ref2motor_idx[velocity_shift + i]] = vel;
-
-			const double ref_pos =
-			    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
-			const double ref_vel = gear_ratio[motor2ref_idx[i]] *
-			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
-
-			mb.motors[i].SetCurrentReference(0.);
-			mb.motors[i].SetPositionReference(ref_pos);
-			mb.motors[i].SetVelocityReference(ref_vel);
+	for (Size i = 0; i < motor_count; ++i) {
+		if (!mb.motors[i].IsEnabled()) {
+			continue;
 		}
+		const double pos = mb.motors[i].GetPosition();
+		const double vel = mb.motors[i].GetVelocity();
+		state[ref2motor_idx[i]] = pos;
+		state[ref2motor_idx[velocity_shift + i]] = vel;
+
+		const double ref_pos =
+		    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+		const double ref_vel = gear_ratio[motor2ref_idx[i]] *
+		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+
+		mb.motors[i].SetCurrentReference(0.);
+		mb.motors[i].SetPositionReference(ref_pos);
+		mb.motors[i].SetVelocityReference(ref_vel);
 	}
 	command();
 	traj.push_back(state);

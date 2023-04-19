@@ -19,12 +19,14 @@ main(int, char *[])
 	Commander com;
 
 	rt_timer::Timer init_timer(commander::send_init_period, com, &Commander::send_init);
+	rt_timer::Timer calibrate_timer(commander::hold_period, com, &Commander::calibrate);
 	rt_timer::Timer hold_timer(commander::hold_period, com, &Commander::hold);
 	rt_timer::Timer track_timer(commander::track_period, com, &Commander::track);
 	ClInfo clinfo(state, com, init_timer, hold_timer, track_timer);
 	rt_timer::Timer clinfo_timer(commander::clinfo_period, clinfo, &ClInfo::print);
 
 	rt_timer::TimerThread init_thread(init_timer);
+	rt_timer::TimerThread calibrate_thread(calibrate_timer);
 	rt_timer::TimerThread hold_thread(hold_timer);
 	rt_timer::TimerThread track_thread(track_timer);
 	rt_timer::TimerThread cli_thread(clinfo_timer);
@@ -58,6 +60,10 @@ main(int, char *[])
 			com.initialize();
 			printf("Sending init...\n");
 			init_thread.run_for(std::chrono::seconds(commander::masterboard_timeout));
+			printf("Done!");
+			printf("Calibrating...\n");
+			calibrate_thread.run_for(
+			    std::chrono::seconds(commander::calibrate_duration));
 			printf("Done!");
 			state = State::hold;
 			break;
