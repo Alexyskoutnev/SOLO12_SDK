@@ -2,10 +2,7 @@
 
 using std::chrono::duration;
 
-ClInfo::ClInfo(State &state, Commander &com, rt_timer::Timer<Commander> &init_timer,
-               rt_timer::Timer<Commander> &hold_timer, rt_timer::Timer<Commander> &track_timer)
-    : state(state), com(com), init_timer(init_timer), hold_timer(hold_timer),
-      track_timer(track_timer)
+ClInfo::ClInfo(State &state, Commander &com) : state(state), com(com)
 {
 #ifdef WIN32
 	/** enable VT100 for win32*/
@@ -18,24 +15,34 @@ ClInfo::ClInfo(State &state, Commander &com, rt_timer::Timer<Commander> &init_ti
 }
 
 void
+ClInfo::push_timer(rt_timer::Timer<Commander> *timer)
+{
+	timers.push_back(timer);
+}
+void
+ClInfo::pop_timer()
+{
+	timers.pop_back();
+}
+void
+ClInfo::push_message(const std::string &message)
+{
+	messages.push_back(message);
+}
+void
+ClInfo::pop_message()
+{
+	messages.pop_back();
+}
+
+void
 ClInfo::print()
 {
 	printf("\33[H\33[2J"); //* clear screen
-	printf("Enter to cycle through states, enter 'q' to quit.\n");
 
-	printf("Status: ");
-	switch (state) {
-	case State::standby:
-		printf("Standby\n");
-		break;
-	case State::hold:
-		printf("Hold\n");
-		break;
-	case State::track:
-		printf("Track\n");
-		break;
+	for (auto &message : messages) {
+		printf("%s\n", message.c_str());
 	}
-
 	if (never_printed) {
 		never_printed = false;
 		start_time = steady_clock::now();
@@ -44,16 +51,9 @@ ClInfo::print()
 	printf("| %-16s |\n", "Real Time:");
 	printf("| %14.4g s |\n", real_time);
 
-	/** debug only */
-	// printf("Init timer:\n");
-	// ClInfo::print_timer_stats(init_timer);
-
-	printf("Hold timer:\n");
-	ClInfo::print_timer_stats(hold_timer);
-
-	printf("Track timer:\n");
-	ClInfo::print_timer_stats(track_timer);
-
+	for (auto &timer : timers) {
+		ClInfo::print_timer_stats(*timer);
+	}
 	com.print();
 }
 

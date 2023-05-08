@@ -40,9 +40,12 @@ using time_sc = steady_clock::time_point;
 class ClInfo
 {
   public:
-	ClInfo(State &state, Commander &com, rt_timer::Timer<Commander> &init_timer,
-	       rt_timer::Timer<Commander> &hold_timer, rt_timer::Timer<Commander> &track_timer);
+	ClInfo(State &state, Commander &com);
 
+	void push_timer(rt_timer::Timer<Commander> *timer);
+	void pop_timer();
+	void push_message(const std::string &message);
+	void pop_message();
 	void print();
 
   private:
@@ -55,9 +58,9 @@ class ClInfo
 
 	State &state;
 	Commander &com;
-	rt_timer::Timer<Commander> &init_timer;
-	rt_timer::Timer<Commander> &hold_timer;
-	rt_timer::Timer<Commander> &track_timer;
+
+	std::vector<std::string> messages;
+	std::vector<rt_timer::Timer<Commander>*> timers;
 };
 
 #endif

@@ -38,7 +38,7 @@ namespace commander
 #endif
 
 constexpr double clinfo_freq = 1;     /** [hz] */
-constexpr double send_init_freq = 10; /** [hz] */
+constexpr double send_init_freq = 1e1; /** [hz] */
 constexpr double hold_freq = 1e3;     /** [hz] */
 constexpr double track_freq = 1e3;    /** [hz] */
 
@@ -52,7 +52,7 @@ constexpr double calibrate_amplitude = M_PI / 4; /** [rad] */
 
 constexpr Size t_dim_expected = 1e5;
 constexpr Size traj_dim = 36;
-constexpr Size masterboard_timeout = 5; /** [s] */
+constexpr Size masterboard_timeout = 2; /** [s] */
 const std::string ref_traj_fprefix = "../../data/active/";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string fprefix = "../data/";
