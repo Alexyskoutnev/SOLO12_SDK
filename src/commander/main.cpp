@@ -64,7 +64,7 @@ main(int, char *[])
 		case State::standby: {
 			com.initialize();
 			clinfo.push_message("Sending initialization");
-			init_thread.run_for(std::chrono::seconds(commander::masterboard_timeout));
+			init_thread.run_for(std::chrono::seconds(commander::init_duration));
 			clinfo.pop_message();
 			state = State::hold;
 			clinfo.pop_message();

@@ -49,8 +49,8 @@ Commander::initialize()
 	t_index = 0;
 }
 
- void
- Commander::calibrate()
+void
+Commander::calibrate()
 {
 	if (is_ready) {
 		hold();
@@ -142,15 +142,14 @@ Commander::standby()
 void
 Commander::hold()
 {
-	 sample();
+	sample();
 
-	 for (Size i = 0; i < motor_count; ++i) {
+	for (Size i = 0; i < motor_count; ++i) {
 		mb.motors[i].SetCurrentReference(0.);
-		const double ref_pos = gear_ratio[motor2ref_idx[i]] * mb.motors[i].GetPosition();
-		mb.motors[i].SetPositionReference(ref_pos);
+		mb.motors[i].SetPositionReference(0.);
 		mb.motors[i].SetVelocityReference(0.);
-	 }
-	 command();
+	}
+	command();
 }
 
 void
