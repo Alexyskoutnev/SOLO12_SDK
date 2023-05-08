@@ -11,6 +11,8 @@ Include(FetchContent)
 
 set(matrix_rw_VERSION 1.2.1) #* matrix_rw
 set(rt_timer_VERSION 1.0.5) #* rt_timer
+set(cxxopts_VERSION 3.1.1) #* cxxopts, used for CLI argument parsing
+
 
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -26,6 +28,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		URL https://github.com/cinaral/rt_timer/releases/download/v${rt_timer_VERSION}/src.zip
 	)
 	FetchContent_MakeAvailable(rt_timer)
+
+	FetchContent_Declare(
+		cxxopts 
+		URL https://github.com/jarro2783/cxxopts/archive/refs/tags/v${cxxopts_VERSION}.zip 
+	)
+	FetchContent_MakeAvailable(cxxopts)
 endif()
 
 
@@ -124,6 +132,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		${INCLUDE_DIR}
 		${matrix_rw_SOURCE_DIR}/include
 		${rt_timer_SOURCE_DIR}/include
+		${cxxopts_SOURCE_DIR}/include
 	)
 	target_compile_options(
 		main PRIVATE
