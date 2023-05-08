@@ -67,6 +67,8 @@ class MasterBoardInterface
 			void set_kd(double){};
 			void set_current_sat(double){};
 			void set_enable_index_offset_compensation(bool){};
+			bool get_enable_index_offset_compensation(){};
+			void SetPositionOffset(double){};
 			bool
 			HasIndexBeenDetected()
 			{

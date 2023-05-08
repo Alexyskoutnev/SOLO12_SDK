@@ -5,6 +5,10 @@
 using commander::Commander;
 using commander::State;
 
+//! problems:
+//! 1. Motor 10 encoder/index pulse not wot working
+//! 2. Index offset is not working
+
 int
 main(int argc, char const *argv[])
 {
@@ -13,8 +17,8 @@ main(int argc, char const *argv[])
 	// clang-format off
 	options.add_options()
 		("h,help", "Print usage")
-		("c,calibration", "Enable calibration", cxxopts::value<bool>()->default_value("false")
-	);
+		("s,sweeping", "Enable index sweep", cxxopts::value<bool>()->default_value("false"))
+		("c,calibration", "Enable index offset calibration", cxxopts::value<bool>()->default_value("false"));
 	// clang-format on
 	auto result = options.parse(argc, argv);
 
@@ -23,6 +27,7 @@ main(int argc, char const *argv[])
 		return 0;
 	}
 
+	bool is_sweeping = result["sweeping"].as<bool>();
 	const bool is_calibrating = result["calibration"].as<bool>();
 
 #ifndef DRY_BUILD
@@ -40,20 +45,25 @@ main(int argc, char const *argv[])
 	rt_timer::Timer clinfo_timer(commander::clinfo_period, clinfo, &ClInfo::print);
 	rt_timer::Timer hold_timer(commander::hold_period, com, &Commander::hold);
 	rt_timer::Timer track_timer(commander::track_period, com, &Commander::track);
-	rt_timer::Timer calibrate_timer(commander::hold_period, com, &Commander::calibrate);
 
 	rt_timer::TimerThread init_thread(init_timer);
 	rt_timer::TimerThread cli_thread(clinfo_timer);
 	rt_timer::TimerThread hold_thread(hold_timer);
 	rt_timer::TimerThread track_thread(track_timer);
-	rt_timer::TimerThread calibrate_thread(calibrate_timer);
 
 	clinfo.push_message("Enter to cycle through states, enter 'q' to quit.");
-	if (is_calibrating) {
-		clinfo.push_message("Calibration enabled");
-	}
-	clinfo.push_message("Waiting...");
 
+	if (is_calibrating) {
+		is_sweeping = true;
+		clinfo.push_message("Calibration enabled");
+		com.enable_calibration();
+	}
+	if (is_sweeping) {
+		clinfo.push_message("Sweeping enabled");
+		com.enable_sweep();
+	}
+
+	clinfo.push_message("Waiting...");
 	cli_thread.start();
 
 	while (true) {
@@ -61,10 +71,10 @@ main(int argc, char const *argv[])
 		case State::standby: {
 			hold_thread.stop();
 			track_thread.stop();
+			track_thread.stop();
 			break;
 		}
 		case State::hold: {
-			track_thread.stop();
 			hold_timer.reset();
 			hold_thread.start();
 			break;
@@ -98,18 +108,26 @@ main(int argc, char const *argv[])
 			state = State::track;
 			clinfo.pop_message();
 			clinfo.pop_timer();
-			if (is_calibrating) {
-				clinfo.push_message("Calibrating...");
-				clinfo.push_timer(&calibrate_timer);
+			if (is_sweeping) {
+				clinfo.push_message("Sweeping...");
+
+				if (is_calibrating) {
+					clinfo.push_message("Move the joints to the zero position "
+					                    "when sweep is complete.");
+				}
 			} else {
 				clinfo.push_message("Tracking...");
-				clinfo.push_timer(&track_timer);
 			}
+			clinfo.push_timer(&track_timer);
 			break;
 		}
 		case State::track: {
 			state = State::standby;
 			clinfo.pop_message();
+
+			if (is_calibrating) {
+				clinfo.pop_message();
+			}
 			clinfo.pop_timer();
 			clinfo.push_message("Waiting...");
 			com.log();

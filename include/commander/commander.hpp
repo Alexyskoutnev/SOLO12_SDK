@@ -56,7 +56,6 @@ class Commander
 	          const double kd = kd_default);
 	~Commander();
 	void initialize();
-	void calibrate();
 	void send_init();
 	void sample();
 	void command();
@@ -64,12 +63,20 @@ class Commander
 	void standby();
 	void hold();
 	void track();
+	void calibrate();
 	void print();
+	void enable_sweep();
+	void sweep_until_index();
+	void enable_offset();
+	void enable_calibration();
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
-	bool is_ready = false;
+	bool is_sweeping = false;
+	bool is_calibrating = false;
+	bool is_offset[motor_count];
+	//  bool is_index_compensated[motor_count] = false;
 	Size t_index;
 	Size log_index;
 	Size t_size;
@@ -78,6 +85,7 @@ class Commander
 	MasterBoardInterface mb;
 	double kp;
 	double kd;
+	double init_pos[motor_count];
 	std::array<double, 1> imu_logs;
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;

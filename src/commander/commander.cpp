@@ -1,5 +1,6 @@
 
 #include "commander/commander.hpp"
+#include "commander/config.hpp"
 #include <math.h>
 
 namespace commander
@@ -47,53 +48,10 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
-}
 
-void
-Commander::calibrate()
-{
-	if (is_ready) {
-		hold();
-		return;
+	for (Size i = 0; i < motor_count; ++i) {
+		is_offset[i] = false;
 	}
-
-	constexpr Size t_size_calibrate = static_cast<Size>(calibrate_duration / hold_period);
-	double des_pos = 0.;
-	double des_vel = 0.;
-	is_ready = true;
-
-	if (t_index >= t_size) {
-		t_index = 0;
-	}
-
-	sample();
-
-	if (t_index < t_size_calibrate) {
-		for (Size i = 0; i < motor_count; i++) {
-			if (!mb.motors[i].IsEnabled()) {
-				continue;
-			}
-
-			if (mb.motors[i].HasIndexBeenDetected()) {
-				des_pos = mb.motors[i].GetPosition();
-				mb.motors[i].set_enable_index_offset_compensation(true);
-			} else {
-				is_ready = false;
-				const double t =
-				    static_cast<double>(t_index) / (t_size_calibrate - 1);
-				des_pos = calibrate_amplitude * sin(2 * M_PI * t);
-				des_vel = 2 * M_PI * calibrate_amplitude * cos(2 * M_PI * t);
-			}
-			const double ref_pos = gear_ratio[motor2ref_idx[i]] * des_pos;
-			const double ref_vel = gear_ratio[motor2ref_idx[i]] * des_vel;
-
-			mb.motors[i].SetCurrentReference(0.);
-			mb.motors[i].SetPositionReference(ref_pos);
-			mb.motors[i].SetVelocityReference(ref_vel);
-		}
-	}
-	command();
-	++t_index;
 }
 
 void
@@ -153,8 +111,25 @@ Commander::hold()
 }
 
 void
+Commander::enable_sweep()
+{
+	is_sweeping = true;
+}
+
+void
+Commander::enable_calibration()
+{
+	is_calibrating = true;
+}
+
+void
 Commander::track()
 {
+	if (is_sweeping) {
+		sweep_until_index();
+		return;
+	}
+
 	if (t_index >= t_size) {
 		hold();
 		return;
@@ -182,6 +157,57 @@ Commander::track()
 	}
 	command();
 	traj.push_back(state);
+	++t_index;
+}
+
+void
+Commander::enable_offset()
+{
+	for (size_t i = 0; i < driver_count; ++i) {
+		if (mb.motors[i].HasIndexBeenDetected()) {
+		}
+	}
+}
+
+void
+Commander::sweep_until_index()
+{
+	double des_pos = 0.;
+	double des_vel = 0.;
+
+	t_size = static_cast<Size>(1. / idx_sweep_freq * track_freq);
+
+	sample();
+	for (Size i = 0; i < motor_count; i++) {
+		if (!mb.motors[i].IsEnabled()) {
+			continue;
+		}
+
+		if (mb.motors[i].HasIndexBeenDetected()) {
+			if (is_calibrating) {
+				/** wait for joint positions to be recorded */
+				des_pos = mb.motors[i].GetPosition();
+				des_vel = 0.;
+			} else if (!is_offset[i] &&
+			           !mb.motors[i].get_enable_index_offset_compensation()) {
+				/** set and enable offset once index is found if not already done */
+				is_offset[i] = true;
+				mb.motors[i].SetPositionOffset(-index_offset[i]);
+				mb.motors[i].set_enable_index_offset_compensation(true);
+			}
+		} else {
+			const double t = static_cast<double>(t_index) / static_cast<double>(t_size);
+			const double ref_pos = idx_sweep_ampl * sin(2. * M_PI * t);
+			const double ref_vel = 2. * M_PI * idx_sweep_ampl * cos(2. * M_PI * t);
+
+			des_pos = gear_ratio[motor2ref_idx[i]] * ref_pos;
+			des_vel = gear_ratio[motor2ref_idx[i]] * ref_vel;
+		}
+		mb.motors[i].SetCurrentReference(0.);
+		mb.motors[i].SetPositionReference(des_pos);
+		mb.motors[i].SetVelocityReference(des_vel);
+	}
+	command();
 	++t_index;
 }
 } // namespace commander
