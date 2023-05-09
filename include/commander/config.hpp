@@ -69,9 +69,13 @@ constexpr Size motor_count = 2 * driver_count;
 constexpr Size velocity_shift = 12;
 constexpr Size torque_shift = 24;
 constexpr Size log_size = 1e5;
-static std::map<Size, Size> motor2ref_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
+
+/** convert traj convention when iterating through motors */
+static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
                                              {6, 6}, {7, 8}, {8, 9}, {9, 7}, {10, 11}, {11, 10}};
-static std::map<Size, Size> ref2motor_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
+
+/** converting measured to traj convention */
+static std::map<Size, Size> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
                                              {6, 6}, {8, 7}, {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
 constexpr double index_offset[] = {3.742453e+00,  -3.754407e+00, -3.003590e+00, 1.696667e-01,

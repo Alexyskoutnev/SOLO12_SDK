@@ -59,8 +59,6 @@ main(int argc, char const *argv[])
 	clinfo.push_message("Waiting...");
 	cli_thread.start();
 
-	bool has_sweeped = false;
-
 	while (true) {
 		switch (state) {
 		case State::standby: {
@@ -98,13 +96,12 @@ main(int argc, char const *argv[])
 			clinfo.pop_message();
 			clinfo.pop_message();
 
-			if (has_sweeped) {
+			if (com.check_ready()) {
 				state = State::hold;
 				clinfo.push_message("Holding...");
 				clinfo.push_timer(&hold_timer);
 			} else {
 				state = State::sweep;
-				has_sweeped = true;
 				clinfo.push_message("Sweeping...");
 				clinfo.push_timer(&sweep_timer);
 

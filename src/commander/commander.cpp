@@ -10,6 +10,11 @@ Commander::Commander(const std::string ref_traj_fname, const std::string mb_host
     : ref_traj_fname(ref_traj_fname), mb(mb_hostname), kp(kp), kd(kd)
 {
 	initialize();
+
+	for (Size i = 0; i < motor_count; ++i) {
+		index_pos[i] = 0.;
+		was_index_detected[i] = false;
+	}
 }
 
 Commander::~Commander()
@@ -37,7 +42,6 @@ Commander::initialize()
 		mb.motor_drivers[i].EnablePositionRolloverError();
 		mb.motor_drivers[i].SetTimeout(masterboard_timeout);
 		mb.motor_drivers[i].Enable();
-		//mb.motors[i].SetPositionOffset(index_offset[i]);
 	}
 
 	ref_traj.clear();
@@ -49,10 +53,14 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
+	
+	is_ready = true;
 
 	for (Size i = 0; i < motor_count; ++i) {
-		index_pos[i] = 0.;
-		was_index_detected[i] = false;
+		if (!was_index_detected[i]) {
+			is_ready = false;
+			break;
+		}
 	}
 }
 
@@ -112,6 +120,12 @@ Commander::hold()
 	command();
 }
 
+bool
+Commander::check_ready()
+{
+	return is_ready;
+}
+
 void
 Commander::enable_calibration()
 {
@@ -154,7 +168,9 @@ Commander::track()
 void
 Commander::sweep()
 {
-	t_size = static_cast<Size>(1. / idx_sweep_freq * track_freq);
+	constexpr Size t_sweep_size = static_cast<Size>(1. / idx_sweep_freq * track_freq);
+	bool all_ready = true;
+
 	sample();
 
 	for (Size i = 0; i < motor_count; i++) {
@@ -174,23 +190,29 @@ Commander::sweep()
 			mb.motors[i].SetVelocityReference(des_vel);
 			continue;
 		}
+		all_ready = false;
 
 		if (mb.motors[i].HasIndexBeenDetected()) {
 			was_index_detected[i] = true;
-			//index_pos[i] = mb.motors[i].GetPosition();
+			// index_pos[i] = mb.motors[i].GetPosition();
 			/** enable offset */
 			mb.motors[i].SetPositionOffset(index_offset[i]);
 			mb.motors[i].set_enable_index_offset_compensation(true);
 			continue;
 		}
-		const double t = static_cast<double>(t_index) / static_cast<double>(t_size);
+		const double t =
+		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
 		const double ref_pos = idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t);
 		const double ref_vel = -2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t);
 		mb.motors[i].SetCurrentReference(0.);
 		mb.motors[i].SetPositionReference(gear_ratio[motor2ref_idx[i]] * ref_pos);
 		mb.motors[i].SetVelocityReference(gear_ratio[motor2ref_idx[i]] * ref_vel);
 	}
+	if (all_ready) {
+		is_ready = true;
+	}
+
 	command();
-	++t_index;
+	++t_sweep_index;
 }
 } // namespace commander
