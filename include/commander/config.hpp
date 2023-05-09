@@ -77,7 +77,7 @@ static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4,
 /** converting measured to traj convention */
 static std::map<Size, Size> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
                                              {6, 6}, {8, 7}, {9, 8}, {7, 9}, {11, 10}, {10, 11}};
-constexpr double gear_ratio[] = {9., 9., 9., -9., -9., 9., 9., -9., -9., -9., 9., 9.};
+constexpr double gear_ratio[] = {9., 9., 9., -9., -9., -9., 9., -9., -9., -9., 9., 9.};
 constexpr double index_offset[] = {3.742453e+00,  -3.754407e+00, -3.003590e+00, 1.696667e-01,
                                    5.925237e-01,  1.736094e+00,  1.728994e+00,  -2.541360e+00,
                                    -1.496978e+00, -4.620478e+00, 3.656657e+00,  8.562542e-02};
