@@ -192,8 +192,10 @@ Commander::sweep_until_index()
 			           !mb.motors[i].get_enable_index_offset_compensation()) {
 				/** set and enable offset once index is found if not already done */
 				is_offset[i] = true;
-				mb.motors[i].SetPositionOffset(-index_offset[i]);
-				mb.motors[i].set_enable_index_offset_compensation(true);
+				des_pos = mb.motors[i].GetPosition();
+				des_vel = 0.;
+				//mb.motors[i].SetPositionOffset(-index_offset[i]);
+				//mb.motors[i].set_enable_index_offset_compensation(true);
 			}
 		} else {
 			const double t = static_cast<double>(t_index) / static_cast<double>(t_size);
