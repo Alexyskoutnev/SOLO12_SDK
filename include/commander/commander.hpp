@@ -30,7 +30,7 @@
 #include "config.hpp"
 #include "matrix_rw.hpp"
 #include "types.hpp"
-#include <atomic>
+// #include <atomic>
 #include <map>
 #include <string>
 #include <vector>
@@ -46,7 +46,7 @@
 
 namespace commander
 {
-enum State { standby, hold, track };
+enum State { standby, sweep, hold, track };
 
 class Commander
 {
@@ -61,22 +61,20 @@ class Commander
 	void command();
 	void log();
 	void standby();
+	void sweep();
 	void hold();
 	void track();
 	void calibrate();
 	void print();
-	void enable_sweep();
-	void sweep_until_index();
-	void enable_offset();
 	void enable_calibration();
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
-	bool is_sweeping = false;
 	bool is_calibrating = false;
-	bool is_offset[motor_count];
+	bool was_index_detected[motor_count];
 	//  bool is_index_compensated[motor_count] = false;
+	double index_pos[motor_count];
 	Size t_index;
 	Size log_index;
 	Size t_size;
@@ -86,6 +84,7 @@ class Commander
 	double kp;
 	double kd;
 	double init_pos[motor_count];
+
 	std::array<double, 1> imu_logs;
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;

@@ -1,4 +1,5 @@
 #include "commander/clinfo.hpp"
+#include <atomic>
 
 using std::chrono::duration;
 
