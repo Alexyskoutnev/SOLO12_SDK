@@ -53,7 +53,7 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
-	
+
 	is_ready = true;
 
 	for (Size i = 0; i < motor_count; ++i) {
@@ -113,9 +113,13 @@ Commander::hold()
 	sample();
 
 	for (Size i = 0; i < motor_count; ++i) {
-		mb.motors[i].SetCurrentReference(0.);
-		mb.motors[i].SetPositionReference(0.);
-		mb.motors[i].SetVelocityReference(0.);
+		if (!mb.motors[i].IsEnabled()) {
+			continue;
+		}
+		// mb.motors[i].SetCurrentReference(0.);
+		mb.motors[i].SetPositionReference(gear_ratio[motor2ref_idx[i]] *
+		                                  ref_hold_position[motor2ref_idx[i]] * 2/3);
+		// mb.motors[i].SetVelocityReference(0.);
 	}
 	command();
 }
@@ -152,11 +156,11 @@ Commander::track()
 		state[ref2motor_idx[velocity_shift + i]] = vel;
 
 		const double ref_pos =
-		    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+		    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]] * 2/3;
 		const double ref_vel = gear_ratio[motor2ref_idx[i]] *
-		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]] * 2/3;
 
-		mb.motors[i].SetCurrentReference(0.);
+		// mb.motors[i].SetCurrentReference(0.);
 		mb.motors[i].SetPositionReference(ref_pos);
 		mb.motors[i].SetVelocityReference(ref_vel);
 	}
@@ -185,7 +189,7 @@ Commander::sweep()
 			if (is_calibrating) {
 				des_pos = index_pos[i];
 			}
-			mb.motors[i].SetCurrentReference(0.);
+			// mb.motors[i].SetCurrentReference(0.);
 			mb.motors[i].SetPositionReference(des_pos);
 			mb.motors[i].SetVelocityReference(des_vel);
 			continue;

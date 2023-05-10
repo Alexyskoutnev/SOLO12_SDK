@@ -39,7 +39,7 @@ namespace commander
 
 constexpr double clinfo_freq = 2;      /** [hz] */
 constexpr double send_init_freq = 1e1; /** [hz] */
-constexpr double hold_freq = 1e2;      /** [hz] */
+constexpr double hold_freq = 1e3;      /** [hz] */
 constexpr double track_freq = 1e3;     /** [hz] */
 
 constexpr double clinfo_period = 1. / clinfo_freq;       /** [s] */
@@ -61,14 +61,16 @@ const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-constexpr double kp_default = 5.;
-constexpr double kd_default = 1.;
+constexpr double kp_default = 5; // 20;
+constexpr double kd_default = 1;
 constexpr double max_current = 4.; /** [A] */
 constexpr Size driver_count = 6;
 constexpr Size motor_count = 2 * driver_count;
 constexpr Size velocity_shift = 12;
 constexpr Size torque_shift = 24;
 constexpr Size log_size = 1e5;
+constexpr double ref_hold_position[motor_count] = {0.016,  0.76,  -1.69, -0.016,  0.76,   -1.698,
+                                                   0.0164, -0.76, 1.698, -0.0164, -0.761, 1.698};
 
 /** convert traj convention when iterating through motors */
 static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},
@@ -77,10 +79,13 @@ static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4,
 /** converting measured to traj convention */
 static std::map<Size, Size> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
                                              {6, 6}, {8, 7}, {9, 8}, {7, 9}, {11, 10}, {10, 11}};
-constexpr double gear_ratio[] = {9., 9., 9., -9., -9., -9., 9., -9., -9., -9., 9., 9.};
-constexpr double index_offset[] = {3.742453e+00,  -3.754407e+00, -3.003590e+00, 1.696667e-01,
-                                   5.925237e-01,  1.736094e+00,  1.728994e+00,  -2.541360e+00,
-                                   -1.496978e+00, -4.620478e+00, 3.656657e+00,  8.562542e-02};
+constexpr double gear_ratio[motor_count] = {9., 9., 9., -9., -9., -9., 9., -9., -9., -9., 9., 9.};
+ constexpr double index_offset[motor_count] = {
+     3.742453e+00, -3.754407e+00, -3.003590e+00, 1.696667e-01,  5.925237e-01, 1.736094e+00,
+     1.728994e+00, -2.541360e+00, -1.496978e+00, -4.620478e+00, 3.656657e+00, 8.562542e-02};
+//constexpr double index_offset[motor_count] = {
+    //2.317180e-02, -3.652461e-02, 8.111297e-02,  -4.987607e-02, -1.272463e-02, 5.155158e-02,
+    //1.626729e-02, 2.117004e-02,  -7.435532e-02, -6.717047e-02, 9.809377e-02,  -1.093560e-02};
 // constexpr double index_offset[] = {M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4,
 //    M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4, M_PI / 4};
 // constexpr double index_offset[] = {4.239933e-01,  -2.057017e-02,  1.218458e+00, 1.235091e+00,
