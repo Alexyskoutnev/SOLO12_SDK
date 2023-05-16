@@ -101,35 +101,39 @@ main(int argc, char const *argv[])
 				clinfo.push_message("Holding...");
 				clinfo.push_timer(&hold_timer);
 			} else {
-				state = State::sweep;
-				clinfo.push_message("Sweeping...");
-				clinfo.push_timer(&sweep_timer);
+					state = State::sweep;
+					clinfo.push_message("Sweeping...");
+					clinfo.push_timer(&sweep_timer);
 
-				if (is_calibrating) {
-					clinfo.push_message("Move the joints to the zero position "
-					                    "when sweep is complete.");
-				}
+					if (is_calibrating) {
+						clinfo.push_message("Move the joints to the zero position "
+											"when sweep is complete.");
+					}
 			}
 			break;
 		}
 		case State::sweep: {
-			state = State::hold;
-			clinfo.pop_message();
-			if (is_calibrating) {
+			if (in == 'n'){
+				state = State::hold;
 				clinfo.pop_message();
+				if (is_calibrating) {
+					clinfo.pop_message();
+				}
+				clinfo.pop_timer();
+				clinfo.push_message("Holding...");
+				clinfo.push_timer(&hold_timer);
+				break;
 			}
-			clinfo.pop_timer();
-			clinfo.push_message("Holding...");
-			clinfo.push_timer(&hold_timer);
-			break;
 		}
 		case State::hold: {
-			state = State::track;
-			clinfo.pop_message();
-			clinfo.pop_timer();
-			clinfo.push_message("Tracking...");
-			clinfo.push_timer(&track_timer);
-			break;
+			if (!com.add_check){
+				state = State::track;
+				clinfo.pop_message();
+				clinfo.pop_timer();
+				clinfo.push_message("Tracking...");
+				clinfo.push_timer(&track_timer);
+				break;
+			}
 		}
 		case State::track: {
 			state = State::standby;
@@ -148,5 +152,6 @@ main(int argc, char const *argv[])
 	cli_thread.stop();
 	hold_thread.stop();
 	track_thread.stop();
+	sweep_thread.stop();
 	return 0;
 }

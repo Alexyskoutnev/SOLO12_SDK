@@ -13,7 +13,8 @@ set(matrix_rw_VERSION 1.2.1) #* matrix_rw
 set(rt_timer_VERSION 1.0.5) #* rt_timer
 set(cxxopts_VERSION 3.1.1) #* cxxopts, used for CLI argument parsing
 
-
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIR})
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	FetchContent_Declare(
@@ -133,6 +134,11 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 		${matrix_rw_SOURCE_DIR}/include
 		${rt_timer_SOURCE_DIR}/include
 		${cxxopts_SOURCE_DIR}/include
+		
+	)
+	target_link_libraries(
+		main
+		${CURSES_LIBRARIES}
 	)
 	target_compile_options(
 		main PRIVATE

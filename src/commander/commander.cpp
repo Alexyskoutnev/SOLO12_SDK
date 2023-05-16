@@ -2,6 +2,15 @@
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
 #include <math.h>
+#include <ncurses.h>
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+
+// #include "rt_timer.hpp"
+// #include <stdio.h>
+std::mutex coutMutex;
 
 namespace commander
 {
@@ -25,6 +34,11 @@ void
 Commander::initialize()
 {
 	mb.Init();
+
+	// initscr();
+	// cbreak();
+		// // noecho();
+	
 
 	for (size_t i = 0; i < driver_count; ++i) {
 		mb.motor_drivers[i].motor1->SetCurrentReference(0);
@@ -172,12 +186,17 @@ Commander::track()
 void
 Commander::sweep()
 {
+	
+
 	constexpr Size t_sweep_size = static_cast<Size>(1. / idx_sweep_freq * track_freq);
 	bool all_ready = true;
+	// bool you_have_to;
 
 	sample();
 
 	for (Size i = 0; i < motor_count; i++) {
+		// std::lock_guard<std::mutex> lock(coutMutex);
+		// std::cout << "all ready : " << you_have_to << std::endl;
 		if (!mb.motors[i].IsEnabled()) {
 			continue;
 		}
@@ -200,23 +219,94 @@ Commander::sweep()
 			was_index_detected[i] = true;
 			// index_pos[i] = mb.motors[i].GetPosition();
 			/** enable offset */
-			mb.motors[i].SetPositionOffset(index_offset[i]);
-			mb.motors[i].set_enable_index_offset_compensation(true);
+			// mb.motors[i].SetPositionOffset(index_offset[i]);
+			// mb.motors[i].set_enable_index_offset_compensation(true);
 			continue;
 		}
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
-		const double ref_pos = idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t);
-		const double ref_vel = -2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t);
+		// const double t = t_sweep_index;
+		double ref_pos;
+		double ref_vel;
+		ref_pos = idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t);
+		ref_vel = -2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t);
 		mb.motors[i].SetCurrentReference(0.);
 		mb.motors[i].SetPositionReference(gear_ratio[motor2ref_idx[i]] * ref_pos);
 		mb.motors[i].SetVelocityReference(gear_ratio[motor2ref_idx[i]] * ref_vel);
 	}
-	if (all_ready) {
-		is_ready = true;
-	}
 
 	command();
 	++t_sweep_index;
+
+	if (all_ready == true && final_check == true) {
+		std::lock_guard<std::mutex> lock(coutMutex);
+		int in;
+		int _i = 0;
+		double des_pos = 0.;
+		double des_vel = 0.;
+		initscr();
+		cbreak();
+		nodelay(stdscr, TRUE);
+		while (add_check){
+			std::cout << "m [ " << _i << "] \n";
+			// std::cout << std::flush; 
+			// std::cout << "Motor [ " << _i  << " ] --> \t";
+			// printAngles(_i);
+			// std::cout << std::flush; 
+			// std::cout << std::endl;
+			in = getch();
+			if (in != ERR){
+				if (in == 'e'){
+					add_check = false;
+					final_check = false;
+					endwin();
+					break;
+				}
+				else if (in == 'w'){ // Increase motor idx
+						_i += 1;
+						if (_i == 12){
+							_i = 0;
+						}
+				}
+				else if (in == 's'){ // Increase motor idx
+						_i -= 1;
+						if (_i == -1){
+							_i = 11;
+						}
+				}
+				else if (in == 'd') { //Increase by 45 degrees
+					offset_add[_i] += M_PI/4;
+				} else if (in == 'a') { //Decrease by 45 degrees
+					offset_add[_i] -= M_PI/4;
+				}
+			}
+			for (int i = 0; i < motor_count; i++){
+				mb.motors[i].SetPositionReference(des_pos + offset_add[i]);
+				mb.motors[i].SetVelocityReference(des_vel);
+				// mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
+				// mb.motors[i].set_enable_index_offset_compensation(true);
+			}
+			command();
+		}
+		for (int i = 0; i < motor_count; i++){
+				mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
+				mb.motors[i].set_enable_index_offset_compensation(true);
+		}
+		is_ready = true;
+	}
+}
+
+void 
+Commander::printAngles(int idx){
+	std::cout << "[";
+	for (int i = 0; i < motor_count; i++){
+		if (i == idx){
+			std::cout << " [ " << offset_add[i] << " ],";
+		} else { 
+			std::cout << " " << offset_add[i] << ", ";
+		}
+		
+	}
+	// std::cout << "]" << std::endl;
 }
 } // namespace commander

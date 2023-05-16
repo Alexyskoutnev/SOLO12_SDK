@@ -46,7 +46,7 @@
 
 namespace commander
 {
-enum State { standby, sweep, hold, track };
+enum State { standby, sweep, sweep_check, hold, track };
 
 class Commander
 {
@@ -67,7 +67,12 @@ class Commander
 	void calibrate();
 	void print();
 	void enable_calibration();
+	void printAngles(int);
 	bool check_ready();
+
+	double offset_add[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+	bool add_check = true;
+	bool final_check = true;
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
@@ -75,6 +80,7 @@ class Commander
 	bool is_calibrating = false;
 	bool was_index_detected[motor_count];
 	bool is_ready;
+	
 	double index_pos[motor_count];
 	Size t_index;
 	Size t_sweep_index;

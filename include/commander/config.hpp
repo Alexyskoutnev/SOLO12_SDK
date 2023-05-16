@@ -38,7 +38,7 @@ namespace commander
 #endif
 
 constexpr double clinfo_freq = 2;      /** [hz] */
-constexpr double send_init_freq = 1e1; /** [hz] */
+constexpr double send_init_freq = 1e3; /** [hz] */
 constexpr double hold_freq = 1e3;      /** [hz] */
 constexpr double track_freq = 1e3;     /** [hz] */
 
@@ -47,7 +47,7 @@ constexpr double send_init_period = 1. / send_init_freq; /** [s] */
 constexpr double hold_period = 1. / hold_freq;           /** [s] */
 constexpr double track_period = 1. / track_freq;         /** [s] */
 
-constexpr double idx_sweep_freq = .05;      /** [hz] */
+constexpr double idx_sweep_freq = .20;      /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 
 constexpr Size t_dim_expected = 1e5;
@@ -80,9 +80,10 @@ static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4,
 static std::map<Size, Size> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2}, {1, 3}, {2, 4},   {5, 5},
                                              {6, 6}, {8, 7}, {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 constexpr double gear_ratio[motor_count] = {9., 9., 9., -9., -9., -9., 9., -9., -9., -9., 9., 9.};
- constexpr double index_offset[motor_count] = {
+constexpr double index_offset[motor_count] = {
      3.742453e+00, -3.754407e+00, -3.003590e+00, 1.696667e-01,  5.925237e-01, 1.736094e+00,
      1.728994e+00, -2.541360e+00, -1.496978e+00, -4.620478e+00, 3.656657e+00, 8.562542e-02};
+// double offset_add[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 //constexpr double index_offset[motor_count] = {
     //2.317180e-02, -3.652461e-02, 8.111297e-02,  -4.987607e-02, -1.272463e-02, 5.155158e-02,
     //1.626729e-02, 2.117004e-02,  -7.435532e-02, -6.717047e-02, 9.809377e-02,  -1.093560e-02};
@@ -92,4 +93,5 @@ constexpr double gear_ratio[motor_count] = {9., 9., 9., -9., -9., -9., 9., -9., 
 //                                    -6.127804e-01,  8.785725e-01,   2.352978e+00, 9.013785e-02,
 //                                     -6.901554e-01,  -1.220539e+00, -6.538768e+00,  5.572759e+00};
 } // namespace commander
+
 #endif
