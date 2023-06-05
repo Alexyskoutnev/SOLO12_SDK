@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#include <ncurses.h>
+
 
 #include "master_board_sdk/ESPNOW_manager.h"
 
@@ -102,7 +104,7 @@ void ESPNOW_manager::bind_filter() {
 		filter_errno = setsockopt(this->sock_fd, SOL_SOCKET, SO_ATTACH_FILTER, &(this->bpf), sizeof(bpf));
 		assert(filter_errno >= 0);
 	} else {
-		printf("Impossible to bind filter !");
+		printw("Impossible to bind filter !");
 	}
 	fflush(stdout);
 }

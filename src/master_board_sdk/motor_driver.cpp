@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "master_board_sdk/motor_driver.h"
+#include <ncurses.h>
 
 MotorDriver::MotorDriver()
 {
@@ -16,15 +17,15 @@ void MotorDriver::SetMotors(Motor *motor1, Motor *motor2)
 
 void MotorDriver::Print()
 {
-  printf("%9d | ", is_connected);
-  printf("%7d | ", is_enabled);
+  printw("%9d | ", is_connected);
+  printw("%7d | ", is_enabled);
   if (error_code != 0) //error code printed in red
   {
-    printf("\033[0;31m");
+    printw("\033[0;31m");
   }
-  printf("%5d", error_code);
-  printf("\033[0m");
-  printf(" | \n");
+  printw("%5d", error_code);
+  printw("\033[0m");
+  printw(" | \n");
 }
 
 void MotorDriver::Enable()

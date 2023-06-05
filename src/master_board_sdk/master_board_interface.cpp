@@ -1,6 +1,7 @@
 #include <math.h>
 #include <signal.h>
 #include "master_board_sdk/master_board_interface.h"
+#include <ncurses.h>
 
 MasterBoardInterface *MasterBoardInterface::instance = NULL;
 
@@ -37,7 +38,7 @@ void MasterBoardInterface::GenerateSessionId()
 
 int MasterBoardInterface::Init()
 {
-  printf("if_name: %s\n", if_name_.c_str());
+  printw("if_name: %s\n", if_name_.c_str());
   ResetPacketLossStats();
 
   memset(&command_packet, 0, sizeof(command_packet_t)); //todo make it more C++
@@ -58,7 +59,7 @@ int MasterBoardInterface::Init()
   if (if_name_[0] == 'e')
   {
     /*Ethernet*/
-    printf("Using Ethernet (%s)\n", if_name_.c_str());
+    printw("Using Ethernet (%s)\n", if_name_.c_str());
     link_handler_ = new ETHERNET_manager(if_name_, my_mac_, dest_mac_);
     link_handler_->set_recv_callback(this);
     link_handler_->start();
@@ -66,7 +67,7 @@ int MasterBoardInterface::Init()
   else if (if_name_[0] == 'w')
   {
     /*WiFi*/
-    printf("Using WiFi (%s)\n", if_name_.c_str());
+    printw("Using WiFi (%s)\n", if_name_.c_str());
     link_handler_ = new ESPNOW_manager(if_name_, DATARATE_24Mbps, CHANNEL_freq_9, my_mac_, dest_mac_, false); //TODO write setter for espnow specific parametters
     link_handler_->set_recv_callback(this);
     link_handler_->start();
@@ -83,7 +84,7 @@ int MasterBoardInterface::Init()
 
 int MasterBoardInterface::Stop()
 {
-  printf("Shutting down connection (%s)\n", if_name_.c_str());
+  printw("Shutting down connection (%s)\n", if_name_.c_str());
   if (link_handler_ != NULL)
     link_handler_->stop();
   return 0;
@@ -91,9 +92,9 @@ int MasterBoardInterface::Stop()
 
 void MasterBoardInterface::KeyboardStop(int /*signum*/)
 {
-  printf("Keyboard Interrupt\n");
+  printw("Keyboard Interrupt\n");
   instance->Stop();
-  printf("-- End of script --\n");
+  printw("-- End of script --\n");
   delete (instance->link_handler_);
   exit(0);
 }
@@ -238,7 +239,7 @@ void MasterBoardInterface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int l
       // ensuring that session id is right if in normal mode
       if (((ack_packet_t *)data)->session_id != session_id)
       {
-        //printf("Wrong session id in ack msg, got %d instead of %d ignoring packet\n", ((ack_packet_t *)data)->session_id, session_id);
+        //printw("Wrong session id in ack msg, got %d instead of %d ignoring packet\n", ((ack_packet_t *)data)->session_id, session_id);
         return; // ignoring the packet
       }
     }
@@ -271,7 +272,7 @@ void MasterBoardInterface::callback(uint8_t /*src_mac*/[6], uint8_t *data, int l
     // ensuring that session id is right
     if (((sensor_packet_t *)data)->session_id != session_id)
     {
-      //printf("Wrong session id in sensor msg, got %d instead of %d, ignoring packet\n", ((sensor_packet_t *)data)->session_id, session_id);
+      //printw("Wrong session id in sensor msg, got %d instead of %d, ignoring packet\n", ((sensor_packet_t *)data)->session_id, session_id);
       return; // ignoring the packet
     }
 
@@ -394,8 +395,8 @@ void MasterBoardInterface::ParseSensorData()
 
 void MasterBoardInterface::PrintIMU()
 {
-  printf("    |     accelerometer    |       gyroscope      |       attitude       |  linear acceleration |\n");
-  printf("IMU | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f |\n\n",
+  printw("    |     accelerometer    |       gyroscope      |       attitude       |  linear acceleration |\n");
+  printw("IMU | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f | %6.2f %6.2f %6.2f |\n\n",
          imu_data.accelerometer[0],
          imu_data.accelerometer[1],
          imu_data.accelerometer[2],
@@ -418,12 +419,12 @@ void MasterBoardInterface::PrintADC()
     if (!motor_drivers[i].is_connected)
       continue;
 
-    printf("ADC %2.2d | %6.3f | % 6.3f |\n",
+    printw("ADC %2.2d | %6.3f | % 6.3f |\n",
            i, motor_drivers[i].adc[0], motor_drivers[i].adc[1]);
     printed = 1;
   }
   if (printed)
-    printf("\n");
+    printw("\n");
 }
 
 void MasterBoardInterface::PrintMotors()
@@ -436,17 +437,17 @@ void MasterBoardInterface::PrintMotors()
 
     if (!header_printed)
     {
-      printf("Motor | enabled | ready | IDXT | Index det |    position   |    velocity   |    current    |\n");
+      printw("Motor | enabled | ready | IDXT | Index det |    position   |    velocity   |    current    |\n");
       header_printed = 1;
     }
 
-    printf("%5.2d | ", 2 * i);
+    printw("%5.2d | ", 2 * i);
     motors[2 * i].Print();
-    printf("%5.2d | ", 2 * i + 1);
+    printw("%5.2d | ", 2 * i + 1);
     motors[2 * i + 1].Print();
   }
   if (header_printed)
-    printf("\n");
+    printw("\n");
 }
 
 void MasterBoardInterface::PrintMotorDrivers()
@@ -459,20 +460,20 @@ void MasterBoardInterface::PrintMotorDrivers()
 
     if (!header_printed)
     {
-      printf("Motor Driver | Connected | Enabled | Error |\n");
+      printw("Motor Driver | Connected | Enabled | Error |\n");
       header_printed = 1;
     }
 
-    printf("%12.2d | ", i);
+    printw("%12.2d | ", i);
     motor_drivers[i].Print();
   }
   if (header_printed)
-    printf("\n");
+    printw("\n");
 }
 
 void MasterBoardInterface::ResetTimeout()
 {
-  printf("Resetting f_name: %s\n", if_name_.c_str());
+  printw("Resetting f_name: %s\n", if_name_.c_str());
   timeout = false;                                           // Resetting timeout variable to be able to send packets again
   t_last_packet = std::chrono::high_resolution_clock::now(); // Resetting time of last packet
   Init();
@@ -503,7 +504,7 @@ void MasterBoardInterface::set_motors(Motor input_motors[])
 {
   for (int i = 0; i < (2 * N_SLAVES); i++)
   {
-    printf("Motor % 2.2d -> ", i);
+    printw("Motor % 2.2d -> ", i);
     (this->motors)[i] = input_motors[i];
   }
 }
@@ -512,39 +513,39 @@ void MasterBoardInterface::set_motor_drivers(MotorDriver input_motor_drivers[])
 {
   for (int i = 0; i < N_SLAVES; i++)
   {
-    printf("Motor Driver % 2.2d -> ", i);
+    printw("Motor Driver % 2.2d -> ", i);
     (this->motor_drivers)[i] = input_motor_drivers[i];
   }
 }
 
 void MasterBoardInterface::PrintStats()
 {
-  printf("         |   lost   |   sent   | loss ratio | histogram\n");
+  printw("         |   lost   |   sent   | loss ratio | histogram\n");
 
   //Command stats
   if (!listener_mode)
   {
-    printf("Commands | %8u | %8u | %10.02f | ", nb_cmd_lost, nb_cmd_sent, 100. * nb_cmd_lost / nb_cmd_sent);
+    printw("Commands | %8u | %8u | %10.02f | ", nb_cmd_lost, nb_cmd_sent, 100. * nb_cmd_lost / nb_cmd_sent);
   }
   else
   {
-    printf("Commands | %8u |          |            | ", nb_cmd_lost);
+    printw("Commands | %8u |          |            | ", nb_cmd_lost);
   }
 
   for (int i = 0; i < MAX_HIST; i++)
   {
-    printf("%d ", histogram_lost_cmd_packets[i]);
+    printw("%d ", histogram_lost_cmd_packets[i]);
   }
-  printf("\n");
+  printw("\n");
 
   //Sensor stats
-  printf("Sensors  | %8u | %8u | %10.02f | ", nb_sensors_lost, nb_sensors_sent, 100. * nb_sensors_lost / nb_sensors_sent);
+  printw("Sensors  | %8u | %8u | %10.02f | ", nb_sensors_lost, nb_sensors_sent, 100. * nb_sensors_lost / nb_sensors_sent);
 
   for (int i = 0; i < MAX_HIST; i++)
   {
-    printf("%d ", histogram_lost_sensor_packets[i]);
+    printw("%d ", histogram_lost_sensor_packets[i]);
   }
-  printf("\n\n");
+  printw("\n\n");
 }
 
 uint32_t MasterBoardInterface::GetSensorsSent() { return nb_sensors_sent; }

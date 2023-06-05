@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "master_board_sdk/motor.h"
+#include <ncurses.h>
 
 Motor::Motor()
 {
@@ -25,14 +26,14 @@ void Motor::SetDriver(MotorDriver *driver)
 
 void Motor::Print()
 {
-  printf("%7d | ", is_enabled);
-  printf("%5d | ", is_ready);
-  printf("%4d | ", index_toggle_bit);
-  printf("%9d | ", has_index_been_detected);
-  printf("%13e | ", position);
-  printf("%13e | ", velocity);
-  printf("%13e | ", current);
-  printf("\n");
+  printw("%7d | ", is_enabled);
+  printw("%5d | ", is_ready);
+  printw("%4d | ", index_toggle_bit);
+  printw("%9d | ", has_index_been_detected);
+  printw("%13e | ", position);
+  printw("%13e | ", velocity);
+  printw("%13e | ", current);
+  printw("\n");
 }
 
 void Motor::Enable()

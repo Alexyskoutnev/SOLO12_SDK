@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <assert.h>
 
+#include <ncurses.h>
 #include "master_board_sdk/Link_manager.h"
 
 void LINK_manager::set_interface(const std::string &interface)
@@ -109,7 +110,7 @@ void *LINK_manager::sock_recv_thread(void *p_arg)
 
 	if (params->obj_link_manager_callback == NULL)
 	{
-		printf("No callback for receive, receive thread exited\n");
+		printw("No callback for receive, receive thread exited\n");
 		return EXIT_SUCCESS;
 	};
 
@@ -133,7 +134,7 @@ void *LINK_manager::sock_recv_thread(void *p_arg)
 		}
 	}
 
-	printf("Receive thread exited \n");
+	printw("Receive thread exited \n");
 	return EXIT_SUCCESS;
 }
 
