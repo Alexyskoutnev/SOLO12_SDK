@@ -40,15 +40,23 @@ endif()
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
-	option(BUILD_TESTS "Build tests" ON)
-	option(BUILD_EXAMPLES "Build examples" ON)
+	option(BUILD_TESTS "Build tests" OFF)
+	option(BUILD_EXAMPLES "Build examples" OFF)
+	
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
 
 	if(WIN32) #* force dry build because masterboard sdk cannot be compiled on w*ndows
 		set(DRY_BUILD ON)
 		set(BUILD_EXAMPLES OFF)
+	else()
+		set(DRY_BUILD OFF)
+		set(BUILD_EXAMPLES OFF)
 	endif()
+
+
+	message("Build test -> ${BUILD_TESTS}")
+	message("Build Examples -> ${BUILD_EXAMPLES}")
 
 	#* where to look for the project header and source files
 	set(INCLUDE_DIR ${CMAKE_CURRENT_LIST_DIR}/include)

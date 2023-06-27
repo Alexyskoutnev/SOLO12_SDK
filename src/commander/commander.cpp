@@ -172,7 +172,7 @@ Commander::track()
 		const double ref_pos =
 		    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]] * 2/3;
 		const double ref_vel = gear_ratio[motor2ref_idx[i]] *
-		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]] * 2/3;
+		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
 
 		// mb.motors[i].SetCurrentReference(0.);
 		mb.motors[i].SetPositionReference(ref_pos);
@@ -181,6 +181,25 @@ Commander::track()
 	command();
 	traj.push_back(state);
 	++t_index;
+}
+
+void keyboard_input(int& in){
+	bool exitloop = false;
+	initscr();
+	cbreak();
+	noecho();
+	nodelay(stdscr, TRUE);
+	while (!exitloop){
+		in = getch();
+		if (in != ERR){
+			// std::lock_guard<std::mutex> lock(coutMutex);
+			// std::cout << "in ->" << in << std::endl;
+			if (in == 'e'){
+				exitloop = true;
+				endwin();
+			}
+		}
+	}
 }
 
 void
@@ -238,62 +257,60 @@ Commander::sweep()
 	command();
 	++t_sweep_index;
 
-	if (all_ready == true && final_check == true) {
-		std::lock_guard<std::mutex> lock(coutMutex);
-		int in;
-		int _i = 0;
-		double des_pos = 0.;
-		double des_vel = 0.;
-		initscr();
-		cbreak();
-		nodelay(stdscr, TRUE);
-		while (add_check){
-			std::cout << "m [ " << _i << "] \n";
-			// std::cout << std::flush; 
-			// std::cout << "Motor [ " << _i  << " ] --> \t";
-			// printAngles(_i);
-			// std::cout << std::flush; 
-			// std::cout << std::endl;
-			in = getch();
-			if (in != ERR){
-				if (in == 'e'){
-					add_check = false;
-					final_check = false;
-					endwin();
-					break;
-				}
-				else if (in == 'w'){ // Increase motor idx
-						_i += 1;
-						if (_i == 12){
-							_i = 0;
-						}
-				}
-				else if (in == 's'){ // Increase motor idx
-						_i -= 1;
-						if (_i == -1){
-							_i = 11;
-						}
-				}
-				else if (in == 'd') { //Increase by 45 degrees
-					offset_add[_i] += M_PI/4;
-				} else if (in == 'a') { //Decrease by 45 degrees
-					offset_add[_i] -= M_PI/4;
-				}
-			}
-			for (int i = 0; i < motor_count; i++){
-				mb.motors[i].SetPositionReference(des_pos + offset_add[i]);
-				mb.motors[i].SetVelocityReference(des_vel);
-				// mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
-				// mb.motors[i].set_enable_index_offset_compensation(true);
-			}
-			command();
-		}
-		for (int i = 0; i < motor_count; i++){
-				mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
-				mb.motors[i].set_enable_index_offset_compensation(true);
-		}
-		is_ready = true;
-	}
+	// for (int i = 0; i < motor_count; i++){ //double check that ALL the INDEX are detected
+	// 	if (!was_index_detected[i])
+	// 		all_ready = false;
+	// }
+
+	// if (all_ready == true && final_check == true) {
+	// 	// std::lock_guard<std::mutex> lock(coutMutex);
+	// 	int in;
+	// 	int _i = 0;
+	// 	double des_pos = 0.;
+	// 	double des_vel = 0.;
+	// 	std::thread keyboard_thread(keyboard_input, std::ref(in));
+	// 	while (add_check){
+	// 		// std::cout << "Motor [ " << _i  << " ] --> \t";
+	// 		// printAngles(_i);
+	// 		if (in != ERR){
+	// 			if (in == 'e'){
+	// 				add_check = false;
+	// 				final_check = false;
+	// 				endwin();
+	// 				break;
+	// 			}
+	// 			else if (in == 'w'){ // Increase motor idx
+	// 					_i += 1;
+	// 					if (_i == 12){
+	// 						_i = 0;
+	// 					}
+	// 			}
+	// 			else if (in == 's'){ // Increase motor idx
+	// 					_i -= 1;
+	// 					if (_i == -1){
+	// 						_i = 11;
+	// 					}
+	// 			}
+	// 			else if (in == 'd') { //Increase by 45 degrees
+	// 				offset_add[_i] += M_PI/4;
+	// 			} else if (in == 'a') { //Decrease by 45 degrees
+	// 				offset_add[_i] -= M_PI/4;
+	// 			}
+	// 		}
+	// 		for (int i = 0; i < motor_count; i++){
+	// 			mb.motors[i].SetPositionReference(des_pos + offset_add[i]);
+	// 			mb.motors[i].SetVelocityReference(des_vel);
+	// 			// mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
+	// 			// mb.motors[i].set_enable_index_offset_compensation(true);
+	// 		}
+	// 		command();
+	// 	}
+	// 	for (int i = 0; i < motor_count; i++){
+	// 			mb.motors[i].SetPositionOffset(index_offset[i] + offset_add[i]);
+	// 			mb.motors[i].set_enable_index_offset_compensation(true);
+	// 	}
+	// 	is_ready = true;
+	// }
 }
 
 void 

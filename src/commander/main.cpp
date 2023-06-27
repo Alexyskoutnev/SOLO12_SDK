@@ -57,6 +57,7 @@ main(int argc, char const *argv[])
 		com.enable_calibration();
 	}
 	clinfo.push_message("Waiting...");
+	clinfo.push_message(std::to_string(state));
 	cli_thread.start();
 
 	while (true) {
@@ -86,6 +87,8 @@ main(int argc, char const *argv[])
 		}
 
 		/** change state on key press */
+		clinfo.push_message("current state - >");
+		clinfo.push_message(std::to_string(state));
 		char in = std::getchar();
 
 		switch (state) {
@@ -95,6 +98,8 @@ main(int argc, char const *argv[])
 			init_thread.run_for(std::chrono::seconds(commander::init_duration));
 			clinfo.pop_message();
 			clinfo.pop_message();
+
+
 
 			if (com.check_ready()) {
 				state = State::hold;
