@@ -2,34 +2,31 @@
 #include "cxxopts.hpp"
 #include "rt_timer.hpp"
 
-#include <ncurses.h>
-
 using commander::Commander;
 using commander::State;
 
 //! problems:
 //! 1. Motor 10 encoder/index pulse not wot working
 //! 2. Index offset is not working
-std::atomic<bool> running(true);
-
-void keyboard_input(std::string& input) {
-    initscr(); // Initialize ncurses
-    raw();     // Disable line buffering
-    noecho();  // Disable automatic echoing of characters
-    while (running) {
-        int ch = getch();
-		// std::cout << "keyboard input got " << ch << std::endl;
-		// printw("keyboard input got (%s)", ch);
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if (ch == 'q'){
-            running = false;
-        }
-        else if (ch != ERR) {
-            input += static_cast<char>(ch);
-        }
-    }
-	endwin();
-}
+// std::atomic<bool> running(true);
+// void keyboard_input(std::string& input) {
+//     initscr(); // Initialize ncurses
+//     raw();     // Disable line buffering
+//     noecho();  // Disable automatic echoing of characters
+//     while (running) {
+//         int ch = getch();
+// 		// std::cout << "keyboard input got " << ch << std::endl;
+// 		// printw("keyboard input got (%s)", ch);
+// 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+//         if (ch == 'q'){
+//             running = false;
+//         }
+//         else if (ch != ERR) {
+//             input += static_cast<char>(ch);
+//         }
+//     }
+// 	endwin();
+// }
 
 int
 main(int argc, char const *argv[])
@@ -63,15 +60,13 @@ main(int argc, char const *argv[])
 	rt_timer::Timer init_timer(commander::send_init_period, com, &Commander::send_init);
 	rt_timer::Timer clinfo_timer(commander::clinfo_period, clinfo, &ClInfo::print);
 	rt_timer::Timer hold_timer(commander::hold_period, com, &Commander::hold);
-	rt_timer::Timer sweep_timer(commander::track_period, com, &Commander::sweep);
-	rt_timer::Timer sweep_check_timer(commander::sweep_check_period, com, &Commander::sweep_check);
+	rt_timer::Timer sweep_timer(commander::debug_period, com, &Commander::sweep);
 	rt_timer::Timer track_timer(commander::track_period, com, &Commander::track);
 
 	rt_timer::TimerThread init_thread(init_timer);
 	rt_timer::TimerThread cli_thread(clinfo_timer);
 	rt_timer::TimerThread hold_thread(hold_timer);
 	rt_timer::TimerThread sweep_thread(sweep_timer);
-	rt_timer::TimerThread sweep_check_thread(sweep_check_timer);
 	rt_timer::TimerThread track_thread(track_timer);
 
 	clinfo.push_message("Enter to cycle through states, enter 'q' to quit.");
@@ -80,8 +75,8 @@ main(int argc, char const *argv[])
 		clinfo.push_message("Calibration enabled");
 		com.enable_calibration();
 	}
-	clinfo.push_message("Waiting...");
-	cli_thread.start();
+	// clinfo.push_message("Waiting...");
+	// cli_thread.start();
 
 	while (true) {
 		switch (state) {
@@ -94,12 +89,6 @@ main(int argc, char const *argv[])
 		case State::sweep: {
 			sweep_timer.reset();
 			sweep_thread.start();
-			break;
-		}
-		case State::sweep_check:{
-			sweep_thread.stop();
-			sweep_check_timer.reset();
-			sweep_check_thread.start();
 			break;
 		}
 		case State::hold: {
@@ -118,15 +107,12 @@ main(int argc, char const *argv[])
 			hold_thread.stop();
 			track_thread.stop();
 			sweep_thread.stop();
-			sweep_check_thread.stop();
 			std::exit(1);
 			break;
 		}
 		}
 
 		/** change state on key press */
-		// clinfo.push_message("current state - > " + std::to_string(state));
-		// clinfo.push_message(" com_check ready- > " + std::to_string(com.check_ready()));
 		char in = std::getchar();
 		if (in != 'n')
 			continue;
@@ -149,38 +135,15 @@ main(int argc, char const *argv[])
 					state = State::sweep;
 					clinfo.push_message("Sweeping...");
 					clinfo.push_timer(&sweep_timer);
-
-					if (is_calibrating) {
-						clinfo.push_message("Move the joints to the zero position "
-											"when sweep is complete.");
-					}
 			}
 			break;
 		}
 		case State::sweep: {
-			state = State::sweep_check;
+			state = State::hold;
 			clinfo.pop_message();
 			clinfo.pop_timer();
 			clinfo.push_message("sweep_check...");
-			clinfo.push_timer(&sweep_check_timer);
-			// std::string key_in;
-			// try {
-			// 	std::thread keyboard_thread(keyboard_input, std::ref(key_in));
-			// } catch(const std::exception& e)
-			// {
-			// 	std::cerr << "An exception occurred: " << e.what() << std::endl;
-			// }
-			break;
-		}
-		case State::sweep_check: {
-			state = State::hold;
-			clinfo.pop_message();
-			if (is_calibrating) {
-				clinfo.pop_message();
-			}
-			clinfo.pop_timer();
-			clinfo.push_message("Holding...");
-			clinfo.push_timer(&hold_timer);
+			clinfo.push_timer(&sweep_timer);
 			break;
 		}
 		case State::hold: {
@@ -200,7 +163,6 @@ main(int argc, char const *argv[])
 			break;
 		}
 		}
-
 		if (in == 'q') {
 			break;
 		}

@@ -41,16 +41,16 @@ constexpr double clinfo_freq = 5;      /** [hz] */
 constexpr double send_init_freq = 1e3; /** [hz] */
 constexpr double hold_freq = 1e3;      /** [hz] */
 constexpr double track_freq = 1e3;     /** [hz] */
-constexpr double sweep_check_freq = 1e3;     /** [hz] */
+constexpr double debug_freq = 10;
 
 constexpr double clinfo_period = 1. / clinfo_freq;       /** [s] */
 constexpr double send_init_period = 1. / send_init_freq; /** [s] */
 constexpr double hold_period = 1. / hold_freq;           /** [s] */
 constexpr double track_period = 1. / track_freq;         /** [s] */
-constexpr double sweep_check_period = 1.0 / sweep_check_freq;         /** [s] */
+constexpr double debug_period = 1.0 / debug_freq;         /** [s] */
 
 // constexpr double idx_sweep_freq = 0.05;      /** [hz] */
-constexpr double idx_sweep_freq = 0.10;      /** [hz] */
+constexpr double idx_sweep_freq = 0.05;      /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 // constexpr double idx_sweep_ampl = M_PI / 10; /** [rad] */
 
@@ -74,8 +74,10 @@ constexpr Size motor_count = 2 * driver_count;
 constexpr Size velocity_shift = 12;
 constexpr Size torque_shift = 24;
 constexpr Size log_size = 1e5;
-constexpr double ref_hold_position[motor_count] = {0.016,  0.76,  -1.69, -0.016,  0.76,   -1.698,
-                                                   0.0164, -0.76, 1.698, -0.0164, -0.761, 1.698};
+// constexpr double ref_hold_position[motor_count] = {0.016,  0.76,  -1.69, -0.016,  0.76,   -1.698,
+//                                                    0.0164, -0.76, 1.698, -0.0164, -0.761, 1.698};
+constexpr double ref_hold_position[motor_count] = {0.0,  0.0,  0.0, 0.0,  0.0,  0.0,
+                                                  0.0,  0.0,  0.0, 0.0,  0.0,  0.0};
 
 /** convert traj convention when iterating through motors */
 static std::map<Size, Size> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4}, {3, 1}, {4, 2},   {5, 5},

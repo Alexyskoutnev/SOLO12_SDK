@@ -110,7 +110,7 @@ void *LINK_manager::sock_recv_thread(void *p_arg)
 
 	if (params->obj_link_manager_callback == NULL)
 	{
-		printw("No callback for receive, receive thread exited\n");
+		printf("No callback for receive, receive thread exited\n");
 		return EXIT_SUCCESS;
 	};
 
@@ -134,7 +134,7 @@ void *LINK_manager::sock_recv_thread(void *p_arg)
 		}
 	}
 
-	printw("Receive thread exited \n");
+	printf("Receive thread exited \n");
 	return EXIT_SUCCESS;
 }
 

@@ -17,15 +17,15 @@ void MotorDriver::SetMotors(Motor *motor1, Motor *motor2)
 
 void MotorDriver::Print()
 {
-  printw("%9d | ", is_connected);
-  printw("%7d | ", is_enabled);
+  printf("%9d | ", is_connected);
+  printf("%7d | ", is_enabled);
   if (error_code != 0) //error code printed in red
   {
-    printw("\033[0;31m");
+    printf("\033[0;31m");
   }
-  printw("%5d", error_code);
-  printw("\033[0m");
-  printw(" | \n");
+  printf("%5d", error_code);
+  printf("\033[0m");
+  printf(" | \n");
 }
 
 void MotorDriver::Enable()

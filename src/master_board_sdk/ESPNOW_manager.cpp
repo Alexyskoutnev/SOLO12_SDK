@@ -104,7 +104,7 @@ void ESPNOW_manager::bind_filter() {
 		filter_errno = setsockopt(this->sock_fd, SOL_SOCKET, SO_ATTACH_FILTER, &(this->bpf), sizeof(bpf));
 		assert(filter_errno >= 0);
 	} else {
-		printw("Impossible to bind filter !");
+		printf("Impossible to bind filter !");
 	}
 	fflush(stdout);
 }
