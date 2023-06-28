@@ -46,7 +46,7 @@
 
 namespace commander
 {
-enum State { standby, sweep, sweep_check, hold, track };
+enum State { standby, sweep, sweep_check, hold, track, EXIT};
 
 class Commander
 {
@@ -62,17 +62,25 @@ class Commander
 	void log();
 	void standby();
 	void sweep();
+	void sweep_check();
 	void hold();
 	void track();
 	void calibrate();
 	void print();
 	void enable_calibration();
 	void printAngles(int);
+	void print(double[], int);
 	bool check_ready();
+	void keyboard_input(std::string&);
 
 	double offset_add[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-	bool add_check = true;
-	bool final_check = true;
+	// bool keyboard_interface_flag = true;
+	// bool final_check = true;
+	// bool manual_calibrate = false;
+
+	// int inputVariable;
+	// std::string key_in;
+	// int _i;
 
   private:
 	matrix_rw::Reader<traj_dim> readmatrix;
@@ -97,6 +105,7 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
+	
 };
 } // namespace commander
 #endif
