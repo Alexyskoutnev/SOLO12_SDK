@@ -32,8 +32,8 @@
 
 namespace commander
 {
-using Size = std::size_t;
-template <Size M_COL> using Row = std::array<double, M_COL>;
+using std::size_t;
+template <size_t M_COL> using Row = std::array<double, M_COL>;
 } // namespace commander
 
 #endif

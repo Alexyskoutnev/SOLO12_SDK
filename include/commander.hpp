@@ -27,10 +27,8 @@
 #ifndef COMMANDER_HPP_CINARAL_230403_1524
 #define COMMANDER_HPP_CINARAL_230403_1524
 
-#include "commander/clinfo.hpp"
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
 #include "commander/types.hpp"
-#include "commander/win32_compatibility.hpp"
 
 #endif

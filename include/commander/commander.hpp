@@ -30,7 +30,6 @@
 #include "config.hpp"
 #include "matrix_rw.hpp"
 #include "types.hpp"
-// #include <atomic>
 #include <map>
 #include <string>
 #include <vector>
@@ -46,7 +45,7 @@
 
 namespace commander
 {
-enum State { standby, sweep, hold, track, EXIT};
+enum State { hold, track };
 
 class Commander
 {
@@ -55,40 +54,28 @@ class Commander
 	          const std::string mb_hostname = mb_hostname_default, const double kp = kp_default,
 	          const double kd = kd_default);
 	~Commander();
-	void initialize();
-	void send_init();
-	void sample();
-	void command();
-	void log();
-	void standby();
-	void sweep();
-	void hold();
-	void track();
-	void calibrate();
-	void print();
-	void enable_calibration();
-	void printAngles(int);
-	void print(double[], int);
-	void print_12arr(std::string, double[]);
-	void print_12arr(std::string, bool[]);
-	bool check_ready();
-	void keyboard_input(std::string&);
 
-	double offset_add[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  public:
+	void initialize();
+	void print_all();
+	void log_traj();
+	bool check_ready();
+	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void track_traj();
+	void sample_traj();
+	void command();
+	void next_state();
 
   private:
+	void initialize_mb();
+
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
-	bool is_calibrating = false;
-	bool was_index_detected[motor_count];
-	bool is_ready;
-	
+
 	double index_pos[motor_count];
-	double motor_ang[motor_count];
-	Size t_index;
-	Size t_sweep_index;
-	Size log_index;
-	Size t_size;
+	double motor_pos[motor_count];
+	size_t t_index;
+	size_t t_size;
 	std::string ref_traj_fname;
 
 	MasterBoardInterface mb;
@@ -100,7 +87,8 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
-	
+
+	State state = hold;
 };
 } // namespace commander
 #endif

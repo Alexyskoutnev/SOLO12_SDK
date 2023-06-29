@@ -78,8 +78,8 @@ main(int argc, char **argv)
 			                            // update all sensor fields.
 			switch (state) {
 			case 0: // check the end of calibration (are the all controlled motor
-			        // enabled and ready?)
-				//state = 1;
+				// enabled and ready?)
+				// state = 1;
 				for (int i = 0; i < N_SLAVES_CONTROLED * 2; i++) {
 					if (!robot_if.motor_drivers[i / 2].is_connected)
 						continue; // ignoring the motors of a disconnected
