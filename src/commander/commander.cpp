@@ -279,8 +279,8 @@ Commander::sweep_traj()
 		}
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
-		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t));
-		vel_ref[i] = gear_ratio[motor2ref_idx[i]] * (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t));
+		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		vel_ref[i] = gear_ratio[motor2ref_idx[i]] * (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
 		track(pos_ref, vel_ref);
 	}
 	++t_sweep_index;	
@@ -291,19 +291,30 @@ Commander::sweep_traj()
 
 		for (size_t i = 0; i < motor_count; i++){
 			if (hard_calibrating){
-				index_offset[i] = index_pos[i];
+				// index_offset[i] = index_pos[i];
+				mb.motors[i].set_enable_index_offset_compensation(true);
+			} else {
+				mb.motors[i].SetPositionOffset(index_pos[i] - index_offset[i]);
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			}
-			mb.motors[i].SetPositionOffset(index_offset[i] - index_pos[i]);
 			// mb.motors[i].SetPositionOffset(0);
 			// mb.motors[i].SetPositionOffset(index_pos[i]);
 			// mb.motors[i].SetPositionOffset(test_offset);
 			// mb.motors[i].set_enable_index_offset_compensation(true);
 		}
 
-		for (size_t i = 0; i < motor_count; i++) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
-			vel_ref[i] = 0.0;
+		if (hard_calibrating){
+			for (size_t i = 0; i < motor_count; i++) {
+				// pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
+				pos_ref[i] = -index_pos[i];
+				vel_ref[i] = 0.0;
+			}
+		}  else {
+			for (size_t i = 0; i < motor_count; i++) {
+				// pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
+				pos_ref[i] = 0.0;
+				vel_ref[i] = 0.0;
+			}
 		}
 		track(pos_ref, vel_ref);
 
@@ -360,15 +371,16 @@ Commander::next_state()
 {
 	switch (state) {
 	case State::hold: {
-		if (was_offset_enabled) {
-			state = State::track;
-		} else {
-			state = State::sweep;
-		}
+		// if (was_offset_enabled) {
+		// 	state = State::track;
+		// } else {
+		// 	state = State::sweep;
+		// }
+		state = State::track;
 		break;
 	}
 	case State::sweep: {
-		state = State::track;
+		state = State::hold;
 		break;
 	}
 	case State::track: {

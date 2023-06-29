@@ -38,7 +38,7 @@ const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-constexpr double kp_default = 5; // 20;
+constexpr double kp_default = 5; // 20, 5;
 constexpr double kd_default = 1;
 constexpr double max_current = 4.; /** [A] */
 constexpr size_t driver_count = 6;
@@ -60,10 +60,8 @@ static std::map<size_t, size_t> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4},   {3, 1
 static std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2},   {1, 3},
                                                  {2, 4}, {5, 5}, {6, 6},   {8, 7},
                                                  {9, 8}, {7, 9}, {11, 10}, {10, 11}};
-constexpr double gear_ratio[motor_count] = {9., 9., 9., -9., -9., -9., 9., -9., -9., -9., 9., 9.};
-constexpr double index_offset[motor_count] = {
-    3.742453e+00, -3.754407e+00, -3.003590e+00, 1.696667e-01,  5.925237e-01, 1.736094e+00,
-    1.728994e+00, -2.541360e+00, -1.496978e+00, -4.620478e+00, 3.656657e+00, 8.562542e-02};
+constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., -9., -9., 9., 9.};
+constexpr double index_offset[motor_count] = {4.78005, 3.07857, -3.02573, 5.96886, -5.59072, 1.21769, 1.71526, 3.18527, 4.76795, 1.12588, 4.22048, 0.087874};
 
 static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
 
