@@ -92,13 +92,15 @@ Commander::print_traj()
 		}
 
 		if (!header_printed) {
-			printf("Motor | Desired   | Actual    |\n");
+			printf("Motor | Ref pos   | pos       | Ref vel   | vel       |\n");
 			header_printed = true;
 		}
 
 		printf("%5.2d | ", i);
 		printf("%9.3g | ", pos_ref[i]);
 		printf("%9.3g | ", pos[i]);
+		printf("%9.3g | ", vel_ref[i]);
+		printf("%9.3g | ", vel[i]);
 		printf("\n");
 	}
 }
@@ -195,6 +197,21 @@ Commander::track_traj()
 }
 
 void
+Commander::sweep_traj()
+{
+	//if (!was_offset_enabled) {
+	//	was_offset_enabled = true;
+	//	set_offset(index_offset);
+	//}
+	/* this does not work the second time? */
+	for (size_t i = 0; i < motor_count; ++i) {
+		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+		vel_ref[i] = 0.;
+	}
+	track(pos_ref, vel_ref);
+}
+
+void
 Commander::sample_traj()
 {
 	Row<traj_dim> state;
@@ -220,10 +237,15 @@ Commander::command()
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+			pos_ref[i] =
+			    0. * gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
 			vel_ref[i] = 0.;
 		}
 		track(pos_ref, vel_ref);
+		break;
+	}
+	case State::sweep: {
+		sweep_traj();
 		break;
 	}
 	case State::track: {
@@ -238,6 +260,14 @@ Commander::next_state()
 {
 	switch (state) {
 	case State::hold: {
+		if (was_offset_enabled) {
+			state = State::track;
+		} else {
+			state = State::sweep;
+		}
+		break;
+	}
+	case State::sweep: {
 		state = State::track;
 		break;
 	}
@@ -246,6 +276,15 @@ Commander::next_state()
 		state = State::hold;
 		break;
 	}
+	}
+}
+
+void
+Commander::set_offset(double (&index_offset)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+		mb.motors[i].SetPositionOffset(index_offset[i]);
+		mb.motors[i].set_enable_index_offset_compensation(true);
 	}
 }
 

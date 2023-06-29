@@ -23,7 +23,7 @@
 
 namespace commander
 {
-enum State { hold, track };
+enum State { hold, sweep, track };
 
 class Commander
 {
@@ -41,7 +41,9 @@ class Commander
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void set_offset(double (&index_offset)[motor_count]);
 	void track_traj();
+	void sweep_traj();
 	void sample_traj();
 	void command();
 	void next_state();
@@ -57,6 +59,8 @@ class Commander
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
+	double index_offset[motor_count] = {0.0, 0.0, 0.0,      0.0, 0.0, 0.0,
+	                                    0.0, 0.0, M_PI / 2, 0.0, 0.0, 0.0};
 	size_t t_index;
 	size_t t_size;
 	std::string ref_traj_fname;
@@ -75,7 +79,7 @@ class Commander
 	double vel_ref[motor_count];
 	double pos[motor_count];
 	double vel[motor_count];
-
+	bool was_offset_enabled = false;
 	State state = hold;
 };
 } // namespace commander
