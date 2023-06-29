@@ -16,7 +16,7 @@ namespace commander
 #endif
 
 constexpr double command_freq = 1e3; /** [hz] */
-constexpr double print_freq = 5;  /** [hz] */
+constexpr double print_freq = 2;  /** [hz] */
 constexpr double input_freq = 1e1; /** [hz] */
 
 constexpr double command_period = 1. / command_freq;   /** [s] */

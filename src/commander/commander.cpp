@@ -103,6 +103,18 @@ Commander::print_state()
 		}
 		printf("} \n");
 	}
+	printf("ERROR Motor |");
+	for (size_t i = 0; i < motor_count; i++){
+		printf(" [%1d] %1d |", i, !(mb.motor_drivers[i / 2].is_connected));
+		
+	}
+	printf("\n");
+	printf("ERROR Spi   |");
+	for (size_t i = 0; i < motor_count; i++){
+		printf(" [%1d] %1d |", i, mb.motor_drivers[i / 2].error_code == 0xf);
+	}
+	printf("\n");
+	printf("ERROR Timeout | %1d \n", mb.IsTimeout());
 }
 
 void
@@ -162,7 +174,7 @@ Commander::print_all()
 	// mb.PrintADC();
 	mb.PrintMotors();
 	mb.PrintMotorDrivers();
-	// mb.PrintStats();
+	mb.PrintStats();
 }
 
 void
@@ -207,6 +219,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (i % 2 == 0) {
 			if (!mb.motor_drivers[i / 2].is_connected) {
+				// printf("ERRRRRRROOOORRR");
 				continue;
 			}
 

@@ -50,8 +50,11 @@ main(int argc, char const *argv[])
 		if (now_time >= print_time) {
 			printf("\33[H\33[2J"); //* clear screen
 			com.print_all();
-			print_time += std::chrono::nanoseconds(
-			    static_cast<size_t>(std::nano::den * commander::print_period));
+			
+			while (print_time < now_time) {
+				print_time += std::chrono::nanoseconds(
+				    static_cast<size_t>(std::nano::den * commander::print_period));
+			}
 		}
 
 		if (is_changing_state) {
