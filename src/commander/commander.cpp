@@ -78,13 +78,36 @@ Commander::initialize_mb()
 void
 Commander::print_state()
 {
-	printf("STATE | %.10s \n", state_to_name[state].c_str());
+	printf("State | %.10s \n", state_to_name[state].c_str());
+}
+
+void
+Commander::print_traj()
+{
+	bool header_printed = false;
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (!mb.motor_drivers[i / 2].is_connected) {
+			continue;
+		}
+
+		if (!header_printed) {
+			printf("Motor | Desired   | Actual    |\n");
+			header_printed = true;
+		}
+
+		printf("%5.2d | ", i);
+		printf("%9.3g | ", pos_ref[i]);
+		printf("%9.3g | ", pos[i]);
+		printf("\n");
+	}
 }
 
 void
 Commander::print_all()
 {
-	print_state(); 
+	print_state();
+	print_traj();
 	mb.PrintIMU();
 	mb.PrintADC();
 	mb.PrintMotors();
@@ -127,31 +150,6 @@ Commander::check_ready()
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count])
-{
-	mb.ParseSensorData();
-
-	for (size_t i = 0; i < motor_count; ++i) {
-		if (i % 2 == 0) {
-			if (!mb.motor_drivers[i / 2].is_connected) {
-				continue;
-			}
-
-			if (mb.motor_drivers[i / 2].error_code == 0xf) {
-				continue;
-			}
-		}
-
-		if (mb.motors[i].IsEnabled()) {
-			mb.motors[i].SetPositionReference(pos_ref[i]);
-		}
-	}
-
-	mb.SendCommand();
-}
-
-
-void
 Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
 	mb.ParseSensorData();
@@ -168,6 +166,9 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 		}
 
 		if (mb.motors[i].IsEnabled()) {
+			pos[i] = mb.motors[i].GetPosition();
+			vel[i] = mb.motors[i].GetVelocity();
+
 			mb.motors[i].SetPositionReference(pos_ref[i]);
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
@@ -179,9 +180,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 void
 Commander::track_traj()
 {
-	double pos_ref[motor_count];
-	double vel_ref[motor_count];
-
 	for (size_t i = 0; i < motor_count; ++i) {
 		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
@@ -202,10 +200,9 @@ Commander::sample_traj()
 	Row<traj_dim> state;
 
 	for (size_t i = 0; i < motor_count; ++i) {
-		const double pos = mb.motors[i].GetPosition();
-		const double vel = mb.motors[i].GetVelocity();
-		state[ref2motor_idx[i]] = pos;
-		state[ref2motor_idx[velocity_shift + i]] = vel;
+
+		state[ref2motor_idx[i]] = pos[i];
+		state[ref2motor_idx[velocity_shift + i]] = vel[i];
 	}
 
 	traj.push_back(state);
@@ -221,12 +218,12 @@ Commander::command()
 
 	switch (state) {
 	case State::hold: {
-		double pos_ref[motor_count];
-
+		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+			vel_ref[i] = 0.;
 		}
-		track(pos_ref);
+		track(pos_ref, vel_ref);
 		break;
 	}
 	case State::track: {

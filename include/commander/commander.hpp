@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-
 #ifndef DRY_BUILD
 	#include <sys/stat.h>
 	#include <unistd.h>
@@ -37,6 +36,7 @@ class Commander
   public:
 	void print_all();
 	void print_state();
+	void print_traj();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -47,9 +47,9 @@ class Commander
 	void next_state();
 
   private:
- 	bool is_ready = false;
+	bool is_ready = false;
 
- 	void initialize();
+	void initialize();
 	void initialize_mb();
 
 	matrix_rw::Reader<traj_dim> readmatrix;
@@ -70,6 +70,11 @@ class Commander
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
+
+	double pos_ref[motor_count];
+	double vel_ref[motor_count];
+	double pos[motor_count];
+	double vel[motor_count];
 
 	State state = hold;
 };
