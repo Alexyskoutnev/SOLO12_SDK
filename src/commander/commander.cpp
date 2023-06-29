@@ -13,7 +13,17 @@ Commander::Commander(const std::string ref_traj_fname, const std::string mb_host
                      const double kp, const double kd)
     : ref_traj_fname(ref_traj_fname), mb(mb_hostname), kp(kp), kd(kd)
 {
+	initialize();
+	initialize_mb();
+}
 
+Commander::~Commander()
+{
+}
+
+void
+Commander::initialize()
+{
 	ref_traj.clear();
 	traj.clear();
 
@@ -23,18 +33,11 @@ Commander::Commander(const std::string ref_traj_fname, const std::string mb_host
 
 	traj.reserve(t_size);
 	t_index = 0;
-
-	initialize_mb();
-}
-
-Commander::~Commander()
-{
 }
 
 void
 Commander::initialize_mb()
 {
-
 	mb.Init();
 
 	for (size_t i = 0; i < driver_count; ++i) {
@@ -180,6 +183,11 @@ Commander::sample_traj()
 void
 Commander::command()
 {
+	if (!is_ready) {
+		is_ready = check_ready();
+		return;
+	}
+
 	switch (state) {
 	case State::hold: {
 		double pos_ref[motor_count];
@@ -204,6 +212,7 @@ Commander::next_state()
 {
 	switch (state) {
 	case State::hold: {
+		initialize();
 		state = State::track;
 		break;
 	}
