@@ -76,8 +76,15 @@ Commander::initialize_mb()
 }
 
 void
+Commander::print_state()
+{
+	printf("STATE | %.10s \n", state_to_name[state].c_str());
+}
+
+void
 Commander::print_all()
 {
+	print_state(); 
 	mb.PrintIMU();
 	mb.PrintADC();
 	mb.PrintMotors();
