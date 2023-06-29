@@ -37,6 +37,7 @@ class Commander
 	void print_all();
 	void log_traj();
 	bool check_ready();
+	void track(double (&pos_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void track_traj();
 	void sample_traj();

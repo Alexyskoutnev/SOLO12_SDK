@@ -94,6 +94,8 @@ Commander::log_traj()
 bool
 Commander::check_ready()
 {
+	mb.ParseSensorData();
+
 	bool is_ready = true;
 
 	for (size_t i = 0; i < motor_count; ++i) {
@@ -112,8 +114,35 @@ Commander::check_ready()
 		mb.motors[i].SetPositionReference(0.);
 		mb.motors[i].SetVelocityReference(0.);
 	}
+	mb.SendCommand();
+
 	return is_ready;
 }
+
+void
+Commander::track(double (&pos_ref)[motor_count])
+{
+	mb.ParseSensorData();
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (i % 2 == 0) {
+			if (!mb.motor_drivers[i / 2].is_connected) {
+				continue;
+			}
+
+			if (mb.motor_drivers[i / 2].error_code == 0xf) {
+				continue;
+			}
+		}
+
+		if (mb.motors[i].IsEnabled()) {
+			mb.motors[i].SetPositionReference(pos_ref[i]);
+		}
+	}
+
+	mb.SendCommand();
+}
+
 
 void
 Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
@@ -123,19 +152,15 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (i % 2 == 0) {
 			if (!mb.motor_drivers[i / 2].is_connected) {
-				// ignore the motors of a disconnected slave
 				continue;
 			}
 
 			if (mb.motor_drivers[i / 2].error_code == 0xf) {
-				// ignore if transaction fails with the corresponding µdriver
-				// board
 				continue;
 			}
 		}
 
 		if (mb.motors[i].IsEnabled()) {
-			mb.motors[i].SetCurrentReference(0.);
 			mb.motors[i].SetPositionReference(pos_ref[i]);
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
@@ -182,20 +207,19 @@ Commander::sample_traj()
 void
 Commander::command()
 {
-	//if (!is_ready) {
-	//	is_ready = check_ready();
-	//}
+	if (!is_ready) {
+		is_ready = check_ready();
+		return;
+	}
 
 	switch (state) {
 	case State::hold: {
 		double pos_ref[motor_count];
-		double vel_ref[motor_count];
 
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = 0.;
-			vel_ref[i] = 0.;
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
 		}
-		track(pos_ref, vel_ref);
+		track(pos_ref);
 		break;
 	}
 	case State::track: {
