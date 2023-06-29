@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+
 #ifndef DRY_BUILD
 	#include <sys/stat.h>
 	#include <unistd.h>
@@ -35,6 +36,7 @@ class Commander
 
   public:
 	void print_all();
+	void print_state();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
