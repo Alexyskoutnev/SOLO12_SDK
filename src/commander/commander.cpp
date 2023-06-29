@@ -33,6 +33,7 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
+
 }
 
 void
@@ -73,6 +74,15 @@ Commander::initialize_mb()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
+
+	// for (size_t i = 0; i < motor_count; i++){
+	// 	mb.motors[i].SetPositionOffset(-index_offset[i]);
+		
+	// 	if (mb.motors[i].HasIndexBeenDetected()) {
+	// 		was_index_detected[i] = true;
+	// 		// mb.motors[i].set_enable_index_offset_compensation(true);
+	// 	}
+	// }
 }
 
 void
@@ -81,6 +91,17 @@ Commander::print_state()
 	printf("Robot State | %.10s \n", state_to_name[state].c_str());
 	if (sweep_done or state == State::sweep){
 		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
+	}
+	if (hard_calibrating){
+		printf("Offset Values: {");
+		for (size_t i = 0; i < motor_count; i++){
+			if (i == motor_count - 1){
+				printf("%g", index_pos[i]);
+			} else {
+				printf("%g, ", index_pos[i]);
+			}	
+		}
+		printf("} \n");
 	}
 }
 
@@ -95,12 +116,14 @@ Commander::print_offset()
 		}
 
 		if (!header_printed) {
-			printf("Motor | offset pos |\n");
+			printf("Motor |  offset   |  idx pos  |   flag    | \n");
 			header_printed = true;
 		}
 
 		printf("%5.2ld | ", i);
 		printf("%9.3g | ", index_offset[i]);
+		printf("%9.3g | ", index_pos[i]);
+		printf("%9d | ", was_index_detected[i]);
 		printf("\n");
 	}
 }
@@ -133,13 +156,13 @@ void
 Commander::print_all()
 {
 	print_state();
-	// print_offset();
+	print_offset();
 	print_traj();
-	mb.PrintIMU();
-	mb.PrintADC();
+	// mb.PrintIMU();
+	// mb.PrintADC();
 	mb.PrintMotors();
 	mb.PrintMotorDrivers();
-	mb.PrintStats();
+	// mb.PrintStats();
 }
 
 void
@@ -237,24 +260,21 @@ Commander::sweep_traj()
 	bool all_ready = true;
 
 	for (size_t i = 0; i < motor_count; i++) {
-		// if (!mb.motors[i].IsEnabled()) {
-		// 	continue;
-		// }
-
-		if (was_index_detected[i]) {
-			double des_pos = 0.;
-			// mb.motors[i].SetCurrentReference(0.);
-			mb.motors[i].SetPositionReference(des_pos);
+		
+		if (was_index_detected[i]){
 			continue;
 		}
+
 		all_ready = false;
 
 		if (mb.motors[i].HasIndexBeenDetected()) {
 			was_index_detected[i] = true;
-			index_offset[i] = mb.motors[i].GetPosition();
+			index_pos[i] = mb.motors[i].GetPosition();
 			/** enable offset */
-			mb.motors[i].SetPositionOffset(index_offset[i]);
-			// mb.motors[i].set_enable_index_offset_compensation(true);
+			// if (!hard_calibrating){
+			// 	mb.motors[i].SetPositionOffset(index_offset[i]);
+			// 	mb.motors[i].set_enable_index_offset_compensation(true);
+			// }
 			continue;
 		}
 		const double t =
@@ -265,13 +285,28 @@ Commander::sweep_traj()
 	}
 	++t_sweep_index;	
 	if (all_ready) {
+
 		is_ready = true;
 		sweep_done = true;
+
+		for (size_t i = 0; i < motor_count; i++){
+			if (hard_calibrating){
+				index_offset[i] = index_pos[i];
+				mb.motors[i].set_enable_index_offset_compensation(true);
+			}
+			mb.motors[i].SetPositionOffset(index_offset[i] - index_pos[i]);
+			// mb.motors[i].SetPositionOffset(0);
+			// mb.motors[i].SetPositionOffset(index_pos[i]);
+			// mb.motors[i].SetPositionOffset(test_offset);
+			// mb.motors[i].set_enable_index_offset_compensation(true);
+		}
+
 		for (size_t i = 0; i < motor_count; i++) {
-			pos_ref[i] = 0.0;
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
 			vel_ref[i] = 0.0;
 		}
 		track(pos_ref, vel_ref);
+
 	}
 
 }
@@ -303,7 +338,7 @@ Commander::command()
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
 			pos_ref[i] =
-			    0. * gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+			     gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
 			vel_ref[i] = 0.;
 		}
 		track(pos_ref, vel_ref);

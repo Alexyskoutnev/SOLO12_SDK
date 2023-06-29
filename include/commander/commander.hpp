@@ -60,13 +60,21 @@ class Commander
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
-	double index_offset[motor_count] = {0.0, 0.0, 0.0,      0.0, 0.0, 0.0,
-	                                    0.0, 0.0, M_PI / 2, 0.0, 0.0, 0.0};
-	bool was_index_detected[motor_count];
+	// double index_offset[motor_count] = {4.78476, -3.20884, -2.4988, 
+	// 									5.96416, 0.172924, -5.06818, 
+	// 									2.2356, -1.53264, -1.50784, 
+	// 									-4.11112, 4.21654, -0.00550638};
+	double index_offset[motor_count] = {4.26096, -3.20884, -2.50225, 0.212153, 0.168673, -5.59543, 1.72045, -1.533, -1.51272, -4.63414, 4.21937, 5.8449};
+	// double index_offset[motor_count] = {0.0, 0.0, 0.0, 
+	// 									0.0, 0.0, 0.0, 
+	// 									0.0, 0.0, 0.0, 
+	// 									0.0, 0.0, 0.0};
+	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
+											false, false, false, false, false, false};
 
 	size_t t_index;
 	size_t t_size;
-	size_t t_sweep_index;
+	size_t t_sweep_index = 0;
 	std::string ref_traj_fname;
 
 	MasterBoardInterface mb;
@@ -85,6 +93,7 @@ class Commander
 	double vel[motor_count];
 	bool was_offset_enabled = false;
 	bool sweep_done = false;
+	bool hard_calibrating = false;
 	State state = hold;
 };
 } // namespace commander
