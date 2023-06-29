@@ -84,6 +84,7 @@ class Commander
 	double pos[motor_count];
 	double vel[motor_count];
 	bool was_offset_enabled = false;
+	bool sweep_done = false;
 	State state = hold;
 };
 } // namespace commander

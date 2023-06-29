@@ -78,7 +78,10 @@ Commander::initialize_mb()
 void
 Commander::print_state()
 {
-	printf("State | %.10s \n", state_to_name[state].c_str());
+	printf("Robot State | %.10s \n", state_to_name[state].c_str());
+	if (sweep_done or state == State::sweep){
+		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
+	}
 }
 
 void
@@ -130,8 +133,8 @@ void
 Commander::print_all()
 {
 	print_state();
-	print_offset();
-	// print_traj();
+	// print_offset();
+	print_traj();
 	mb.PrintIMU();
 	mb.PrintADC();
 	mb.PrintMotors();
@@ -234,9 +237,9 @@ Commander::sweep_traj()
 	bool all_ready = true;
 
 	for (size_t i = 0; i < motor_count; i++) {
-		if (!mb.motors[i].IsEnabled()) {
-			continue;
-		}
+		// if (!mb.motors[i].IsEnabled()) {
+		// 	continue;
+		// }
 
 		if (was_index_detected[i]) {
 			double des_pos = 0.;
@@ -256,11 +259,21 @@ Commander::sweep_traj()
 		}
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
-		const double ref_pos = idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t);
-		const double ref_vel = -2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t);
+		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t));
+		vel_ref[i] = gear_ratio[motor2ref_idx[i]] * (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t));
 		track(pos_ref, vel_ref);
 	}
 	++t_sweep_index;	
+	if (all_ready) {
+		is_ready = true;
+		sweep_done = true;
+		for (size_t i = 0; i < motor_count; i++) {
+			pos_ref[i] = 0.0;
+			vel_ref[i] = 0.0;
+		}
+		track(pos_ref, vel_ref);
+	}
+
 }
 
 void

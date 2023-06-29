@@ -23,6 +23,7 @@ constexpr double command_period = 1. / command_freq;   /** [s] */
 constexpr double print_period = 1. / print_freq; /** [s] */
 constexpr double input_period = 1. / input_freq; /** [s] */
 
+// constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 
@@ -64,7 +65,7 @@ constexpr double index_offset[motor_count] = {
     3.742453e+00, -3.754407e+00, -3.003590e+00, 1.696667e-01,  5.925237e-01, 1.736094e+00,
     1.728994e+00, -2.541360e+00, -1.496978e+00, -4.620478e+00, 3.656657e+00, 8.562542e-02};
 
-static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "track"}};
+static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
 
 } // namespace commander
 
