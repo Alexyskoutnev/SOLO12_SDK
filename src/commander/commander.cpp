@@ -97,7 +97,6 @@ Commander::check_ready()
 	bool is_ready = true;
 
 	for (size_t i = 0; i < motor_count; ++i) {
-
 		if (!mb.motor_drivers[i / 2].is_connected) {
 			// ignore the motors of a disconnected slave
 			continue;
@@ -183,44 +182,41 @@ Commander::sample_traj()
 void
 Commander::command()
 {
-	if (!is_ready) {
-		is_ready = check_ready();
-		return;
-	}
+	if (is_ready) {
+		switch (state) {
+		case State::hold: {
+			double pos_ref[motor_count];
+			double vel_ref[motor_count];
 
-	switch (state) {
-	case State::hold: {
-		double pos_ref[motor_count];
-		double vel_ref[motor_count];
-
-		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = 0.;
-			vel_ref[i] = 0.;
+			for (size_t i = 0; i < motor_count; ++i) {
+				pos_ref[i] = 0.;
+				vel_ref[i] = 0.;
+			}
+			track(pos_ref, vel_ref);
+			break;
 		}
-		track(pos_ref, vel_ref);
-		break;
+		case State::track: {
+			track_traj();
+			break;
+		}
+		}
+	} else {
+		is_ready = check_ready();
 	}
-	case State::track: {
-		track_traj();
-		break;
-	}
-	}
-}
 
-void
-Commander::next_state()
-{
-	switch (state) {
-	case State::hold: {
-		initialize();
-		state = State::track;
-		break;
+	void Commander::next_state()
+	{
+		switch (state) {
+		case State::hold: {
+			state = State::track;
+			break;
+		}
+		case State::track: {
+			initialize();
+			state = State::hold;
+			break;
+		}
+		}
 	}
-	case State::track: {
-		state = State::hold;
-		break;
-	}
-	}
-}
 
 } // namespace commander
