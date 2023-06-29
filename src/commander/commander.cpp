@@ -82,6 +82,27 @@ Commander::print_state()
 }
 
 void
+Commander::print_offset()
+{
+	bool header_printed = false;
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (!mb.motor_drivers[i / 2].is_connected) {
+			continue;
+		}
+
+		if (!header_printed) {
+			printf("Motor | offset pos |\n");
+			header_printed = true;
+		}
+
+		printf("%5.2ld | ", i);
+		printf("%9.3g | ", index_offset[i]);
+		printf("\n");
+	}
+}
+
+void
 Commander::print_traj()
 {
 	bool header_printed = false;
@@ -109,7 +130,8 @@ void
 Commander::print_all()
 {
 	print_state();
-	print_traj();
+	print_offset();
+	// print_traj();
 	mb.PrintIMU();
 	mb.PrintADC();
 	mb.PrintMotors();
@@ -204,11 +226,41 @@ Commander::sweep_traj()
 	//	set_offset(index_offset);
 	//}
 	/* this does not work the second time? */
-	for (size_t i = 0; i < motor_count; ++i) {
-		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
-		vel_ref[i] = 0.;
+	// for (size_t i = 0; i < motor_count; ++i) {
+	// 	pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+	// 	vel_ref[i] = 0.;
+	// }
+	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
+	bool all_ready = true;
+
+	for (size_t i = 0; i < motor_count; i++) {
+		if (!mb.motors[i].IsEnabled()) {
+			continue;
+		}
+
+		if (was_index_detected[i]) {
+			double des_pos = 0.;
+			// mb.motors[i].SetCurrentReference(0.);
+			mb.motors[i].SetPositionReference(des_pos);
+			continue;
+		}
+		all_ready = false;
+
+		if (mb.motors[i].HasIndexBeenDetected()) {
+			was_index_detected[i] = true;
+			index_offset[i] = mb.motors[i].GetPosition();
+			/** enable offset */
+			mb.motors[i].SetPositionOffset(index_offset[i]);
+			// mb.motors[i].set_enable_index_offset_compensation(true);
+			continue;
+		}
+		const double t =
+		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
+		const double ref_pos = idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t);
+		const double ref_vel = -2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t);
+		track(pos_ref, vel_ref);
 	}
-	track(pos_ref, vel_ref);
+	++t_sweep_index;	
 }
 
 void

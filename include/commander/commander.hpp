@@ -37,6 +37,7 @@ class Commander
 	void print_all();
 	void print_state();
 	void print_traj();
+	void print_offset();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -61,8 +62,11 @@ class Commander
 	double motor_pos[motor_count];
 	double index_offset[motor_count] = {0.0, 0.0, 0.0,      0.0, 0.0, 0.0,
 	                                    0.0, 0.0, M_PI / 2, 0.0, 0.0, 0.0};
+	bool was_index_detected[motor_count];
+
 	size_t t_index;
 	size_t t_size;
+	size_t t_sweep_index;
 	std::string ref_traj_fname;
 
 	MasterBoardInterface mb;
