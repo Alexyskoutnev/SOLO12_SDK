@@ -22,21 +22,13 @@ main(int argc, char const *argv[])
 
 	/* capture inputs in another thread */
 	auto thread = std::thread([&] {
-		std::chrono::high_resolution_clock::time_point now_time;
-		auto input_time = std::chrono::high_resolution_clock::now();
-
 		while (is_running) {
-			now_time = std::chrono::high_resolution_clock::now();
+			char in = std::getchar();
 
-			if (now_time >= input_time) {
-				char in = std::getchar();
-				if (in != 'q') {
-					is_running = false;
-				} else {
-					is_changing_state = true;
-				}
-				input_time += std::chrono::nanoseconds(
-				    static_cast<size_t>(std::nano::den * commander::input_period));
+			if (in == 'q') {
+				is_running = false;
+			} else {
+				is_changing_state = true;
 			}
 		}
 	});
@@ -63,8 +55,12 @@ main(int argc, char const *argv[])
 		}
 
 		if (is_changing_state) {
+			is_changing_state = false;
 			com.next_state();
 		}
 	}
+
+	thread.join();
+
 	return 0;
 }

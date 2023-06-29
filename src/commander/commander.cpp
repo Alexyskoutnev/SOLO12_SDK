@@ -128,7 +128,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 			}
 
 			if (mb.motor_drivers[i / 2].error_code == 0xf) {
-				// ignore if transaction fails s with the corresponding µdriver
+				// ignore if transaction fails with the corresponding µdriver
 				// board
 				continue;
 			}
@@ -182,41 +182,43 @@ Commander::sample_traj()
 void
 Commander::command()
 {
-	if (is_ready) {
-		switch (state) {
-		case State::hold: {
-			double pos_ref[motor_count];
-			double vel_ref[motor_count];
+	//if (!is_ready) {
+	//	is_ready = check_ready();
+	//}
 
-			for (size_t i = 0; i < motor_count; ++i) {
-				pos_ref[i] = 0.;
-				vel_ref[i] = 0.;
-			}
-			track(pos_ref, vel_ref);
-			break;
-		}
-		case State::track: {
-			track_traj();
-			break;
-		}
-		}
-	} else {
-		is_ready = check_ready();
-	}
+	switch (state) {
+	case State::hold: {
+		double pos_ref[motor_count];
+		double vel_ref[motor_count];
 
-	void Commander::next_state()
-	{
-		switch (state) {
-		case State::hold: {
-			state = State::track;
-			break;
+		for (size_t i = 0; i < motor_count; ++i) {
+			pos_ref[i] = 0.;
+			vel_ref[i] = 0.;
 		}
-		case State::track: {
-			initialize();
-			state = State::hold;
-			break;
-		}
-		}
+		track(pos_ref, vel_ref);
+		break;
 	}
+	case State::track: {
+		track_traj();
+		break;
+	}
+	}
+}
+
+void
+Commander::next_state()
+{
+	switch (state) {
+	case State::hold: {
+		state = State::track;
+		break;
+	}
+	case State::track: {
+		initialize();
+		state = State::hold;
+		break;
+	}
+	}
+}
 
 } // namespace commander
