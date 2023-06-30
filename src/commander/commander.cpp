@@ -151,7 +151,20 @@ Commander::stats()
 			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1]) ? mb.motor_drivers[i].adc[0] : mb.motor_drivers[i].adc[1];
 		}
 	}
+	if (max_command_exc_stat < command_time_dur.count()){
+		max_command_exc_stat  = command_time_dur.count();
+	} 
+	if (max_print_exc_stat < print_time_dur.count()){
+		max_print_exc_stat = print_time_dur.count();
+	}
+}
 
+void
+Commander::print_stats()
+{
+	printf("Command time | [cur] %5.2f ms | [max] %5.2f ms \n", command_time_dur.count(), max_command_exc_stat);
+	printf("Print time   | [cur] %5.2f ms | [max] %5.2f ms \n", print_time_dur.count(), max_print_exc_stat);
+	printf("Max Amp      |   %5.2f        | \n", max_amp_stat);
 }
 
 void
@@ -189,12 +202,20 @@ Commander::print_all()
 	mb.PrintMotors();
 	mb.PrintMotorDrivers();
 	mb.PrintStats();
+	print_stats();
 }
 
 void
 Commander::log_traj()
 {
 	writematrix(fprefix + traj_fname, traj);
+}
+
+void
+Commander::reset()
+{
+	initialize();
+	initialize_mb();
 }
 
 bool
@@ -273,15 +294,7 @@ Commander::track_traj()
 void
 Commander::sweep_traj()
 {
-	//if (!was_offset_enabled) {
-	//	was_offset_enabled = true;
-	//	set_offset(index_offset);
-	//}
-	/* this does not work the second time? */
-	// for (size_t i = 0; i < motor_count; ++i) {
-	// 	pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
-	// 	vel_ref[i] = 0.;
-	// }
+
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
 
@@ -296,11 +309,6 @@ Commander::sweep_traj()
 		if (mb.motors[i].HasIndexBeenDetected()) {
 			was_index_detected[i] = true;
 			index_pos[i] = mb.motors[i].GetPosition();
-			/** enable offset */
-			// if (!hard_calibrating){
-			// 	mb.motors[i].SetPositionOffset(index_offset[i]);
-			// 	mb.motors[i].set_enable_index_offset_compensation(true);
-			// }
 			continue;
 		}
 		const double t =
@@ -326,13 +334,11 @@ Commander::sweep_traj()
 
 		if (hard_calibrating){
 			for (size_t i = 0; i < motor_count; i++) {
-				// pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
 				pos_ref[i] = -index_pos[i];
 				vel_ref[i] = 0.0;
 			}
 		}  else {
 			for (size_t i = 0; i < motor_count; i++) {
-				// pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];;
 				pos_ref[i] = 0.0;
 				vel_ref[i] = 0.0;
 			}
@@ -392,11 +398,7 @@ Commander::next_state()
 {
 	switch (state) {
 	case State::hold: {
-		// if (was_offset_enabled) {
-		// 	state = State::track;
-		// } else {
-		// 	state = State::sweep;
-		// }
+		reset();
 		state = State::track;
 		break;
 	}
@@ -405,7 +407,7 @@ Commander::next_state()
 		break;
 	}
 	case State::track: {
-		initialize();
+		reset();
 		state = State::hold;
 		break;
 	}

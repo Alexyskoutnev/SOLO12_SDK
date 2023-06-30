@@ -37,20 +37,26 @@ main(int argc, char const *argv[])
 	std::chrono::high_resolution_clock::time_point now_time;
 	auto command_time = std::chrono::high_resolution_clock::now();
 	auto print_time = std::chrono::high_resolution_clock::now();
-
+	
 	while (is_running) {
 		now_time = std::chrono::high_resolution_clock::now();
 
 		if (now_time >= command_time) {
+			auto start = std::chrono::high_resolution_clock::now();
 			com.command();
+			auto end = std::chrono::high_resolution_clock::now();
+			com.command_time_dur = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			com.stats();  //Probably not the best place to put this [but needs to update relatively fast]
 			command_time += std::chrono::nanoseconds(
 			    static_cast<size_t>(std::nano::den * commander::command_period));
 		}
 
 		if (now_time >= print_time) {
 			printf("\33[H\33[2J"); //* clear screen
+			auto start = std::chrono::high_resolution_clock::now();
 			com.print_all();
-			
+			auto end = std::chrono::high_resolution_clock::now();
+			com.print_time_dur = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 			while (print_time < now_time) {
 				print_time += std::chrono::nanoseconds(
 				    static_cast<size_t>(std::nano::den * commander::print_period));

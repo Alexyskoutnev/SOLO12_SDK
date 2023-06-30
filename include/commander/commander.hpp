@@ -42,6 +42,7 @@ class Commander
 	void print_state();
 	void print_traj();
 	void print_offset();
+	void print_stats();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -53,6 +54,11 @@ class Commander
 	void command();
 	void next_state();
 	void stats();
+	void reset();
+
+	/* stat vars */
+	std::chrono::milliseconds command_time_dur{0};
+	std::chrono::milliseconds print_time_dur{0};
 
   private:
 	bool is_ready = false;
@@ -103,8 +109,9 @@ class Commander
 
 	/* Stats Vars */
 	double max_amp_stat = 0;
-	double max_execution_stat = 0;
-
+	double max_command_exc_stat = 0;
+	double max_print_exc_stat = 0;
+	
 
 };
 } // namespace commander
