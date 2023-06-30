@@ -120,6 +120,8 @@ int MasterBoardInterface::SendInit()
 
   // Assess time duration since the last packet has been received
   std::chrono::duration<double, std::milli> time_span = t_send_packet - t_last_packet;
+  
+  time_span_stat = time_span; //Records the time span between last packet recieved and the packet getting sent
 
   // If this duration is greater than the timeout limit duration
   // then the packet is not sent and the connection with the master board is closed
@@ -209,6 +211,11 @@ int MasterBoardInterface::SendCommand()
 
   // Assess time duration since the last packet has been received
   std::chrono::duration<double, std::milli> time_span = t_send_packet - t_last_packet;
+
+  time_span_stat = time_span; //Records the time span between last packet recieved and the packet getting sent
+  time_span_arr[cmd_packet_index%100] = time_span.count();
+  if (time_span.count() > time_span_max)
+    time_span_max = time_span.count();
 
   // If this duration is greater than the timeout limit duration
   // then the packet is not sent and the connection with the master board is closed
@@ -544,6 +551,17 @@ void MasterBoardInterface::PrintStats()
   for (int i = 0; i < MAX_HIST; i++)
   {
     printf("%d ", histogram_lost_sensor_packets[i]);
+  }
+  printf("\n");
+  if (cmd_packet_index > time_span_record_length){
+    double sum = 0.0;
+    for (const auto& t_span : time_span_arr){
+      sum += t_span;
+    }
+    time_span_avg_stat = sum / time_span_record_length;
+    printf("Timing   | [cur] %4.2f ms | [max] %4.2f ms | [avg] %4.2f ms | \n", time_span_stat, time_span_max, time_span_avg_stat);
+  } else {
+    printf("Timing   | [cur] %4.2f ms | [max] %4.2f ms \n", time_span_stat, time_span_max);
   }
   printf("\n\n");
 }

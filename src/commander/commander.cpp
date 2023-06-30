@@ -141,6 +141,20 @@ Commander::print_offset()
 }
 
 void
+Commander::stats()
+{
+	/* records the max amp from motor */
+	for (int i = 0; i < N_SLAVES; i++)
+	{
+		if (mb.motor_drivers[i].adc[0] > max_amp_stat || mb.motor_drivers[i].adc[1] > max_amp_stat)
+		{
+			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1]) ? mb.motor_drivers[i].adc[0] : mb.motor_drivers[i].adc[1];
+		}
+	}
+
+}
+
+void
 Commander::print_traj()
 {
 	bool header_printed = false;
@@ -168,7 +182,7 @@ void
 Commander::print_all()
 {
 	print_state();
-	print_offset();
+	// print_offset();
 	print_traj();
 	// mb.PrintIMU();
 	// mb.PrintADC();
@@ -219,7 +233,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (i % 2 == 0) {
 			if (!mb.motor_drivers[i / 2].is_connected) {
-				// printf("ERRRRRRROOOORRR");
 				continue;
 			}
 
@@ -304,16 +317,11 @@ Commander::sweep_traj()
 
 		for (size_t i = 0; i < motor_count; i++){
 			if (hard_calibrating){
-				// index_offset[i] = index_pos[i];
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			} else {
 				mb.motors[i].SetPositionOffset(index_pos[i] - index_offset[i]);
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			}
-			// mb.motors[i].SetPositionOffset(0);
-			// mb.motors[i].SetPositionOffset(index_pos[i]);
-			// mb.motors[i].SetPositionOffset(test_offset);
-			// mb.motors[i].set_enable_index_offset_compensation(true);
 		}
 
 		if (hard_calibrating){

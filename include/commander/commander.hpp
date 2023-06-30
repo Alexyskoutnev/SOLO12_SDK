@@ -52,6 +52,7 @@ class Commander
 	void sample_traj();
 	void command();
 	void next_state();
+	void stats();
 
   private:
 	bool is_ready = false;
@@ -99,6 +100,12 @@ class Commander
 	bool sweep_done = false;
 	bool hard_calibrating = false;
 	State state = sweep;
+
+	/* Stats Vars */
+	double max_amp_stat = 0;
+	double max_execution_stat = 0;
+
+
 };
 } // namespace commander
 #endif

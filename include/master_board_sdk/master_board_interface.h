@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <chrono>
+#include <array>
 
 #include "master_board_sdk/ESPNOW_manager.h"
 #include "master_board_sdk/ETHERNET_manager.h"
@@ -95,7 +96,7 @@ private:
 
 	// Time duration [ms] after which the MasterBoardInterface shuts down if the
 	// master board is not responding (timeout)
-	std::chrono::milliseconds t_before_shutdown_control{50};
+	std::chrono::milliseconds t_before_shutdown_control{100};
 
 	// Time point that is updated each time a packet is received
 	std::chrono::high_resolution_clock::time_point t_last_packet =
@@ -116,6 +117,14 @@ private:
 
 	bool init_sent = false;
 	bool ack_received = false;
+
+	/* stats vars */
+	std::chrono::duration<double, std::milli> time_span_stat;
+	static constexpr size_t time_span_record_length = 100;
+	std::array<double, time_span_record_length> time_span_arr;
+	double time_span_avg_stat;
+	double time_span_max = 0;
+	
 
 public:
 	Motor motors[N_SLAVES * 2];
