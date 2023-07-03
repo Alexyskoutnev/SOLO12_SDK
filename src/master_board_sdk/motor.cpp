@@ -30,9 +30,9 @@ void Motor::Print()
   printf("%5d | ", is_ready);
   printf("%4d | ", index_toggle_bit);
   printf("%9d | ", has_index_been_detected);
-  printf("%13e | ", position);
-  printf("%13e | ", velocity);
-  printf("%13e | ", current);
+  printf("%13.3f | ", position);
+  printf("%13.3f | ", velocity);
+  printf("%13.3f | ", current);
   printf("\n");
 }
 
