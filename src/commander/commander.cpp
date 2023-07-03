@@ -143,8 +143,6 @@ Commander::update_stats()
 {
 	/* records the max amp from motor */
 	for (int i = 0; i < N_SLAVES; i++) {
-		// printf("Amps on motor: [1] %.3f [2] %.3f \n", mb.motor_drivers[i].adc[0], mb.motor_drivers[i].adc[1]);
-		// printf("Max amps %.2f\n", max_amp_stat);
 		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
 		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
 			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])

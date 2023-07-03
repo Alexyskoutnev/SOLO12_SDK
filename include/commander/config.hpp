@@ -31,15 +31,14 @@ constexpr size_t t_dim_expected = 1e5;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;       /** [s] */
 constexpr size_t sweep_duration = 5;      /** [s] */
-// constexpr size_t masterboard_timeout = 10; /** [ms] */
-constexpr size_t masterboard_timeout = 0; /** [ms] */
+constexpr std::uint8_t masterboard_timeout = 0; /** [ms] */
 const std::string ref_traj_fprefix = "../../data/active/";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-constexpr double kp_default = 5.0; // 20, 5;
+constexpr double kp_default = 10.0; // 20, 5;
 constexpr double kd_default = 1.0;
 constexpr double max_current = 5.0; /** [A] */
 constexpr size_t driver_count = 6;
@@ -62,7 +61,7 @@ static std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2},   {1, 3
                                                  {2, 4}, {5, 5}, {6, 6},   {8, 7},
                                                  {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., -9., -9., 9., 9.};
-constexpr double index_offset[motor_count] = {4.78005, 3.07857, -3.02573, 5.96886, -5.59072, 1.21769, 1.71526, 3.18527, 4.76795, 1.12588, 4.22048, 0.087874};
+constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.213095, 0.17087, 1.21532, 4.33566, 4.22832, 4.77109, 1.64702, 4.21985, 5.85839};
 
 static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
 

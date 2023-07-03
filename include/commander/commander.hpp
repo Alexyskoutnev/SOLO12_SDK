@@ -124,11 +124,6 @@ class Commander
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
-	// double index_offset[motor_count] = {4.78476, -3.20884, -2.4988,
-	// 									5.96416, 0.172924,
-	// -5.06818, 									2.2356, -1.53264, -1.50784, 									-4.11112, 4.21654, -0.00550638}; double
-	// index_offset[motor_count] = {4.26096, -3.20884, -2.50225, 0.212153, 0.168673,
-	// -5.59543, 1.72045, -1.533, -1.51272, -4.63414, 4.21937, 5.8449};
 	double index_offset[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 	                                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
