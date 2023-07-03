@@ -25,9 +25,60 @@ namespace commander
 {
 enum State { hold, sweep, track };
 
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
+template <typename T>
+int
+sgn(T val)
+{
+	return (T(0) < val) - (val < T(0));
 }
+
+class TimingStats
+{
+  public:
+	TimingStats()
+	{
+		prev_sample_instant = std::chrono::high_resolution_clock::now();
+		min_margin = std::numeric_limits<double>::max();
+		max_elapsed = 0;
+		reset_accum();
+	}
+
+	void
+	sampling_check()
+	{
+		auto now_time = std::chrono::high_resolution_clock::now();
+
+		if (now_time > prev_sample_instant && run_count_accum > 0) {
+			avg_rate = static_cast<double>(run_count_accum) /  std::chrono::duration<double>(now_time - prev_sample_instant).count();;
+			avg_elapsed = elapsed_accum / run_count_accum;
+			avg_margin = margin_accum / run_count_accum;
+			reset_accum();
+			prev_sample_instant = now_time;
+		}
+	}
+
+	size_t run_count;
+	size_t violation_count;
+	double avg_rate;
+	double avg_margin;
+	double avg_elapsed;
+	double min_margin;
+	double max_elapsed;
+
+	size_t run_count_accum;
+	double margin_accum;
+	double elapsed_accum;
+
+  private:
+	void
+	reset_accum()
+	{
+		run_count_accum = 0;
+		margin_accum = 0;
+		elapsed_accum = 0;
+	}
+	std::chrono::high_resolution_clock::time_point prev_sample_instant;
+};
 
 class Commander
 {
@@ -43,6 +94,7 @@ class Commander
 	void print_traj();
 	void print_offset();
 	void print_stats();
+	void print_timing_stats();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -53,11 +105,12 @@ class Commander
 	void sample_traj();
 	void command();
 	void next_state();
-	void stats();
+	void update_stats();
 	void reset();
 
 	/* stat vars */
-	std::chrono::milliseconds command_time_dur{0};
+	TimingStats timing_stats;
+	// std::chrono::milliseconds command_time_dur{0};
 	std::chrono::milliseconds print_time_dur{0};
 
   private:
@@ -71,17 +124,15 @@ class Commander
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
-	// double index_offset[motor_count] = {4.78476, -3.20884, -2.4988, 
-	// 									5.96416, 0.172924, -5.06818, 
-	// 									2.2356, -1.53264, -1.50784, 
-	// 									-4.11112, 4.21654, -0.00550638};
-	// double index_offset[motor_count] = {4.26096, -3.20884, -2.50225, 0.212153, 0.168673, -5.59543, 1.72045, -1.533, -1.51272, -4.63414, 4.21937, 5.8449};
-	double index_offset[motor_count] = {0.0, 0.0, 0.0, 
-										0.0, 0.0, 0.0, 
-										0.0, 0.0, 0.0, 
-										0.0, 0.0, 0.0};
+	// double index_offset[motor_count] = {4.78476, -3.20884, -2.4988,
+	// 									5.96416, 0.172924,
+	// -5.06818, 									2.2356, -1.53264, -1.50784, 									-4.11112, 4.21654, -0.00550638}; double
+	// index_offset[motor_count] = {4.26096, -3.20884, -2.50225, 0.212153, 0.168673,
+	// -5.59543, 1.72045, -1.533, -1.51272, -4.63414, 4.21937, 5.8449};
+	double index_offset[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+	                                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
-											false, false, false, false, false, false};
+	                                        false, false, false, false, false, false};
 
 	size_t t_index;
 	size_t t_size;
@@ -108,11 +159,11 @@ class Commander
 	State state = sweep;
 
 	/* Stats Vars */
+
 	double max_amp_stat = 0;
 	double max_command_exc_stat = 0;
 	double max_print_exc_stat = 0;
-	
-
 };
+
 } // namespace commander
 #endif

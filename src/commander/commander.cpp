@@ -33,7 +33,6 @@ Commander::initialize()
 
 	traj.reserve(t_size);
 	t_index = 0;
-
 }
 
 void
@@ -77,7 +76,7 @@ Commander::initialize_mb()
 
 	// for (size_t i = 0; i < motor_count; i++){
 	// 	mb.motors[i].SetPositionOffset(-index_offset[i]);
-		
+
 	// 	if (mb.motors[i].HasIndexBeenDetected()) {
 	// 		was_index_detected[i] = true;
 	// 		// mb.motors[i].set_enable_index_offset_compensation(true);
@@ -89,28 +88,27 @@ void
 Commander::print_state()
 {
 	printf("Robot State | %.10s \n", state_to_name[state].c_str());
-	if (sweep_done or state == State::sweep){
+	if (sweep_done or state == State::sweep) {
 		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
 	}
-	if (hard_calibrating){
+	if (hard_calibrating) {
 		printf("Offset Values: {");
-		for (size_t i = 0; i < motor_count; i++){
-			if (i == motor_count - 1){
+		for (size_t i = 0; i < motor_count; i++) {
+			if (i == motor_count - 1) {
 				printf("%g", index_pos[i]);
 			} else {
 				printf("%g, ", index_pos[i]);
-			}	
+			}
 		}
 		printf("} \n");
 	}
 	printf("ERROR Motor |");
-	for (size_t i = 0; i < motor_count; i++){
+	for (size_t i = 0; i < motor_count; i++) {
 		printf(" [%1d] %1d |", i, !(mb.motor_drivers[i / 2].is_connected));
-		
 	}
 	printf("\n");
 	printf("ERROR Spi   |");
-	for (size_t i = 0; i < motor_count; i++){
+	for (size_t i = 0; i < motor_count; i++) {
 		printf(" [%1d] %1d |", i, mb.motor_drivers[i / 2].error_code == 0xf);
 	}
 	printf("\n");
@@ -141,20 +139,18 @@ Commander::print_offset()
 }
 
 void
-Commander::stats()
+Commander::update_stats()
 {
 	/* records the max amp from motor */
-	for (int i = 0; i < N_SLAVES; i++)
-	{
-		if (mb.motor_drivers[i].adc[0] > max_amp_stat || mb.motor_drivers[i].adc[1] > max_amp_stat)
-		{
-			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1]) ? mb.motor_drivers[i].adc[0] : mb.motor_drivers[i].adc[1];
+	for (int i = 0; i < N_SLAVES; i++) {
+		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
+		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
+			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])
+			    ? mb.motor_drivers[i].adc[0]
+			    : mb.motor_drivers[i].adc[1];
 		}
 	}
-	if (max_command_exc_stat < command_time_dur.count()){
-		max_command_exc_stat  = command_time_dur.count();
-	} 
-	if (max_print_exc_stat < print_time_dur.count()){
+	if (max_print_exc_stat < print_time_dur.count()) {
 		max_print_exc_stat = print_time_dur.count();
 	}
 }
@@ -162,9 +158,26 @@ Commander::stats()
 void
 Commander::print_stats()
 {
-	printf("Command time | [cur] %5.2f ms | [max] %5.2f ms \n", command_time_dur.count(), max_command_exc_stat);
-	printf("Print time   | [cur] %5.2f ms | [max] %5.2f ms \n", print_time_dur.count(), max_print_exc_stat);
 	printf("Max Amp      |   %5.2f        | \n", max_amp_stat);
+}
+
+void
+Commander::print_timing_stats()
+{
+	printf("Print time   | [cur] %5.2f ms | [max] %5.2f ms \n", print_time_dur.count(),
+	       max_print_exc_stat);
+
+	timing_stats.sampling_check();
+
+	printf("%10s | %10s | %10s | %10s | %5s | %10s | %10s | %10s | %10s\n", "Timing",
+	       "Rate (Hz)", "Violation%", "Violation#", "Run#", "Min M (ms)", "Max E (ms)",
+	       "Avg M (ms)", "Avg E (ms)");
+	printf("%10s | %10.3g | %10.3g | %10lu | %5lu | %10.3g | %10.3g | %10.3g | %10.3g\n", "",
+	       timing_stats.avg_rate,
+	       static_cast<double>(timing_stats.violation_count) / timing_stats.run_count * 100,
+	       timing_stats.violation_count, timing_stats.run_count, timing_stats.min_margin * 1e3,
+	       timing_stats.max_elapsed * 1e3, timing_stats.avg_margin * 1e3,
+	       timing_stats.avg_elapsed * 1e3);
 }
 
 void
@@ -203,6 +216,7 @@ Commander::print_all()
 	mb.PrintMotorDrivers();
 	mb.PrintStats();
 	print_stats();
+	print_timing_stats();
 }
 
 void
@@ -299,8 +313,8 @@ Commander::sweep_traj()
 	bool all_ready = true;
 
 	for (size_t i = 0; i < motor_count; i++) {
-		
-		if (was_index_detected[i]){
+
+		if (was_index_detected[i]) {
 			continue;
 		}
 
@@ -313,18 +327,20 @@ Commander::sweep_traj()
 		}
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
-		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
-		vel_ref[i] = gear_ratio[motor2ref_idx[i]] * (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
+		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
 		track(pos_ref, vel_ref);
 	}
-	++t_sweep_index;	
+	++t_sweep_index;
 	if (all_ready) {
 
 		is_ready = true;
 		sweep_done = true;
 
-		for (size_t i = 0; i < motor_count; i++){
-			if (hard_calibrating){
+		for (size_t i = 0; i < motor_count; i++) {
+			if (hard_calibrating) {
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			} else {
 				mb.motors[i].SetPositionOffset(index_pos[i] - index_offset[i]);
@@ -332,21 +348,19 @@ Commander::sweep_traj()
 			}
 		}
 
-		if (hard_calibrating){
+		if (hard_calibrating) {
 			for (size_t i = 0; i < motor_count; i++) {
 				pos_ref[i] = -index_pos[i];
 				vel_ref[i] = 0.0;
 			}
-		}  else {
+		} else {
 			for (size_t i = 0; i < motor_count; i++) {
 				pos_ref[i] = 0.0;
 				vel_ref[i] = 0.0;
 			}
 		}
 		track(pos_ref, vel_ref);
-
 	}
-
 }
 
 void
@@ -375,8 +389,7 @@ Commander::command()
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] =
-			     gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
 			vel_ref[i] = 0.;
 		}
 		track(pos_ref, vel_ref);
