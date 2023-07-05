@@ -8,7 +8,7 @@ In the sweeping state, the robot calibrates itself by finding the index encoding
 Hold -> Track -> Hold -> Track -> ...
 </p>
 
-Most of the hardware configuration is located in the `SOLO12_SDK/include/config.hpp` header file, 
+Most of the hardware configuration is located in the `SOLO12_SDK/include/commander/config.hpp` header file, 
 
 
 #  Building
