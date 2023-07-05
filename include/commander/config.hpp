@@ -38,7 +38,7 @@ const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-constexpr double kp_default = 10.0; // 20, 5;
+constexpr double kp_default = 15.0; // 20, 5;
 constexpr double kd_default = 1.0;
 constexpr double max_current = 5.0; /** [A] */
 constexpr size_t driver_count = 6;
@@ -46,10 +46,8 @@ constexpr size_t motor_count = 2 * driver_count;
 constexpr size_t velocity_shift = 12;
 constexpr size_t torque_shift = 24;
 constexpr size_t log_size = 1e5;
-// constexpr double ref_hold_position[motor_count] = {0.016,  0.76,  -1.69, -0.016,  0.76,   -1.698,
-//                                                    0.0164, -0.76, 1.698, -0.0164, -0.761, 1.698};
-constexpr double ref_hold_position[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                                                   0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+constexpr double ref_hold_position[motor_count] = {-0.02994342123001601,0.8417958506858044,-1.4680598092208696, 0.034703827464225616, 0.6965753517673012, -1.5201062852793965,
+                                                   -0.030430423734251956,-0.8427529306923185,1.472304968271508, 0.03471242623251419,-0.6956731237807676,1.520772243209184};
 
 /** convert traj convention when iterating through motors */
 static std::map<size_t, size_t> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4},   {3, 1},

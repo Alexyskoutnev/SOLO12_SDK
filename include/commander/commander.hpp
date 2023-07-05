@@ -151,6 +151,7 @@ class Commander
 	bool was_offset_enabled = false;
 	bool sweep_done = false;
 	bool hard_calibrating = false;
+	bool loop_track_traj = false;
 	State state = sweep;
 
 	/* Stats Vars */

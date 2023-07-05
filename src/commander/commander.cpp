@@ -291,10 +291,17 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 void
 Commander::track_traj()
 {
-	for (size_t i = 0; i < motor_count; ++i) {
-		pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
-		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+	if (t_index < t_size - 1) {
+		for (size_t i = 0; i < motor_count; ++i) {
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+		}
+	} else {
+		for (size_t i = 0; i < motor_count; ++i) {
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			vel_ref[i] = 0;
+		}
 	}
 
 	track(pos_ref, vel_ref);
@@ -302,6 +309,8 @@ Commander::track_traj()
 	if (t_index < t_size - 1) {
 		sample_traj();
 		++t_index;
+	} else if (loop_track_traj) {
+		t_index = 0;	
 	}
 }
 
@@ -389,7 +398,7 @@ Commander::command()
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[0][motor2ref_idx[i]];
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0.;
 		}
 		track(pos_ref, vel_ref);
@@ -420,7 +429,6 @@ Commander::next_state()
 		break;
 	}
 	case State::track: {
-		reset();
 		state = State::hold;
 		break;
 	}
