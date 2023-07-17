@@ -99,6 +99,7 @@ class Commander
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_red)[motor_count]);
 	void set_offset(double (&index_offset)[motor_count]);
 	void track_traj();
 	void sweep_traj();
@@ -146,12 +147,16 @@ class Commander
 
 	double pos_ref[motor_count];
 	double vel_ref[motor_count];
+	double toq_ref[motor_count];
 	double pos[motor_count];
 	double vel[motor_count];
 	bool was_offset_enabled = false;
 	bool sweep_done = false;
 	bool hard_calibrating = false;
-	bool loop_track_traj = false;
+	bool loop_track_traj = true;
+	bool torque_control_flag = true;
+	bool PD_control_flag = false;
+
 	State state = sweep;
 
 	/* Stats Vars */

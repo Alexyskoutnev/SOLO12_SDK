@@ -289,6 +289,63 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 }
 
 void
+Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_ref)[motor_count])
+{
+	mb.ParseSensorData();
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (i % 2 == 0) {
+			if (!mb.motor_drivers[i / 2].is_connected) {
+				continue;
+			}
+
+			if (mb.motor_drivers[i / 2].error_code == 0xf) {
+				continue;
+			}
+		}
+
+		if (mb.motors[i].IsEnabled()) {
+			pos[i] = mb.motors[i].GetPosition();
+			vel[i] = mb.motors[i].GetVelocity();
+
+			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetVelocityReference(vel_ref[i]);
+			mb.motors[i].SetCurrentReference(toq_ref[i]);
+		}
+	}
+
+	mb.SendCommand();
+}
+
+
+void
+Commander::track(double (&pos_ref)[motor_count])
+{
+	mb.ParseSensorData();
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (i % 2 == 0) {
+			if (!mb.motor_drivers[i / 2].is_connected) {
+				continue;
+			}
+
+			if (mb.motor_drivers[i / 2].error_code == 0xf) {
+				continue;
+			}
+		}
+
+		if (mb.motors[i].IsEnabled()) {
+			pos[i] = mb.motors[i].GetPosition();
+			vel[i] = mb.motors[i].GetVelocity();
+
+			mb.motors[i].SetPositionReference(pos_ref[i]);
+		}
+	}
+
+	mb.SendCommand();
+}
+
+void
 Commander::track_traj()
 {
 	if (t_index < t_size - 1) {
@@ -296,6 +353,7 @@ Commander::track_traj()
 			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
 			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 		}
 	} else {
 		for (size_t i = 0; i < motor_count; ++i) {
@@ -304,7 +362,14 @@ Commander::track_traj()
 		}
 	}
 
-	track(pos_ref, vel_ref);
+	if (torque_control_flag)
+		track(pos_ref, vel_ref, toq_ref);
+
+	else if (PD_control_flag)
+		track(pos_ref, vel_ref);
+	else
+		track(pos_ref);
+
 
 	if (t_index < t_size - 1) {
 		sample_traj();
@@ -340,6 +405,7 @@ Commander::sweep_traj()
 		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		
 		track(pos_ref, vel_ref);
 	}
 	++t_sweep_index;

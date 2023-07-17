@@ -33,6 +33,7 @@ constexpr size_t init_duration = 1;       /** [s] */
 constexpr size_t sweep_duration = 5;      /** [s] */
 constexpr std::uint8_t masterboard_timeout = 0; /** [ms] */
 const std::string ref_traj_fprefix = "../../data/active/";
+//const std::string ref_traj_fname_default = "gait.csv";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
