@@ -25,7 +25,7 @@ To build the source code, please follow these steps.
 2. Place your desired trajectory in `SOLO12_SDK/data/active` with the name `gait.csv`. 
 3. Position each leg perpendicular to the body frame.
 <p align="center">
-<img src=./data/assets/solo12_startup_config.png width="250" height="300">
+<img src=./data/assets/IMG_5731.png width="250" height="250">
 </p>
 
 
