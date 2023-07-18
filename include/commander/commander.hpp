@@ -154,7 +154,7 @@ class Commander
 	bool sweep_done = false;
 	bool hard_calibrating = false;
 	bool loop_track_traj = true;
-	bool torque_control_flag = true;
+	bool torque_control_flag = false;
 	bool PD_control_flag = false;
 
 	State state = sweep;
@@ -164,6 +164,12 @@ class Commander
 	double max_amp_stat = 0;
 	double max_command_exc_stat = 0;
 	double max_print_exc_stat = 0;
+
+
+	bool hip_offset_flag = true;
+	double hip_offset_position[motor_count] = {0.15,-0.15,0.0,0.0,0.0,0.0,
+                                                    0.15,-0.15,0.0,0.0,0.0,0.0};
+
 };
 
 } // namespace commander
