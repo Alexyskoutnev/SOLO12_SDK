@@ -349,14 +349,33 @@ Commander::track(double (&pos_ref)[motor_count])
 void
 Commander::track_traj()
 {
-	if (t_index < t_size - 1) {
+
+	if (t_index < t_size - 1) 
+	{
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			
+			if (hip_offset_flag)
+			{
+				if (i == 0 || i == 1 || i == 6 || i == 7)
+				{
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+
+				}
+				else 
+				{
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+				}
+			} else 
+			{
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			}
 			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
 			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 		}
-	} else {
+	} 
+	else 
+	{
 		for (size_t i = 0; i < motor_count; ++i) {
 			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0;
@@ -371,8 +390,11 @@ Commander::track_traj()
 	else
 		track(pos_ref);
 
+<<<<<<< HEAD
 	track_error(pos_ref, vel_ref);
 
+=======
+>>>>>>> d3fba0585dff119a164ea147db025608a127e760
 	if (t_index < t_size - 1) {
 		sample_traj();
 		++t_index;
@@ -496,7 +518,20 @@ Commander::command()
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			if (hip_offset_flag)
+			{
+				if (i == 0 || i == 1 || i == 6 || i == 7)
+				{
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+				}
+
+			}
+			else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			}
 			vel_ref[i] = 0.;
 		}
 		track(pos_ref, vel_ref);
