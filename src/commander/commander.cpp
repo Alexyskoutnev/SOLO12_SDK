@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <math.h>
+#include <fstream>
 
 namespace commander
 {
@@ -370,6 +371,7 @@ Commander::track_traj()
 	else
 		track(pos_ref);
 
+	track_error(pos_ref, vel_ref);
 
 	if (t_index < t_size - 1) {
 		sample_traj();
@@ -378,7 +380,37 @@ Commander::track_traj()
 		t_index = 0;	
 	}
 }
+void
+Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+{
+	std::ofstream outputFile("data.csv");
+	header_printed = false
 
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (!mb.motor_drivers[i / 2].is_connected) {
+			continue;
+		}
+		
+		if (outputFile.is_open()) {
+			if (!header_printed) {
+			outputFile << "Motor, Refpos, Actpos, Refvel, Actvel")<< std::endl;
+			header_printed = true;
+		}
+		
+		if (mb.motors[i].IsEnabled()) {
+			pos[i] = mb.motors[i].GetPosition();
+			vel[i] = mb.motors[i].GetVelocity();
+		}
+
+		outputFile<< i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] <<std::endl;
+		}
+		else {
+			std:cerr <<"Failed to open the file."<<std::endl;
+		}
+	}
+
+
+}
 void
 Commander::sweep_traj()
 {
