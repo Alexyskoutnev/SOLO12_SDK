@@ -1,4 +1,3 @@
-
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
 
@@ -403,33 +402,34 @@ Commander::track_traj()
 	}
 }
 void
+Commander::initialize_csv_file_track_error(){
+	 std::ofstream outputFile("data.csv");
+}
+
+void
 Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-	std::ofstream outputFile("data.csv");
-	header_printed = false
+    initialize_csv_file();
 
-	for (size_t i = 0; i < motor_count; ++i) {
+    std::ofstream outputFile("data.csv", std::ios_base::app); // Append mode
+
+    for (size_t i = 0; i < motor_count; ++i) {
 		if (!mb.motor_drivers[i / 2].is_connected) {
 			continue;
-		}
-		
-		if (outputFile.is_open()) {
-			if (!header_printed) {
-			outputFile << "Motor, Refpos, Actpos, Refvel, Actvel")<< std::endl;
-			header_printed = true;
-		}
-		
-		if (mb.motors[i].IsEnabled()) {
-			pos[i] = mb.motors[i].GetPosition();
-			vel[i] = mb.motors[i].GetVelocity();
-		}
+        }
 
-		outputFile<< i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] <<std::endl;
-		}
-		else {
-			std:cerr <<"Failed to open the file."<<std::endl;
-		}
-	}
+        if (outputFile.is_open()) {
+			if (mb.motors[i].IsEnabled()) {
+				pos[i] = mb.motors[i].GetPosition();
+				vel[i] = mb.motors[i].GetVelocity();
+			}
+			outputFile << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << std::endl;
+			}
+            else {
+				std::cerr << "Failed to open the file." << std::endl;
+            }
+        }
+}
 
 
 }
