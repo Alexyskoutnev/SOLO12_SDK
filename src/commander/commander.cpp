@@ -73,15 +73,7 @@ Commander::initialize_mb()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
-
-	// for (size_t i = 0; i < motor_count; i++){
-	// 	mb.motors[i].SetPositionOffset(-index_offset[i]);
-
-	// 	if (mb.motors[i].HasIndexBeenDetected()) {
-	// 		was_index_detected[i] = true;
-	// 		// mb.motors[i].set_enable_index_offset_compensation(true);
-	// 	}
-	// }
+	initialize_csv_file_track_error();  //Initializes the tracking of control and realized cmds
 }
 
 void
@@ -389,11 +381,8 @@ Commander::track_traj()
 	else
 		track(pos_ref);
 
-<<<<<<< HEAD
 	track_error(pos_ref, vel_ref);
 
-=======
->>>>>>> d3fba0585dff119a164ea147db025608a127e760
 	if (t_index < t_size - 1) {
 		sample_traj();
 		++t_index;
@@ -401,38 +390,32 @@ Commander::track_traj()
 		t_index = 0;	
 	}
 }
+
 void
 Commander::initialize_csv_file_track_error(){
-	 std::ofstream outputFile("data.csv");
+
+	try {
+        
+		track_realized_control_io.open(track_realized_control_data, std::ios::app);
+
+        if (!track_realized_control_io.is_open()) {
+            throw std::runtime_error("Error opening file!");
+        }
+    }
+
+    catch (const std::exception& e) {
+        std::cerr << "Exception occurred: " << e.what() << '\n';
+    }
 }
 
 void
 Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-    initialize_csv_file();
-
-    std::ofstream outputFile("data.csv", std::ios_base::app); // Append mode
-
     for (size_t i = 0; i < motor_count; ++i) {
-		if (!mb.motor_drivers[i / 2].is_connected) {
-			continue;
-        }
-
-        if (outputFile.is_open()) {
-			if (mb.motors[i].IsEnabled()) {
-				pos[i] = mb.motors[i].GetPosition();
-				vel[i] = mb.motors[i].GetVelocity();
-			}
-			outputFile << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << std::endl;
-			}
-            else {
-				std::cerr << "Failed to open the file." << std::endl;
-            }
-        }
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << '\n';
+	}
 }
 
-
-}
 void
 Commander::sweep_traj()
 {
