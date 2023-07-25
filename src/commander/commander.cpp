@@ -1,4 +1,3 @@
-
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
 
@@ -6,6 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <math.h>
+#include <fstream>
 
 namespace commander
 {
@@ -73,15 +73,7 @@ Commander::initialize_mb()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
-
-	// for (size_t i = 0; i < motor_count; i++){
-	// 	mb.motors[i].SetPositionOffset(-index_offset[i]);
-
-	// 	if (mb.motors[i].HasIndexBeenDetected()) {
-	// 		was_index_detected[i] = true;
-	// 		// mb.motors[i].set_enable_index_offset_compensation(true);
-	// 	}
-	// }
+	initialize_csv_file_track_error();  //Initializes the tracking of control and realized cmds
 }
 
 void
@@ -389,11 +381,38 @@ Commander::track_traj()
 	else
 		track(pos_ref);
 
+	track_error(pos_ref, vel_ref);
+
 	if (t_index < t_size - 1) {
 		sample_traj();
 		++t_index;
 	} else if (loop_track_traj) {
 		t_index = 0;	
+	}
+}
+
+void
+Commander::initialize_csv_file_track_error(){
+
+	try {
+        
+		track_realized_control_io.open(track_realized_control_data, std::ios::app);
+
+        if (!track_realized_control_io.is_open()) {
+            throw std::runtime_error("Error opening file!");
+        }
+    }
+
+    catch (const std::exception& e) {
+        std::cerr << "Exception occurred: " << e.what() << '\n';
+    }
+}
+
+void
+Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+{
+    for (size_t i = 0; i < motor_count; ++i) {
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
 

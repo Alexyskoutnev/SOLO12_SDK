@@ -27,7 +27,7 @@ constexpr double input_period = 1. / input_freq; /** [s] */
 constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 
-constexpr size_t t_dim_expected = 2.6e6;
+constexpr size_t t_dim_expected = 50000;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;       /** [s] */
 constexpr size_t sweep_duration = 5;      /** [s] */
@@ -35,6 +35,7 @@ constexpr std::uint8_t masterboard_timeout = 0; /** [ms] */
 const std::string ref_traj_fprefix = "../../data/active/";
 //const std::string ref_traj_fname_default = "gait.csv";
 const std::string ref_traj_fname_default = "gait.csv";
+const std::string track_realized_control_data = "../../data/track_data/realized_control_data.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 

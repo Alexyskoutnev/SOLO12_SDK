@@ -11,6 +11,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 #ifndef DRY_BUILD
 	#include <sys/stat.h>
@@ -100,6 +102,8 @@ class Commander
 	void track(double (&pos_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_red)[motor_count]);
+	void initialize_csv_file_track_error();
+	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void set_offset(double (&index_offset)[motor_count]);
 	void track_traj();
 	void sweep_traj();
@@ -141,6 +145,12 @@ class Commander
 	double init_pos[motor_count];
 
 	std::array<double, 1> imu_logs;
+	// std::vector<std::Array<double, 5>> error;
+	// for () { std::Array<double, 5> error_row = {1,2,3,4,5};
+	// error.push_back(error_row)
+	// }
+	// matrix_rw::Writer<5> writematrix;
+	// writematrix(file_path, error)
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
@@ -169,6 +179,9 @@ class Commander
 	bool hip_offset_flag = true;
 	double hip_offset_position[motor_count] = {0.15,-0.15,0.0,0.0,0.0,0.0,
                                                     0.15,-0.15,0.0,0.0,0.0,0.0};
+
+	// std::ofstream track_realized_control_io(track_realized_control_data, std::ios_base::app);
+	std::ofstream track_realized_control_io;
 
 };
 
