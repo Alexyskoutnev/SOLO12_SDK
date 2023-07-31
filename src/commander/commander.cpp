@@ -373,13 +373,13 @@ Commander::track_traj()
 		}
 	}
 
-	if (torque_control_flag)
-		track(pos_ref, vel_ref, toq_ref);
+	if (torque_control_flag){
+		track(pos_ref, vel_ref, toq_ref);}
 
-	else if (PD_control_flag)
-		track(pos_ref, vel_ref);
-	else
-		track(pos_ref);
+	else if (PD_control_flag){
+		track(pos_ref, vel_ref);}
+	else{
+		track(pos_ref);}
 
 	track_error(pos_ref, vel_ref);
 
@@ -442,7 +442,7 @@ Commander::sweep_traj()
 		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
-		
+
 		track(pos_ref, vel_ref);
 	}
 	++t_sweep_index;
