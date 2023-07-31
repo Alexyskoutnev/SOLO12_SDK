@@ -145,12 +145,6 @@ class Commander
 	double init_pos[motor_count];
 
 	std::array<double, 1> imu_logs;
-	// std::vector<std::Array<double, 5>> error;
-	// for () { std::Array<double, 5> error_row = {1,2,3,4,5};
-	// error.push_back(error_row)
-	// }
-	// matrix_rw::Writer<5> writematrix;
-	// writematrix(file_path, error)
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
 	std::vector<Row<traj_dim + 1>> logs;
