@@ -1,0 +1,33 @@
+name : C++ Build and Test Workflow
+
+on : 
+    push :
+      branches:
+        - main
+        - summerwork
+    pull_request:
+      branches:
+        - main
+        - summerwork
+
+jobs:
+      build:
+        runs-on : ubuntu-latest
+
+        steps:
+          - name : Checkout repository
+            uses : actions/checkout@v2
+
+          - name : Installing CMake
+            run : sudo apt-get update && sudo apt-get install -y cmake
+
+          - name : Build Project
+            run : mkdir build
+                  cd scripts/build
+                  ./configure.sh
+                  ./build.sh
+                  cd ../../build
+                  make
+
+
+  
