@@ -30,5 +30,6 @@ jobs:
           ./configure.sh
           ./build.sh
       - name: Building
+        run: |
           cd ../../build
           make
