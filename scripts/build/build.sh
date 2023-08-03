@@ -1,8 +1,4 @@
 #!/bin/bash
-
-#* project's relative path with respect to this script
-PROJECT_PATH="../.."
-
 #* Hide popd and pushd stdout by defining new commands.
 popdq () {
 	command popd "$@" > /dev/null
@@ -15,6 +11,8 @@ pushdq () {
 trap popdq EXIT
 pushdq "$(dirname ${BASH_SOURCE[0]:-$0})"
 
-cmake --build $PROJECT_PATH/build 
+#* project's relative path with respect to this script
+PROJECT_PATH="../.."
 
-echo "$0 done."
+cmake --build $PROJECT_PATH/build 
+echo "$0 returned $?."

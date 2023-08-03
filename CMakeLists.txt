@@ -6,29 +6,10 @@ project(
 	LANGUAGES CXX
 )
 
-#* dependencies
-Include(FetchContent)
-
-set(matrix_rw_VERSION 1.2.1) #* matrix_rw
-set(rt_timer_VERSION 1.0.5) #* rt_timer
-set(cxxopts_VERSION 3.1.1) #* cxxopts, used for CLI argument parsing
-
-#find_package(Curses REQUIRED)
-#include_directories(${CURSES_INCLUDE_DIR})
-
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-	FetchContent_Declare(
-		matrix_rw 
-		URL https://github.com/cinaral/matrix_rw/releases/download/v${matrix_rw_VERSION}/src.zip
-	)
-	FetchContent_MakeAvailable(matrix_rw)
-endif()
-
-
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
 	option(BUILD_TESTS "Build tests" OFF)
-	option(BUILD_EXAMPLES "Build examples" OFF)
+	option(BUILD_EXAMPLES "Build examples" ON)
 	
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
@@ -36,11 +17,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	if(WIN32) #* force dry build because masterboard sdk cannot be compiled on w*ndows
 		set(DRY_BUILD ON)
 		set(BUILD_EXAMPLES OFF)
-	else()
-		set(DRY_BUILD OFF)
-		set(BUILD_EXAMPLES OFF)
 	endif()
-
 
 	message("Build test -> ${BUILD_TESTS}")
 	message("Build Examples -> ${BUILD_EXAMPLES}")
