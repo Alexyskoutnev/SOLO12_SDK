@@ -27,7 +27,7 @@ constexpr double input_period = 1. / input_freq; /** [s] */
 constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 
-constexpr size_t t_dim_expected = 50000;
+constexpr size_t t_dim_expected = 4245;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;       /** [s] */
 constexpr size_t sweep_duration = 5;      /** [s] */
