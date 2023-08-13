@@ -179,7 +179,7 @@ void
 Commander::print_traj()
 {
 	bool header_printed = false;
-
+	printf("====================== index [%d] ======================\n", t_index);
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (!mb.motor_drivers[i / 2].is_connected) {
 			continue;
@@ -275,7 +275,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
 	}
@@ -303,7 +303,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 			mb.motors[i].SetCurrentReference(toq_ref[i]);
 		}

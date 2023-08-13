@@ -60,10 +60,11 @@ static std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2},   {1, 3
                                                  {2, 4}, {5, 5}, {6, 6},   {8, 7},
                                                  {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., -9., -9., 9., 9.};
-constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.213095, 0.17087, 1.21532, 4.33566, 4.22832, 4.77109, 1.64702, 4.21985, 5.85839};
+// constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.213095, 0.17087, 1.21532, 4.33566, 4.22832, 4.77109, 1.64702, 4.21985, 5.85839};
+constexpr double index_offset[motor_count] = {4.26285, 2.03286, -3.54795, 4.92864, -5.06801, 1.21595, 4.32513, 4.23617, 4.26034, 2.6877, 4.14373, 0.0895862};
 
 static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
-constexpr double motor_ang_bound = 28.2743;
+constexpr double motor_ang_bound = 9 * M_PI;
 
 enum control_state {P_CONTROL, PD_CONTROL, TORQUE};
 static std::map<control_state, std::string> control_type_2_name {{control_state::P_CONTROL, "P_CONTROL"}, {control_state::PD_CONTROL, "PD_CONTROL"}, {control_state::TORQUE, "TORQUE"}};
