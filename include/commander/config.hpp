@@ -27,22 +27,21 @@ constexpr double input_period = 1. / input_freq; /** [s] */
 constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 
-constexpr size_t t_dim_expected = 4245;
+constexpr size_t t_dim_expected = 12;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;       /** [s] */
 constexpr size_t sweep_duration = 5;      /** [s] */
 constexpr std::uint8_t masterboard_timeout = 0; /** [ms] */
-const std::string ref_traj_fprefix = "../../data/active/";
-//const std::string ref_traj_fname_default = "gait.csv";
+const std::string ref_traj_fprefix = "../data/active/";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string track_realized_control_data = "../../data/track_data/realized_control_data.csv";
 const std::string fprefix = "../data/";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";
-constexpr double kp_default = 15.0; // 20, 5;
+constexpr double kp_default = 5.0; // 20, 5;
 constexpr double kd_default = 1.0;
-constexpr double max_current = 5.0; /** [A] */
+constexpr double max_current = 3.0; /** [A] */
 constexpr size_t driver_count = 6;
 constexpr size_t motor_count = 2 * driver_count;
 constexpr size_t velocity_shift = 12;
@@ -64,9 +63,10 @@ constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., 
 constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.213095, 0.17087, 1.21532, 4.33566, 4.22832, 4.77109, 1.64702, 4.21985, 5.85839};
 
 static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
+constexpr double motor_ang_bound = 28.2743;
 
-
-
+enum control_state {P_CONTROL, PD_CONTROL, TORQUE};
+static std::map<control_state, std::string> control_type_2_name {{control_state::P_CONTROL, "P_CONTROL"}, {control_state::PD_CONTROL, "PD_CONTROL"}, {control_state::TORQUE, "TORQUE"}};
 
 } // namespace commander
 

@@ -112,6 +112,7 @@ class Commander
 	void next_state();
 	void update_stats();
 	void reset();
+	double min_max_bound(double&);
 
 	/* stat vars */
 	TimingStats timing_stats;
@@ -158,8 +159,7 @@ class Commander
 	bool sweep_done = false;
 	bool hard_calibrating = false;
 	bool loop_track_traj = true;
-	bool torque_control_flag = false;
-	bool PD_control_flag = false;
+	control_state CONTROLLER_T = P_CONTROL;
 
 	State state = sweep;
 

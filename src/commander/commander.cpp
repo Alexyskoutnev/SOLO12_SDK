@@ -31,6 +31,8 @@ Commander::initialize()
 	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
 	t_size = ref_traj.size(); /** determine t_dim */
 
+	// exit(1);
+
 	traj.reserve(t_size);
 	t_index = 0;
 }
@@ -79,6 +81,7 @@ Commander::initialize_mb()
 void
 Commander::print_state()
 {
+	printf("Controller [%.10s]\n", control_type_2_name[CONTROLLER_T].c_str());
 	printf("Robot State | %.10s \n", state_to_name[state].c_str());
 	if (sweep_done or state == State::sweep) {
 		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
@@ -204,11 +207,11 @@ Commander::print_all()
 	print_traj();
 	// mb.PrintIMU();
 	// mb.PrintADC();
-	mb.PrintMotors();
-	mb.PrintMotorDrivers();
-	mb.PrintStats();
-	print_stats();
-	print_timing_stats();
+	// mb.PrintMotors();
+	// mb.PrintMotorDrivers();
+	// mb.PrintStats();
+	// print_stats();
+	// print_timing_stats();
 }
 
 void
@@ -330,7 +333,7 @@ Commander::track(double (&pos_ref)[motor_count])
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 		}
 	}
 
@@ -371,15 +374,18 @@ Commander::track_traj()
 			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0;
 		}
+		
 	}
 
-	if (torque_control_flag){
-		track(pos_ref, vel_ref, toq_ref);}
-
-	else if (PD_control_flag){
-		track(pos_ref, vel_ref);}
-	else{
-		track(pos_ref);}
+	if (CONTROLLER_T == control_state::TORQUE){
+		track(pos_ref, vel_ref, toq_ref);
+	}
+	else if (CONTROLLER_T == control_state::PD_CONTROL){
+		track(pos_ref, vel_ref);
+	}
+	else if (CONTROLLER_T == control_state::P_CONTROL){
+		track(pos_ref);
+	}
 
 	track_error(pos_ref, vel_ref);
 
@@ -558,6 +564,16 @@ Commander::set_offset(double (&index_offset)[motor_count])
 		mb.motors[i].SetPositionOffset(index_offset[i]);
 		mb.motors[i].set_enable_index_offset_compensation(true);
 	}
+}
+
+double
+Commander::min_max_bound(double &num){
+	if (num > motor_ang_bound)
+		return motor_ang_bound;
+	else if (num < motor_count)
+		return -motor_ang_bound;
+	else
+		return num;
 }
 
 } // namespace commander
