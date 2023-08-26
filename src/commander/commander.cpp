@@ -3,41 +3,47 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <math.h>
-#include <fstream>
 
 namespace commander
 {
-Commander::Commander(const std::string ref_traj_fname, const std::string mb_hostname,
-                     const double kp, const double kd)
-    : ref_traj_fname(ref_traj_fname), mb(mb_hostname), kp(kp), kd(kd)
+Commander::Commander(const std::string mb_if_name, const std::string ref_traj_fname)
+    : ref_traj_fname(ref_traj_fname), mb(mb_if_name)
 {
-	initialize();
-	initialize_mb();
+	reset();
+	// initialize_csv_file_track_error(); // Initializes the tracking of control and realized
+	// cmds
 }
 
 Commander::~Commander()
 {
 }
 
+/* reset the commander */
 void
-Commander::initialize()
+Commander::reset()
 {
 	ref_traj.clear();
 	traj.clear();
 
 	ref_traj.reserve(t_dim_expected);
-	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
-	t_size = ref_traj.size(); /** determine t_dim */
+	ref_traj_reader(ref_traj_fprefix + ref_traj_fname, ref_traj);
+	t_size = ref_traj.size(); /* determine t_dim */
 
 	traj.reserve(t_size);
 	t_index = 0;
 }
 
+/* initialize the masterboard interface */
 void
-Commander::initialize_mb()
+Commander::initialize_masterboard()
 {
+	if (is_masterboard_ready) {
+		return;
+	};
+
 	mb.Init();
 
 	for (size_t i = 0; i < driver_count; ++i) {
@@ -72,66 +78,77 @@ Commander::initialize_mb()
 
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
+	} else {
+		is_masterboard_ready = true;
 	}
-
-	initialize_csv_file_track_error();  // Initializes the tracking of control and realized cmds
 }
 
+/* main loop, timing is important, do not modify */
 void
-Commander::print_all()
+Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state)
 {
-	print_state();
-	// print_offset();
-	print_traj();
-	// mb.PrintIMU();
-	// mb.PrintADC();
-	mb.PrintMotors();
-	mb.PrintMotorDrivers();
-	mb.PrintStats();
-	print_stats();
-	print_timing_stats();
-}
+	std::chrono::high_resolution_clock::time_point now_time;
 
+	auto command_time = std::chrono::high_resolution_clock::now();
+	auto print_time = std::chrono::high_resolution_clock::now();
 
-void
-Commander::command()
-{
-	if (!is_ready) {
-		is_ready = check_ready();
-		return;
-	}
+	while (is_running) {
+		now_time = std::chrono::high_resolution_clock::now();
 
-	switch (state) {
-	case State::hold: {
-		/* this does not work the second time? */
-		for (size_t i = 0; i < motor_count; ++i) {
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+		/* command every command period */
+		if (now_time >= command_time) {
+			command();
+			//  when the command was finished
+			auto finish_time = std::chrono::high_resolution_clock::now();
+			// when the command should have been finished by
+			auto deadline = now_time +
+			    std::chrono::nanoseconds(static_cast<size_t>(
+				std::nano::den * commander::command_period));
+			/* save timing stats */
 
-				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-				}
-
+			// margin = deadline - finish time
+			double margin;
+			if (finish_time < deadline) { // we are good, margin is positive
+				margin =
+				    std::chrono::duration<double>(deadline - finish_time).count();
+			} else { // we are late, margin is negative
+				command_timing_stats.violation_count++;
+				margin =
+				    -std::chrono::duration<double>(finish_time - deadline).count();
 			}
-			else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-			}
-			vel_ref[i] = 0.;
+			// elapsed = finish time - start time
+			const double elapsed =
+			    std::chrono::duration<double>(finish_time - now_time).count();
+
+			command_timing_stats.update(margin, elapsed);
+			command_time = deadline; // the next command time is the current deadline.
 		}
-		track(pos_ref, vel_ref);
-		break;
-	}
-	case State::sweep: {
-		sweep_traj();
-		break;
-	}
-	case State::track: {
-		track_traj();
-		break;
-	}
+
+		/* print every print period */
+		if (now_time >= print_time) {
+			printf("\33[H\33[2J"); //* clear screen
+
+			print_info();
+
+			auto finish_time = std::chrono::high_resolution_clock::now();
+			const double elapsed =
+			    std::chrono::duration<double>(finish_time - now_time).count();
+
+			/* print does not need detailed stats */
+			print_timing_stats.update(0, elapsed);
+
+			// skip if needed
+			while (print_time < now_time) {
+				print_timing_stats.skip_count++;
+				print_time += std::chrono::nanoseconds(
+				    static_cast<size_t>(std::nano::den * commander::print_period));
+			}
+		}
+
+		if (is_changing_state) {
+			is_changing_state = false;
+			change_to_next_state();
+		}
 	}
 }
 
@@ -153,6 +170,74 @@ Commander::change_to_next_state()
 		break;
 	}
 	}
+}
+
+void
+Commander::command()
+{
+	if (!is_masterboard_ready) {
+		return;
+	}
+
+	if (!is_ready) {
+		is_ready = check_ready();
+		return;
+	}
+
+	switch (state) {
+		// case State::not_ready: {
+		// }
+	case State::hold: {
+		/* this does not work the second time? */
+		for (size_t i = 0; i < motor_count; ++i) {
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_hold_position[motor2ref_idx[i]];
+				}
+
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_hold_position[motor2ref_idx[i]];
+			}
+			vel_ref[i] = 0.;
+		}
+		track(pos_ref, vel_ref);
+		break;
+	}
+	case State::sweep: {
+		sweep_traj();
+		break;
+	}
+	case State::track: {
+		track_traj();
+		break;
+	}
+	}
+}
+
+void
+Commander::print_info()
+{
+	printf("Command timing:\n");
+	command_timing_stats.print();
+
+	printf("Print timing:\n");
+	print_timing_stats.print();
+	// print_state();
+	//  print_offset();
+	// print_traj();
+	//  mb.PrintIMU();
+	//  mb.PrintADC();
+	// mb.PrintMotors();
+	// mb.PrintMotorDrivers();
+	// mb.PrintStats();
+	// print_stats();
 }
 
 void
@@ -221,9 +306,7 @@ Commander::update_stats()
 			    : mb.motor_drivers[i].adc[1];
 		}
 	}
-	if (max_print_exc_stat < print_time_dur.count()) {
-		max_print_exc_stat = print_time_dur.count();
-	}
+
 }
 
 void
@@ -232,24 +315,25 @@ Commander::print_stats()
 	printf("Max Amp    |    %5.2f       | \n", max_amp_stat);
 }
 
-void
-Commander::print_timing_stats()
-{
-	printf("Print time | [cur] %5.2f ms | [max] %5.2f ms \n", print_time_dur.count(),
-	       max_print_exc_stat);
+// void
+// Commander::print_timing_stats()
+//{
+//	printf("Print time | [cur] %5.2f ms | [max] %5.2f ms \n", print_elapsed.count(),
+//	       max_print_exc_stat);
 
-	timing_stats.sampling_check();
+//	command_timing_stats.sampling_check();
 
-	printf("%10s | %10s | %10s | %10s | %5s | %10s | %10s | %10s | %10s\n", "Timing",
-	       "Rate (Hz)", "Violation%", "Violation#", "Run#", "Min M (ms)", "Max E (ms)",
-	       "Avg M (ms)", "Avg E (ms)");
-	printf("%10s | %10.3g | %10.3g | %10lu | %5lu | %10.3g | %10.3g | %10.3g | %10.3g\n", "",
-	       timing_stats.avg_rate,
-	       static_cast<double>(timing_stats.violation_count) / timing_stats.run_count * 100,
-	       timing_stats.violation_count, timing_stats.run_count, timing_stats.min_margin * 1e3,
-	       timing_stats.max_elapsed * 1e3, timing_stats.avg_margin * 1e3,
-	       timing_stats.avg_elapsed * 1e3);
-}
+//	printf("%10s | %10s | %10s | %10s | %5s | %10s | %10s | %10s | %10s\n", "Timing",
+//	       "Rate (Hz)", "Violation%", "Violation#", "Run#", "Min M (ms)", "Max E (ms)",
+//	       "Avg M (ms)", "Avg E (ms)");
+//	printf("%10s | %10.3g | %10.3g | %10lu | %5lu | %10.3g | %10.3g | %10.3g | %10.3g\n", "",
+//	       command_timing_stats.avg_rate,
+//	       static_cast<double>(command_timing_stats.violation_count) /
+//	           command_timing_stats.run_count * 100,
+//	       command_timing_stats.violation_count, command_timing_stats.run_count,
+//	       command_timing_stats.min_margin * 1e3, command_timing_stats.max_elapsed * 1e3,
+//	       command_timing_stats.avg_margin * 1e3, command_timing_stats.avg_elapsed * 1e3);
+//}
 
 void
 Commander::print_traj()
@@ -279,13 +363,6 @@ void
 Commander::log_traj()
 {
 	writematrix(fprefix + traj_fname, traj);
-}
-
-void
-Commander::reset()
-{
-	initialize();
-	initialize_mb();
 }
 
 bool
@@ -345,7 +422,8 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_ref)[motor_count])
+Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
+                 double (&toq_ref)[motor_count])
 {
 	mb.ParseSensorData();
 
@@ -372,7 +450,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 
 	mb.SendCommand();
 }
-
 
 void
 Commander::track(double (&pos_ref)[motor_count])
@@ -405,45 +482,44 @@ void
 Commander::track_traj()
 {
 
-	if (t_index < t_size - 1) 
-	{
+	if (t_index < t_size - 1) {
 		for (size_t i = 0; i < motor_count; ++i) {
-			
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
 
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_traj[t_index][motor2ref_idx[i]];
 				}
-				else 
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
-				}
-			} else 
-			{
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_traj[t_index][motor2ref_idx[i]];
 			}
 			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
 			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 		}
-	} 
-	else 
-	{
+	} else {
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0;
 		}
 	}
 
-	if (torque_control_flag){
-		track(pos_ref, vel_ref, toq_ref);}
+	if (torque_control_flag) {
+		track(pos_ref, vel_ref, toq_ref);
+	}
 
-	else if (PD_control_flag){
-		track(pos_ref, vel_ref);}
-	else{
-		track(pos_ref);}
+	else if (PD_control_flag) {
+		track(pos_ref, vel_ref);
+	} else {
+		track(pos_ref);
+	}
 
 	track_error(pos_ref, vel_ref);
 
@@ -451,32 +527,34 @@ Commander::track_traj()
 		sample_traj();
 		++t_index;
 	} else if (loop_track_traj) {
-		t_index = 0;	
+		t_index = 0;
 	}
 }
 
 void
-Commander::initialize_csv_file_track_error(){
+Commander::initialize_csv_file_track_error()
+{
 
 	try {
-        
+
 		track_realized_control_io.open(track_realized_control_data, std::ios::app);
 
-        if (!track_realized_control_io.is_open()) {
-            throw std::runtime_error("Error opening file!");
-        }
-    }
+		if (!track_realized_control_io.is_open()) {
+			throw std::runtime_error("Error opening file!");
+		}
+	}
 
-    catch (const std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << '\n';
-    }
+	catch (const std::exception &e) {
+		std::cerr << "Exception occurred: " << e.what() << '\n';
+	}
 }
 
 void
 Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-    for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << '\n';
+	for (size_t i = 0; i < motor_count; ++i) {
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
+					  << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
 
@@ -503,7 +581,8 @@ Commander::sweep_traj()
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
 		pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * get_sign(gear_ratio[i]);
+		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) *
+		    get_sign(gear_ratio[i]);
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 
@@ -552,7 +631,6 @@ Commander::sample_traj()
 
 	traj.push_back(state);
 }
-
 
 void
 Commander::set_offset(double (&index_offset)[motor_count])

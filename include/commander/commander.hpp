@@ -9,6 +9,7 @@
 #include "matrix_rw.hpp"
 #include "timing_stats.hpp"
 #include "types.hpp"
+#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -38,29 +39,30 @@ get_sign(T val)
 class Commander
 {
   public:
-	Commander(const std::string ref_traj_fname = ref_traj_fname_default,
-	          const std::string mb_hostname = mb_hostname_default, const double kp = kp_default,
-	          const double kd = kd_default);
+	Commander(const std::string mb_if_name, const std::string ref_traj_fname);
+
 	~Commander();
 
   public:
-	void print_all();
+	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
+	void print_info();
 	void command();
 	void change_to_next_state();
 	void update_stats();
-	TimingStats timing_stats;
-	std::chrono::milliseconds print_time_dur{0};
+	void initialize_masterboard();
 
   private:
+	TimingStats command_timing_stats;
+	TimingStats print_timing_stats;
+
+	bool is_masterboard_ready = false;
 	bool is_ready = false;
 
-	void initialize();
-	void initialize_mb();
 	void print_state();
 	void print_traj();
 	void print_offset();
 	void print_stats();
-	void print_timing_stats();
+	// void print_timing_stats();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -76,7 +78,7 @@ class Commander
 
 	void reset();
 
-	matrix_rw::Reader<traj_dim> readmatrix;
+	matrix_rw::Reader<traj_dim> ref_traj_reader;
 	matrix_rw::Writer<traj_dim> writematrix;
 
 	double index_pos[motor_count];
