@@ -73,7 +73,86 @@ Commander::initialize_mb()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
-	initialize_csv_file_track_error();  //Initializes the tracking of control and realized cmds
+
+	initialize_csv_file_track_error();  // Initializes the tracking of control and realized cmds
+}
+
+void
+Commander::print_all()
+{
+	print_state();
+	// print_offset();
+	print_traj();
+	// mb.PrintIMU();
+	// mb.PrintADC();
+	mb.PrintMotors();
+	mb.PrintMotorDrivers();
+	mb.PrintStats();
+	print_stats();
+	print_timing_stats();
+}
+
+
+void
+Commander::command()
+{
+	if (!is_ready) {
+		is_ready = check_ready();
+		return;
+	}
+
+	switch (state) {
+	case State::hold: {
+		/* this does not work the second time? */
+		for (size_t i = 0; i < motor_count; ++i) {
+			if (hip_offset_flag)
+			{
+				if (i == 0 || i == 1 || i == 6 || i == 7)
+				{
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+				}
+
+			}
+			else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			}
+			vel_ref[i] = 0.;
+		}
+		track(pos_ref, vel_ref);
+		break;
+	}
+	case State::sweep: {
+		sweep_traj();
+		break;
+	}
+	case State::track: {
+		track_traj();
+		break;
+	}
+	}
+}
+
+void
+Commander::change_to_next_state()
+{
+	switch (state) {
+	case State::hold: {
+		reset();
+		state = State::track;
+		break;
+	}
+	case State::sweep: {
+		state = State::hold;
+		break;
+	}
+	case State::track: {
+		state = State::hold;
+		break;
+	}
+	}
 }
 
 void
@@ -194,21 +273,6 @@ Commander::print_traj()
 		printf("%9.3g | ", vel[i]);
 		printf("\n");
 	}
-}
-
-void
-Commander::print_all()
-{
-	print_state();
-	// print_offset();
-	print_traj();
-	// mb.PrintIMU();
-	// mb.PrintADC();
-	mb.PrintMotors();
-	mb.PrintMotorDrivers();
-	mb.PrintStats();
-	print_stats();
-	print_timing_stats();
 }
 
 void
@@ -439,9 +503,9 @@ Commander::sweep_traj()
 		const double t =
 		    static_cast<double>(t_sweep_index) / static_cast<double>(t_sweep_size);
 		pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		    (idx_sweep_ampl - idx_sweep_ampl * cos(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * sgn(gear_ratio[i]);
+		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 
 		track(pos_ref, vel_ref);
 	}
@@ -489,67 +553,6 @@ Commander::sample_traj()
 	traj.push_back(state);
 }
 
-void
-Commander::command()
-{
-	if (!is_ready) {
-		is_ready = check_ready();
-		return;
-	}
-
-	switch (state) {
-	case State::hold: {
-		/* this does not work the second time? */
-		for (size_t i = 0; i < motor_count; ++i) {
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
-
-				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-				}
-
-			}
-			else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-			}
-			vel_ref[i] = 0.;
-		}
-		track(pos_ref, vel_ref);
-		break;
-	}
-	case State::sweep: {
-		sweep_traj();
-		break;
-	}
-	case State::track: {
-		track_traj();
-		break;
-	}
-	}
-}
-
-void
-Commander::next_state()
-{
-	switch (state) {
-	case State::hold: {
-		reset();
-		state = State::track;
-		break;
-	}
-	case State::sweep: {
-		state = State::hold;
-		break;
-	}
-	case State::track: {
-		state = State::hold;
-		break;
-	}
-	}
-}
 
 void
 Commander::set_offset(double (&index_offset)[motor_count])

@@ -3,21 +3,16 @@
 #include <thread>
 
 using commander::Commander;
-using commander::State;
 
 int
-main(int argc, char const *argv[])
+main(int, char const *[])
 {
 #ifndef DRY_BUILD
 	/** give the process a high priority */
 	nice(-20);
-#else
-	rt_timer::set_process_priority();
 #endif
 
 	Commander com;
-	// TimerStats stats;
-
 	std::atomic_bool is_running = true;
 	std::atomic_bool is_changing_state = false;
 
@@ -102,7 +97,7 @@ main(int argc, char const *argv[])
 
 		if (is_changing_state) {
 			is_changing_state = false;
-			com.next_state();
+			com.change_to_next_state();
 		}
 	}
 

@@ -7,12 +7,13 @@
 
 #include "config.hpp"
 #include "matrix_rw.hpp"
+#include "timing_stats.hpp"
 #include "types.hpp"
+#include <fstream>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <iostream>
 
 #ifndef DRY_BUILD
 	#include <sys/stat.h>
@@ -29,58 +30,10 @@ enum State { hold, sweep, track };
 
 template <typename T>
 int
-sgn(T val)
+get_sign(T val)
 {
 	return (T(0) < val) - (val < T(0));
 }
-
-class TimingStats
-{
-  public:
-	TimingStats()
-	{
-		prev_sample_instant = std::chrono::high_resolution_clock::now();
-		min_margin = std::numeric_limits<double>::max();
-		max_elapsed = 0;
-		reset_accum();
-	}
-
-	void
-	sampling_check()
-	{
-		auto now_time = std::chrono::high_resolution_clock::now();
-
-		if (now_time > prev_sample_instant && run_count_accum > 0) {
-			avg_rate = static_cast<double>(run_count_accum) /  std::chrono::duration<double>(now_time - prev_sample_instant).count();;
-			avg_elapsed = elapsed_accum / run_count_accum;
-			avg_margin = margin_accum / run_count_accum;
-			reset_accum();
-			prev_sample_instant = now_time;
-		}
-	}
-
-	size_t run_count;
-	size_t violation_count;
-	double avg_rate;
-	double avg_margin;
-	double avg_elapsed;
-	double min_margin;
-	double max_elapsed;
-
-	size_t run_count_accum;
-	double margin_accum;
-	double elapsed_accum;
-
-  private:
-	void
-	reset_accum()
-	{
-		run_count_accum = 0;
-		margin_accum = 0;
-		elapsed_accum = 0;
-	}
-	std::chrono::high_resolution_clock::time_point prev_sample_instant;
-};
 
 class Commander
 {
@@ -92,6 +45,17 @@ class Commander
 
   public:
 	void print_all();
+	void command();
+	void change_to_next_state();
+	void update_stats();
+	TimingStats timing_stats;
+	std::chrono::milliseconds print_time_dur{0};
+
+  private:
+	bool is_ready = false;
+
+	void initialize();
+	void initialize_mb();
 	void print_state();
 	void print_traj();
 	void print_offset();
@@ -101,28 +65,16 @@ class Commander
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
 	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_red)[motor_count]);
+	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
+	           double (&toq_red)[motor_count]);
 	void initialize_csv_file_track_error();
 	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void set_offset(double (&index_offset)[motor_count]);
 	void track_traj();
 	void sweep_traj();
 	void sample_traj();
-	void command();
-	void next_state();
-	void update_stats();
+
 	void reset();
-
-	/* stat vars */
-	TimingStats timing_stats;
-	// std::chrono::milliseconds command_time_dur{0};
-	std::chrono::milliseconds print_time_dur{0};
-
-  private:
-	bool is_ready = false;
-
-	void initialize();
-	void initialize_mb();
 
 	matrix_rw::Reader<traj_dim> readmatrix;
 	matrix_rw::Writer<traj_dim> writematrix;
@@ -169,14 +121,12 @@ class Commander
 	double max_command_exc_stat = 0;
 	double max_print_exc_stat = 0;
 
-
 	bool hip_offset_flag = true;
-	double hip_offset_position[motor_count] = {0.15,-0.15,0.0,0.0,0.0,0.0,
-                                                    0.15,-0.15,0.0,0.0,0.0,0.0};
+	double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,
+	                                           0.15, -0.15, 0.0, 0.0, 0.0, 0.0};
 
 	// std::ofstream track_realized_control_io(track_realized_control_data, std::ios_base::app);
 	std::ofstream track_realized_control_io;
-
 };
 
 } // namespace commander
