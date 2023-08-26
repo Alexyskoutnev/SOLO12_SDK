@@ -109,7 +109,7 @@ class Commander
 	void sweep_traj();
 	void sample_traj();
 	void command();
-	void next_state();
+	void change_to_next_state();
 	void update_stats();
 	void reset();
 	double min_max_bound(double&);

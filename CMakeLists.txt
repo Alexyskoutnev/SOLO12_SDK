@@ -8,18 +8,18 @@ project(
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	option(DEBUG_BUILD "Build everything in debug mode" ON)
-	option(BUILD_TESTS "Build tests" OFF)
+	option(BUILD_TESTS "Build tests" OFF) # we have no tests yet
 	option(BUILD_EXAMPLES "Build examples" ON)
 	
 	option(USE_SINGLE_PRECISION "Use single precision floats" OFF)
 	option(DRY_BUILD "Build without building masterboard sdk for debug" OFF)
 
-	if(WIN32) #* force dry build because masterboard sdk cannot be compiled on w*ndows
+	if(WIN32) # force dry build because masterboard sdk cannot be compiled on w*ndows
+		message("You are on w*ndows, forcing dry build")
 		set(DRY_BUILD ON)
 		set(BUILD_EXAMPLES OFF)
 	endif()
 
-	message("Build test -> ${BUILD_TESTS}")
 	message("Build Examples -> ${BUILD_EXAMPLES}")
 
 	#* where to look for the project header and source files
@@ -38,8 +38,8 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	)
 
 	#* source files
-	file (GLOB_RECURSE MASTER_BOARD_SRC CONFIGURE_DEPENDS "${SRC_DIR}/master_board_sdk/*.cpp")
-	file (GLOB_RECURSE COMMANDER_SRC CONFIGURE_DEPENDS "${SRC_DIR}/commander/*.cpp")
+	file(GLOB_RECURSE MASTER_BOARD_SRC CONFIGURE_DEPENDS "${SRC_DIR}/master_board_sdk/*.cpp")
+	file(GLOB_RECURSE COMMANDER_SRC CONFIGURE_DEPENDS "${SRC_DIR}/commander/*.cpp")
 
 	#* set up output directories
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -51,7 +51,6 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	set(CMAKE_CXX_STANDARD 17)
 	set(CMAKE_CXX_STANDARD_REQUIRED ON)
 	set(CMAKE_CXX_EXTENSIONS OFF)
-	set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 	add_compile_options(
 		-fdiagnostics-color=always #* colored debug output

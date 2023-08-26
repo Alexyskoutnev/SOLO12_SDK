@@ -3,20 +3,15 @@
 #include <thread>
 
 using commander::Commander;
-using commander::State;
 
 int
 main(int argc, char const *argv[])
 {
 #ifndef DRY_BUILD
-	/** give the process a high priority */
-	nice(-20);
-#else
-	rt_timer::set_process_priority();
+	nice(-20); // give the process high priority
 #endif
 
 	Commander com;
-	// TimerStats stats;
 
 	std::atomic_bool is_running = true;
 	std::atomic_bool is_changing_state = false;
@@ -36,7 +31,6 @@ main(int argc, char const *argv[])
 
 	/* main loop */
 	std::chrono::high_resolution_clock::time_point now_time;
-
 	auto command_time = std::chrono::high_resolution_clock::now();
 	auto print_time = std::chrono::high_resolution_clock::now();
 
@@ -102,7 +96,7 @@ main(int argc, char const *argv[])
 
 		if (is_changing_state) {
 			is_changing_state = false;
-			com.next_state();
+			com.change_to_next_state();
 		}
 	}
 

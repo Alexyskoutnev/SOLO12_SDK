@@ -3,9 +3,9 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <math.h>
-#include <fstream>
 
 namespace commander
 {
@@ -29,9 +29,7 @@ Commander::initialize()
 
 	ref_traj.reserve(t_dim_expected);
 	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
-	t_size = ref_traj.size(); /** determine t_dim */
-
-	// exit(1);
+	t_size = ref_traj.size(); /* determine t_dim */
 
 	traj.reserve(t_size);
 	t_index = 0;
@@ -75,7 +73,8 @@ Commander::initialize_mb()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	}
-	initialize_csv_file_track_error();  //Initializes the tracking of control and realized cmds
+
+	initialize_csv_file_track_error(); // Initializes the tracking of control and realized cmds
 }
 
 void
@@ -284,7 +283,8 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_ref)[motor_count])
+Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
+                 double (&toq_ref)[motor_count])
 {
 	mb.ParseSensorData();
 
@@ -311,7 +311,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 
 	mb.SendCommand();
 }
-
 
 void
 Commander::track(double (&pos_ref)[motor_count])
@@ -343,47 +342,40 @@ Commander::track(double (&pos_ref)[motor_count])
 void
 Commander::track_traj()
 {
-
-	if (t_index < t_size - 1) 
-	{
+	if (t_index < t_size - 1) {
 		for (size_t i = 0; i < motor_count; ++i) {
-			
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
 
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_traj[t_index][motor2ref_idx[i]];
 				}
-				else 
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
-				}
-			} else 
-			{
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_traj[t_index][motor2ref_idx[i]];
 			}
 			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
 			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 		}
-	} 
-	else 
-	{
+	} else {
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0;
 		}
-		
 	}
 
-	if (CONTROLLER_T == control_state::TORQUE){
+	if (CONTROLLER_T == control_state::TORQUE) {
 		track(pos_ref, vel_ref, toq_ref);
-	}
-	else if (CONTROLLER_T == control_state::PD_CONTROL){
+	} else if (CONTROLLER_T == control_state::PD_CONTROL) {
 		track(pos_ref, vel_ref);
-	}
-	else if (CONTROLLER_T == control_state::P_CONTROL){
+	} else if (CONTROLLER_T == control_state::P_CONTROL) {
 		track(pos_ref);
 	}
 
@@ -393,39 +385,38 @@ Commander::track_traj()
 		sample_traj();
 		++t_index;
 	} else if (loop_track_traj) {
-		t_index = 0;	
+		t_index = 0;
 	}
 }
 
 void
-Commander::initialize_csv_file_track_error(){
-
+Commander::initialize_csv_file_track_error()
+{
 	try {
-        
 		track_realized_control_io.open(track_realized_control_data, std::ios::app);
 
-        if (!track_realized_control_io.is_open()) {
-            throw std::runtime_error("Error opening file!");
-        }
-    }
+		if (!track_realized_control_io.is_open()) {
+			throw std::runtime_error("Error opening file!");
+		}
+	}
 
-    catch (const std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << '\n';
-    }
+	catch (const std::exception &e) {
+		std::cerr << "Exception occurred: " << e.what() << '\n';
+	}
 }
 
 void
 Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-    for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << '\n';
+	for (size_t i = 0; i < motor_count; ++i) {
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
+					  << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
 
 void
 Commander::sweep_traj()
 {
-
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
 
@@ -507,19 +498,20 @@ Commander::command()
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
 
 				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_hold_position[motor2ref_idx[i]];
 				}
 
-			}
-			else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_hold_position[motor2ref_idx[i]];
 			}
 			vel_ref[i] = 0.;
 		}
@@ -538,7 +530,7 @@ Commander::command()
 }
 
 void
-Commander::next_state()
+Commander::change_to_next_state()
 {
 	switch (state) {
 	case State::hold: {
@@ -567,13 +559,15 @@ Commander::set_offset(double (&index_offset)[motor_count])
 }
 
 double
-Commander::min_max_bound(double &num){
-	if (num > motor_ang_bound)
+Commander::min_max_bound(double &num)
+{
+	if (num > motor_ang_bound) {
 		return motor_ang_bound;
-	else if (num < motor_count)
+	} else if (num < -motor_ang_bound) {
 		return -motor_ang_bound;
-	else
+	} else {
 		return num;
+	}
 }
 
 } // namespace commander
