@@ -44,17 +44,20 @@ Commander::initialize_masterboard()
 		mb.motor_drivers[i].motor2->SetCurrentReference(0);
 		mb.motor_drivers[i].motor1->Enable();
 		mb.motor_drivers[i].motor2->Enable();
-		mb.motor_drivers[i].EnablePositionRolloverError();
-		mb.motor_drivers[i].SetTimeout(masterboard_timeout);
-		mb.motor_drivers[i].Enable();
 
-		// compare to example_pd.cpp, we plan to use the on-board PD controller
+		// Set the gains for the PD controller running on the cards.
 		mb.motor_drivers[i].motor1->set_kp(kp);
 		mb.motor_drivers[i].motor2->set_kp(kp);
 		mb.motor_drivers[i].motor1->set_kd(kd);
 		mb.motor_drivers[i].motor2->set_kd(kd);
+
+		// Set the maximum current controlled by the card.
 		mb.motor_drivers[i].motor1->set_current_sat(max_current);
 		mb.motor_drivers[i].motor2->set_current_sat(max_current);
+
+		mb.motor_drivers[i].EnablePositionRolloverError();
+		mb.motor_drivers[i].SetTimeout(masterboard_timeout);
+		mb.motor_drivers[i].Enable();
 	}
 
 	const double send_init_delay = 1e-3;
@@ -169,7 +172,7 @@ Commander::change_to_next_state()
 	switch (state) {
 	case State::not_ready: {
 		if (is_masterboard_ready) {
-			state = State::hold;
+			state = State::sweep;
 		} else {
 			printf("Not ready!\n");
 		}
@@ -235,9 +238,10 @@ Commander::command_check_ready()
 		return false;
 	}
 
-	mb.ParseSensorData();
-
+	all_index_detected = true;
 	bool is_ready = true;
+
+	mb.ParseSensorData();
 
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (!mb.motor_drivers[i / 2].is_connected) {
@@ -254,6 +258,12 @@ Commander::command_check_ready()
 		mb.motors[i].SetCurrentReference(0.);
 		mb.motors[i].SetPositionReference(0.);
 		mb.motors[i].SetVelocityReference(0.);
+
+		if (mb.motors[i].HasIndexBeenDetected()) {
+			was_index_detected[i] = true;
+		} else {
+			all_index_detected = false;
+		}
 	}
 	mb.SendCommand();
 
@@ -268,7 +278,8 @@ Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[m
 		return;
 	}
 
-	update_stats();
+	// update_stats();
+	mb.ParseSensorData();
 
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (i % 2 == 0) {
@@ -316,7 +327,7 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 			vel[i] = mb.motors[i].GetVelocity();
 
 			// to be implemented
-			// calculate current here !!!!! 
+			// calculate current here !!!!!
 			double current = 0;
 			mb.motors[i].SetCurrentReference(current);
 		}
@@ -386,12 +397,25 @@ Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
 void
 Commander::generate_sweep_command()
 {
+
+	if (all_index_detected) {
+		/* read index position from file */
+		matrix_rw::Reader<motor_count> index_pos_reader;
+		std::vector<Row<motor_count>> index_pos_vec;
+		index_pos_reader(fprefix + index_pos_fname, index_pos_vec);
+		for (size_t i = 0; i < motor_count; ++i) {
+			index_pos[i] = index_pos_vec[0][i];
+		}
+	}
+
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
 
 	for (size_t i = 0; i < motor_count; i++) {
 
 		if (was_index_detected[i]) {
+			pos_ref[i] = index_pos[i];
+			vel_ref[i] = 0;
 			continue;
 		}
 
@@ -413,7 +437,9 @@ Commander::generate_sweep_command()
 		command_reference(pos_ref, vel_ref);
 	}
 	++t_sweep_index;
+
 	if (all_ready) {
+		all_index_detected = true;
 		is_masterboard_ready = true;
 		is_sweep_done = true;
 
@@ -421,24 +447,32 @@ Commander::generate_sweep_command()
 			if (is_hard_calibrating) {
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			} else {
-				mb.motors[i].SetPositionOffset(index_pos[i] - index_offset[i]);
+				mb.motors[i].SetPositionOffset(index_offset[i]);
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			}
 		}
 
 		if (is_hard_calibrating) {
-			for (size_t i = 0; i < motor_count; i++) {
+			for (size_t i = 0; i < motor_count; ++i) {
 				pos_ref[i] = -index_pos[i];
 				vel_ref[i] = 0.0;
 			}
 		} else {
-			for (size_t i = 0; i < motor_count; i++) {
+			Row<motor_count> index_pos_row;
+
+			for (size_t i = 0; i < motor_count; ++i) {
+				index_pos_row[i] = index_pos[i];
 				pos_ref[i] = 0.0;
 				vel_ref[i] = 0.0;
 			}
+			/* write index position to file */
+			std::vector<Row<motor_count>> index_pos_vec;
+			index_pos_vec.push_back(index_pos_row);
+			matrix_rw::Writer<motor_count> write_index_pos;
+			write_index_pos(fprefix + index_pos_fname, index_pos_vec);
 		}
-		command_reference(pos_ref, vel_ref);
 	}
+	command_reference(pos_ref, vel_ref);
 }
 
 void
@@ -598,14 +632,6 @@ Commander::print_info()
 void
 Commander::print_state()
 {
-	printf("| %12s | %12s | %12s | %12s | %12s |\n", "Masterboard", "Robot state",
-	       "Index sweep", "Hard Calibr.", "Track PD");
-	printf("| %12s | %12s | %12s | %12s | %12s | \n",
-	       (is_masterboard_connected) ? "Connected" : "Disconnected",
-	       state_to_name[state].c_str(), (is_sweep_done) ? "Done" : "Not Done",
-	       (is_hard_calibrating) ? "True" : "False",
-	       (using_masterboard_pd) ? "Onboard" : "Current");
-
 	if (is_hard_calibrating) {
 		printf("Offset Values: {");
 		for (size_t i = 0; i < motor_count; i++) {
@@ -649,6 +675,14 @@ Commander::print_state()
 	if (spi_error_header_printed) {
 		printf("\n");
 	}
+
+	printf("| %12s | %12s | %12s | %12s | %12s |\n", "Masterboard", "Robot state",
+	       "Index detect", "Hard Calibr.", "Track PD");
+	printf("| %12s | %12s | %12s | %12s | %12s | \n",
+	       (is_masterboard_connected) ? "Connected" : "Disconnected",
+	       state_to_name[state].c_str(), (all_index_detected) ? "All found" : "Not Done",
+	       (is_hard_calibrating) ? "True" : "False",
+	       (using_masterboard_pd) ? "Onboard" : "Current");
 }
 
 /* Prints stats */

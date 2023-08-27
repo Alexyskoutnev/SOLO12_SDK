@@ -17,11 +17,9 @@ namespace commander
 
 constexpr double command_freq = 1e3; /** [hz] */
 constexpr double print_freq = 2;     /** [hz] */
-constexpr double input_freq = 1e1;   /** [hz] */
 
 constexpr double command_period = 1. / command_freq; /** [s] */
 constexpr double print_period = 1. / print_freq;     /** [s] */
-constexpr double input_period = 1. / input_freq;     /** [s] */
 
 // constexpr double idx_sweep_freq = 0.05;     /** [hz] */
 constexpr double idx_sweep_freq = 0.05;     /** [hz] */
@@ -30,7 +28,7 @@ constexpr double idx_sweep_ampl = M_PI / 9; /** [rad] */
 constexpr bool print_stats = true;
 constexpr bool print_command_timing = true;
 constexpr bool print_print_timing = false;
-constexpr bool print_offset = false;
+constexpr bool print_offset = true;
 constexpr bool print_traj = true;
 constexpr bool print_masterboard = false;
 constexpr bool is_looping_traj = true;
@@ -40,11 +38,12 @@ constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;             /** [s] */
 constexpr size_t sweep_duration = 5;            /** [s] */
 constexpr std::uint8_t masterboard_timeout = 0; /** [ms] */
-const std::string ref_traj_fprefix = "../../data/active/";
+const std::string ref_traj_fprefix = "../data/active/";
 // const std::string ref_traj_fname_default = "gait.csv";
 const std::string ref_traj_fname_default = "gait.csv";
 const std::string track_realized_control_data = "../../data/track_data/realized_control_data.csv";
 const std::string fprefix = "../data/";
+const std::string index_pos_fname = "index_pos.csv";
 const std::string traj_fname = "traj.csv";
 
 const std::string mb_hostname_default = "enx606d3cd504bf";

@@ -40,6 +40,25 @@ main(int argc, char **argv)
 	auto const if_name = result["if-name"].as<std::string>();
 	auto const traj_fname = result["traj-fname"].as<std::string>();
 
+	/* give the process a high priority */
+	nice(-20);
+
+	/* capture inputs in a second thread */
+	std::atomic_bool is_running = true;
+	std::atomic_bool is_changing_state = false;
+
+	auto thread = std::thread([&] {
+		while (is_running) {
+			char in = std::getchar();
+
+			if (in == quit_key) {
+				is_running = false;
+			} else {
+				is_changing_state = true;
+			}
+		}
+	});
+
 	/* initialize commander */
 	Commander com(if_name, traj_fname);
 
@@ -56,27 +75,6 @@ main(int argc, char **argv)
 	if (result["no-onboard-pd"].as<bool>()) {
 		com.disable_onboard_pd();
 	}
-
-	/* give the process a high priority */
-	nice(-20);
-
-	/* capture inputs in a second thread */
-	std::atomic_bool is_running = true;
-	std::atomic_bool is_changing_state = false;
-
-	auto thread = std::thread([&] {
-		while (is_running) {
-			char in = std::getchar();
-
-			if (in == quit_key) {
-				is_running = false;
-			} else if (in == reset_key) {
-				com.reset();
-			} else {
-				is_changing_state = true;
-			}
-		}
-	});
 
 	/* main loop */
 	com.loop(is_running, is_changing_state);

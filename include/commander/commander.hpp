@@ -39,13 +39,13 @@ class Commander
 	~Commander();
 
   public:
-	void reset();
 	void initialize_masterboard();
 	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
 	void enable_hard_calibration();
 	void disable_onboard_pd();
 
   private:
+	void reset();
 	void change_to_next_state();
 	void command();
 	bool command_check_ready();
@@ -88,8 +88,6 @@ class Commander
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
-	double index_offset[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	                                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
 	                                        false, false, false, false, false, false};
 
@@ -98,8 +96,8 @@ class Commander
 	size_t t_sweep_index = 0;
 	std::string ref_traj_fname;
 
-	double kp;
-	double kd;
+	double kp = 15;
+	double kd = 1;
 	double init_pos[motor_count];
 
 	std::array<double, 1> imu_logs;
@@ -116,11 +114,12 @@ class Commander
 	bool is_masterboard_connected = false;
 	bool is_masterboard_ready = false;
 	bool is_sweep_done = false;
+	bool all_index_detected = false;
 
 	/* Stats Vars */
 	double max_amp_stat = 0;
 
-	bool hip_offset_flag = true;
+	bool hip_offset_flag = false;
 	double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,
 	                                           0.15, -0.15, 0.0, 0.0, 0.0, 0.0};
 

@@ -177,12 +177,12 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#**************************#
 	#* Executable permissions *#
 	#**************************#
-	if(NOT DEBUG_BUILD)
+	#if(NOT DEBUG_BUILD)
 		add_custom_command(
 			TARGET main
 			POST_BUILD
 			WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 			COMMAND scripts/set_permissions.sh
 		)
-	endif()
+	#endif()
 endif()
