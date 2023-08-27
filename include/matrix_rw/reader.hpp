@@ -88,6 +88,7 @@ template <Size M_COL> class Reader
 				row[i] = std::stod(line);
 #endif
 			}
+			// printf("row[%ld] = %f", i, row[i]);
 		}
 	}
 

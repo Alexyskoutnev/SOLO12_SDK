@@ -31,7 +31,6 @@ main(int, char const *[])
 
 	/* main loop */
 	std::chrono::high_resolution_clock::time_point now_time;
-
 	auto command_time = std::chrono::high_resolution_clock::now();
 	auto print_time = std::chrono::high_resolution_clock::now();
 

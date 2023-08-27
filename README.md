@@ -33,8 +33,8 @@ To build the source code, please follow these steps.
 # Execution
 Now there is a test trajectory in `/data/active/gait.csv`
 
-1. Navigate to `/build/bin` directory: `cd build/bin`
-2. Run main executable: `./main`
+1. Navigate to `/build/` directory: `cd build/`
+2. Run main executable: `./bin/main`
 3. Start the main script and wait for the sweep sequence to finish.
 4. Press `enter` and the robot will be in the hold state.
 5. Press `enter` again and the robot will be tracking the test trajectory found in `/data/active/gait.csv`.

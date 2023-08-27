@@ -3,9 +3,9 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <math.h>
-#include <fstream>
 
 namespace commander
 {
@@ -29,7 +29,7 @@ Commander::initialize()
 
 	ref_traj.reserve(t_dim_expected);
 	readmatrix(ref_traj_fprefix + ref_traj_fname, ref_traj);
-	t_size = ref_traj.size(); /** determine t_dim */
+	t_size = ref_traj.size(); /* determine t_dim */
 
 	traj.reserve(t_size);
 	t_index = 0;
@@ -158,6 +158,7 @@ Commander::change_to_next_state()
 void
 Commander::print_state()
 {
+	printf("Controller [%.10s]\n", control_type_2_name[CONTROLLER_T].c_str());
 	printf("Robot State | %.10s \n", state_to_name[state].c_str());
 	if (sweep_done or state == State::sweep) {
 		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
@@ -255,7 +256,7 @@ void
 Commander::print_traj()
 {
 	bool header_printed = false;
-
+	printf("====================== index [%d] ======================\n", t_index);
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (!mb.motor_drivers[i / 2].is_connected) {
 			continue;
@@ -336,7 +337,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
 	}
@@ -345,7 +346,8 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count], double (&toq_ref)[motor_count])
+Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
+                 double (&toq_ref)[motor_count])
 {
 	mb.ParseSensorData();
 
@@ -364,7 +366,7 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 			mb.motors[i].SetCurrentReference(toq_ref[i]);
 		}
@@ -372,7 +374,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 
 	mb.SendCommand();
 }
-
 
 void
 Commander::track(double (&pos_ref)[motor_count])
@@ -394,7 +395,7 @@ Commander::track(double (&pos_ref)[motor_count])
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+			mb.motors[i].SetPositionReference(min_max_bound(pos_ref[i]));
 		}
 	}
 
@@ -404,46 +405,42 @@ Commander::track(double (&pos_ref)[motor_count])
 void
 Commander::track_traj()
 {
-
-	if (t_index < t_size - 1) 
-	{
+	if (t_index < t_size - 1) {
 		for (size_t i = 0; i < motor_count; ++i) {
-			
-			if (hip_offset_flag)
-			{
-				if (i == 0 || i == 1 || i == 6 || i == 7)
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
 
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_traj[t_index][motor2ref_idx[i]];
 				}
-				else 
-				{
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
-				}
-			} else 
-			{
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_traj[t_index][motor2ref_idx[i]];
 			}
 			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
 			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 		}
-	} 
-	else 
-	{
+	} else {
 		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] = gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 			vel_ref[i] = 0;
 		}
 	}
 
-	if (torque_control_flag){
-		track(pos_ref, vel_ref, toq_ref);}
-
-	else if (PD_control_flag){
-		track(pos_ref, vel_ref);}
-	else{
-		track(pos_ref);}
+	if (CONTROLLER_T == control_state::TORQUE) {
+		track(pos_ref, vel_ref, toq_ref);
+	} else if (CONTROLLER_T == control_state::PD_CONTROL) {
+		track(pos_ref, vel_ref);
+	} else if (CONTROLLER_T == control_state::P_CONTROL) {
+		track(pos_ref);
+	}
 
 	track_error(pos_ref, vel_ref);
 
@@ -451,39 +448,38 @@ Commander::track_traj()
 		sample_traj();
 		++t_index;
 	} else if (loop_track_traj) {
-		t_index = 0;	
+		t_index = 0;
 	}
 }
 
 void
-Commander::initialize_csv_file_track_error(){
-
+Commander::initialize_csv_file_track_error()
+{
 	try {
-        
 		track_realized_control_io.open(track_realized_control_data, std::ios::app);
 
-        if (!track_realized_control_io.is_open()) {
-            throw std::runtime_error("Error opening file!");
-        }
-    }
+		if (!track_realized_control_io.is_open()) {
+			throw std::runtime_error("Error opening file!");
+		}
+	}
 
-    catch (const std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << '\n';
-    }
+	catch (const std::exception &e) {
+		std::cerr << "Exception occurred: " << e.what() << '\n';
+	}
 }
 
 void
 Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-    for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << "," << vel_ref[i] << "," << vel[i] << '\n';
+	for (size_t i = 0; i < motor_count; ++i) {
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
+					  << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
 
 void
 Commander::sweep_traj()
 {
-
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
 
@@ -560,6 +556,18 @@ Commander::set_offset(double (&index_offset)[motor_count])
 	for (size_t i = 0; i < motor_count; ++i) {
 		mb.motors[i].SetPositionOffset(index_offset[i]);
 		mb.motors[i].set_enable_index_offset_compensation(true);
+	}
+}
+
+double
+Commander::min_max_bound(double &num)
+{
+	if (num > motor_ang_bound) {
+		return motor_ang_bound;
+	} else if (num < -motor_ang_bound) {
+		return -motor_ang_bound;
+	} else {
+		return num;
 	}
 }
 

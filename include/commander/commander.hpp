@@ -110,8 +110,7 @@ class Commander
 	bool sweep_done = false;
 	bool hard_calibrating = false;
 	bool loop_track_traj = true;
-	bool torque_control_flag = false;
-	bool PD_control_flag = false;
+	control_state CONTROLLER_T = P_CONTROL;
 
 	State state = sweep;
 
