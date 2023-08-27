@@ -94,8 +94,8 @@ class Commander
 	size_t t_sweep_index = 0;
 	std::string ref_traj_fname;
 
-	double kp = 15;
-	double kd = 1;
+	double kp = commander::kp_default;
+	double kd = commander::kd_default;
 	double init_pos[motor_count];
 
 	std::array<double, 1> imu_logs;
