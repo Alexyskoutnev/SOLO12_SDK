@@ -8,8 +8,8 @@ class TimingStats
 {
   public:
 	TimingStats();
+
 	void reset();
-	void sampling_check();
 	void update(double const margin, double const elapsed);
 	void print();
 
@@ -17,6 +17,7 @@ class TimingStats
 	size_t skip_count;
 
   private:
+	void sampling_check();
 	void reset_accum();
 
 	size_t run_count;
@@ -25,7 +26,7 @@ class TimingStats
 	double avg_elapsed;
 	double min_margin;
 	double max_elapsed;
-
+	
 	size_t run_count_accum;
 	double margin_accum;
 	double elapsed_accum;

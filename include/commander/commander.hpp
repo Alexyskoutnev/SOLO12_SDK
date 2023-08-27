@@ -6,6 +6,8 @@
 #define COMMANDER_HPP_CINARAL_230403_1507
 
 #include "config.hpp"
+#include "master_board_sdk/defines.h"
+#include "master_board_sdk/master_board_interface.h"
 #include "matrix_rw.hpp"
 #include "timing_stats.hpp"
 #include "types.hpp"
@@ -14,16 +16,9 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
-
-#ifndef DRY_BUILD
-	#include <sys/stat.h>
-	#include <unistd.h>
-	#include "master_board_sdk/defines.h"
-	#include "master_board_sdk/master_board_interface.h"
-#else
-	#include "dummy_interface.hpp"
-#endif
 
 namespace commander
 {
@@ -44,25 +39,15 @@ class Commander
 	~Commander();
 
   public:
-	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
-	void print_info();
-	void command();
-	void change_to_next_state();
-	void update_stats();
+	void reset();
 	void initialize_masterboard();
+	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
 
   private:
-	TimingStats command_timing_stats;
-	TimingStats print_timing_stats;
+	void change_to_next_state();
+	void command();
 
-	bool is_masterboard_ready = false;
-	bool is_ready = false;
-
-	void print_state();
-	void print_traj();
-	void print_offset();
-	void print_stats();
-	// void print_timing_stats();
+	void update_stats();
 	void log_traj();
 	bool check_ready();
 	void track(double (&pos_ref)[motor_count]);
@@ -76,7 +61,21 @@ class Commander
 	void sweep_traj();
 	void sample_traj();
 
-	void reset();
+	/* printing functions */
+	void print_info();
+	void print_state();
+	void print_stats();
+	void print_offset();
+	void print_traj();
+	void print_masterboard();
+
+	MasterBoardInterface mb;
+
+	TimingStats command_timing_stats;
+	TimingStats print_timing_stats;
+
+	bool is_masterboard_ready = false;
+	bool is_ready = false;
 
 	matrix_rw::Reader<traj_dim> ref_traj_reader;
 	matrix_rw::Writer<traj_dim> writematrix;
@@ -93,7 +92,6 @@ class Commander
 	size_t t_sweep_index = 0;
 	std::string ref_traj_fname;
 
-	MasterBoardInterface mb;
 	double kp;
 	double kd;
 	double init_pos[motor_count];
@@ -118,7 +116,6 @@ class Commander
 	State state = sweep;
 
 	/* Stats Vars */
-
 	double max_amp_stat = 0;
 	double max_command_exc_stat = 0;
 	double max_print_exc_stat = 0;

@@ -1,10 +1,5 @@
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
-
-#include <chrono>
-#include <cstdlib>
-#include <fstream>
-#include <iostream>
 #include <math.h>
 
 namespace commander
@@ -14,7 +9,6 @@ Commander::Commander(const std::string mb_if_name, const std::string ref_traj_fn
 {
 	reset();
 	// initialize_csv_file_track_error(); // Initializes the tracking of control and realized
-	// cmds
 }
 
 Commander::~Commander()
@@ -25,6 +19,9 @@ Commander::~Commander()
 void
 Commander::reset()
 {
+	command_timing_stats.reset();
+	print_timing_stats.reset();
+
 	ref_traj.clear();
 	traj.clear();
 
@@ -40,10 +37,6 @@ Commander::reset()
 void
 Commander::initialize_masterboard()
 {
-	if (is_masterboard_ready) {
-		return;
-	};
-
 	mb.Init();
 
 	for (size_t i = 0; i < driver_count; ++i) {
@@ -83,7 +76,11 @@ Commander::initialize_masterboard()
 	}
 }
 
-/* main loop, timing is important, do not modify */
+/* main loop
+
+Do NOT modify!
+Timing is important, modify instead: command(), print_info() and change_to_next_state()
+*/
 void
 Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state)
 {
@@ -97,7 +94,7 @@ Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_stat
 
 		/* command every command period */
 		if (now_time >= command_time) {
-			command();
+			command(); // *** modify me ***
 			//  when the command was finished
 			auto finish_time = std::chrono::high_resolution_clock::now();
 			// when the command should have been finished by
@@ -128,7 +125,7 @@ Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_stat
 		if (now_time >= print_time) {
 			printf("\33[H\33[2J"); //* clear screen
 
-			print_info();
+			print_info(); // *** modify me ***
 
 			auto finish_time = std::chrono::high_resolution_clock::now();
 			const double elapsed =
@@ -145,13 +142,15 @@ Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_stat
 			}
 		}
 
+		/* change state if needed */
 		if (is_changing_state) {
 			is_changing_state = false;
-			change_to_next_state();
+			change_to_next_state(); // *** modify me ***
 		}
 	}
 }
 
+/* controls state flow */
 void
 Commander::change_to_next_state()
 {
@@ -172,6 +171,7 @@ Commander::change_to_next_state()
 	}
 }
 
+/* commands the masterboard */
 void
 Commander::command()
 {
@@ -222,79 +222,6 @@ Commander::command()
 }
 
 void
-Commander::print_info()
-{
-	printf("Command timing:\n");
-	command_timing_stats.print();
-
-	printf("Print timing:\n");
-	print_timing_stats.print();
-	// print_state();
-	//  print_offset();
-	// print_traj();
-	//  mb.PrintIMU();
-	//  mb.PrintADC();
-	// mb.PrintMotors();
-	// mb.PrintMotorDrivers();
-	// mb.PrintStats();
-	// print_stats();
-}
-
-void
-Commander::print_state()
-{
-	printf("Robot State | %.10s \n", state_to_name[state].c_str());
-	if (sweep_done or state == State::sweep) {
-		printf("Sweeping Done | %.10s \n", (sweep_done) ? "True" : "False");
-	}
-	if (hard_calibrating) {
-		printf("Offset Values: {");
-		for (size_t i = 0; i < motor_count; i++) {
-			if (i == motor_count - 1) {
-				printf("%g", index_pos[i]);
-			} else {
-				printf("%g, ", index_pos[i]);
-			}
-		}
-		printf("} \n");
-	}
-	printf("ERROR Motor |");
-	for (size_t i = 0; i < motor_count; i++) {
-		printf(" [%1d] %1d |", i, !(mb.motor_drivers[i / 2].is_connected));
-	}
-	printf("\n");
-	printf("ERROR Spi   |");
-	for (size_t i = 0; i < motor_count; i++) {
-		printf(" [%1d] %1d |", i, mb.motor_drivers[i / 2].error_code == 0xf);
-	}
-	printf("\n");
-	printf("ERROR Timeout | %1d \n", mb.IsTimeout());
-}
-
-void
-Commander::print_offset()
-{
-	bool header_printed = false;
-
-	for (size_t i = 0; i < motor_count; ++i) {
-		if (!mb.motor_drivers[i / 2].is_connected) {
-			continue;
-		}
-
-		if (!header_printed) {
-			printf("Motor |  offset   |  idx pos  |   flag    | \n");
-			header_printed = true;
-		}
-
-		printf("%5.2ld | ", i);
-		printf("%9.3g | ", index_offset[i]);
-		printf("%9.3g | ", index_pos[i]);
-		printf("%9d | ", was_index_detected[i]);
-		printf("\n");
-	}
-}
-
-void
 Commander::update_stats()
 {
 	/* records the max amp from motor */
@@ -305,57 +232,6 @@ Commander::update_stats()
 			    ? mb.motor_drivers[i].adc[0]
 			    : mb.motor_drivers[i].adc[1];
 		}
-	}
-
-}
-
-void
-Commander::print_stats()
-{
-	printf("Max Amp    |    %5.2f       | \n", max_amp_stat);
-}
-
-// void
-// Commander::print_timing_stats()
-//{
-//	printf("Print time | [cur] %5.2f ms | [max] %5.2f ms \n", print_elapsed.count(),
-//	       max_print_exc_stat);
-
-//	command_timing_stats.sampling_check();
-
-//	printf("%10s | %10s | %10s | %10s | %5s | %10s | %10s | %10s | %10s\n", "Timing",
-//	       "Rate (Hz)", "Violation%", "Violation#", "Run#", "Min M (ms)", "Max E (ms)",
-//	       "Avg M (ms)", "Avg E (ms)");
-//	printf("%10s | %10.3g | %10.3g | %10lu | %5lu | %10.3g | %10.3g | %10.3g | %10.3g\n", "",
-//	       command_timing_stats.avg_rate,
-//	       static_cast<double>(command_timing_stats.violation_count) /
-//	           command_timing_stats.run_count * 100,
-//	       command_timing_stats.violation_count, command_timing_stats.run_count,
-//	       command_timing_stats.min_margin * 1e3, command_timing_stats.max_elapsed * 1e3,
-//	       command_timing_stats.avg_margin * 1e3, command_timing_stats.avg_elapsed * 1e3);
-//}
-
-void
-Commander::print_traj()
-{
-	bool header_printed = false;
-
-	for (size_t i = 0; i < motor_count; ++i) {
-		if (!mb.motor_drivers[i / 2].is_connected) {
-			continue;
-		}
-
-		if (!header_printed) {
-			printf("Motor | Ref pos   | pos       | Ref vel   | vel       |\n");
-			header_printed = true;
-		}
-
-		printf("%5.2d | ", i);
-		printf("%9.3g | ", pos_ref[i]);
-		printf("%9.3g | ", pos[i]);
-		printf("%9.3g | ", vel_ref[i]);
-		printf("%9.3g | ", vel[i]);
-		printf("\n");
 	}
 }
 
@@ -639,6 +515,167 @@ Commander::set_offset(double (&index_offset)[motor_count])
 		mb.motors[i].SetPositionOffset(index_offset[i]);
 		mb.motors[i].set_enable_index_offset_compensation(true);
 	}
+}
+
+/*******************/
+/* Print functions */
+/*******************/
+
+/* Prints info */
+void
+Commander::print_info()
+{
+	printf("State:\n");
+	print_state();
+
+	if (commander::print_stats) {
+		printf("Stats:\n");
+		print_stats();
+	}
+
+	if (commander::print_command_timing) {
+		printf("Command timing:\n");
+		command_timing_stats.print();
+	}
+	if (commander::print_print_timing) {
+		printf("Print timing:\n");
+		print_timing_stats.print();
+	}
+
+	if (commander::print_offset) {
+		printf("Offset:\n");
+		print_offset();
+	}
+
+	if (commander::print_masterboard) {
+		printf("Masterboard:\n");
+		print_masterboard();
+	}
+
+	if (commander::print_traj) {
+		printf("Trajectory:\n");
+		print_traj();
+	}
+}
+
+/* Prints state */
+void
+Commander::print_state()
+{
+	printf("| %8s | %8s |\n", "Robot", "Sweep");
+	printf("| %8s | %8s |\n", state_to_name[state].c_str(), (sweep_done) ? "Done" : "Not Done");
+
+	if (hard_calibrating) {
+		printf("Offset Values: {");
+		for (size_t i = 0; i < motor_count; i++) {
+			if (i == motor_count - 1) {
+				printf("%g", index_pos[i]);
+			} else {
+				printf("%g, ", index_pos[i]);
+			}
+		}
+		printf("} \n");
+	}
+
+	if (mb.IsTimeout()) {
+		printf("ERROR TIMEOUT\n");
+	}
+
+	bool motor_error_header_printed = false;
+	for (size_t i = 0; i < motor_count; i++) {
+		if (!(mb.motor_drivers[i / 2].is_connected)) {
+			if (!motor_error_header_printed) {
+				printf("ERROR MOTOR ID: ");
+				motor_error_header_printed = true;
+			}
+			printf("%zu ", i);
+		}
+	}
+	if (motor_error_header_printed) {
+		printf("\n");
+	}
+
+	bool spi_error_header_printed = false;
+	for (size_t i = 0; i < motor_count; i++) {
+		if (mb.motor_drivers[i / 2].error_code == 0xf) {
+			if (!spi_error_header_printed) {
+				printf("ERROR SPI ID: ");
+				spi_error_header_printed = true;
+			}
+			printf("%zu ", i);
+		}
+	}
+	if (spi_error_header_printed) {
+		printf("\n");
+	}
+}
+
+/* Prints stats */
+void
+Commander::print_stats()
+{
+	printf("| %8s |\n", "Max Amp");
+	printf("| %8.2f |\n", max_amp_stat);
+}
+
+/* Prints offset info */
+void
+Commander::print_offset()
+{
+	bool header_printed = false;
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (!mb.motor_drivers[i / 2].is_connected) {
+			continue;
+		}
+
+		if (!header_printed) {
+			printf("Motor |  offset   |  idx pos  |   flag    | \n");
+			header_printed = true;
+		}
+
+		printf("%5.2ld | ", i);
+		printf("%9.3g | ", index_offset[i]);
+		printf("%9.3g | ", index_pos[i]);
+		printf("%9d | ", was_index_detected[i]);
+		printf("\n");
+	}
+}
+
+/* Prints trajectory info */
+void
+Commander::print_traj()
+{
+	bool header_printed = false;
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (!mb.motor_drivers[i / 2].is_connected) {
+			continue;
+		}
+
+		if (!header_printed) {
+			printf("| %5s | %10s | %10s | %10s | %10s |\n", "Motor", "Ref pos", "pos",
+			       "Ref vel", "vel");
+			header_printed = true;
+		}
+		printf("| %5.2zu | ", i);
+		printf("%10.3g | ", pos_ref[i]);
+		printf("%10.3g | ", pos[i]);
+		printf("%10.3g | ", vel_ref[i]);
+		printf("%10.3g | ", vel[i]);
+		printf("\n");
+	}
+}
+
+/* Prints masterboard printing functions */
+void
+Commander::print_masterboard()
+{
+	mb.PrintIMU();
+	mb.PrintADC();
+	mb.PrintMotors();
+	mb.PrintMotorDrivers();
+	mb.PrintStats();
 }
 
 } // namespace commander

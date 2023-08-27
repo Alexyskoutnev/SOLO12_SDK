@@ -10,6 +10,7 @@ using commander::Commander;
 const std::string if_name_default = "enx606d3cd504bf";
 const std::string ref_traj_fname_default = "gait.csv";
 const char quit_key = 'q';
+const char reset_key = 'r';
 
 int
 main(int argc, char **argv)
@@ -59,6 +60,8 @@ main(int argc, char **argv)
 
 			if (in == quit_key) {
 				is_running = false;
+			} else if (in == reset_key) {
+				com.reset();
 			} else {
 				is_changing_state = true;
 			}

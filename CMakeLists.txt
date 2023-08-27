@@ -177,7 +177,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 	#**************************#
 	#* Executable permissions *#
 	#**************************#
-	if(NOT DRY_BUILD)
+	if(NOT DEBUG_BUILD)
 		add_custom_command(
 			TARGET main
 			POST_BUILD
