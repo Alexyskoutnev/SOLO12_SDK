@@ -48,21 +48,19 @@ class Commander
   private:
 	void change_to_next_state();
 	void command();
-
-	void update_stats();
-	void log_traj();
 	bool command_check_ready();
 	void command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-
 	void generate_track_traj();
 	void generate_sweep_traj();
 
-	void initialize_csv_file_track_error();
-	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void set_offset(double (&index_offset)[motor_count]);
-
 	void sample_traj();
+	void update_stats();
+	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	// void log_traj();
+	// void saturate_reference();
+	// void initialize_csv_file_track_error();
+	// void set_offset(double (&index_offset)[motor_count]);
 
 	/* printing functions */
 	void print_info();

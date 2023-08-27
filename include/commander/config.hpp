@@ -75,6 +75,14 @@ constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.21309
                                               0.17087, 1.21532, 4.33566, 4.22832,
                                               4.77109, 1.64702, 4.21985, 5.85839};
 
+constexpr double max_pos[motor_count] = {3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI,
+                                         3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI,
+                                         3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI};
+
+constexpr double min_pos[motor_count] = {-3 * M_PI, -3 * M_PI, -3 * M_PI, -3 * M_PI,
+                                         -3 * M_PI, -3 * M_PI, -3 * M_PI, -3 * M_PI,
+                                         -3 * M_PI, -3 * M_PI, -3 * M_PI, -3 * M_PI};
+
 static std::map<int, std::string> state_to_name = {
     {0, "Not ready"}, {1, "Holding"}, {2, "Sweeping"}, {3, "Tracking"}};
 

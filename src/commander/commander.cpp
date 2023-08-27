@@ -350,39 +350,6 @@ Commander::update_stats()
 }
 
 void
-Commander::log_traj()
-{
-	writematrix(fprefix + traj_fname, traj);
-}
-
-void
-Commander::initialize_csv_file_track_error()
-{
-
-	try {
-
-		track_realized_control_io.open(track_realized_control_data, std::ios::app);
-
-		if (!track_realized_control_io.is_open()) {
-			throw std::runtime_error("Error opening file!");
-		}
-	}
-
-	catch (const std::exception &e) {
-		std::cerr << "Exception occurred: " << e.what() << '\n';
-	}
-}
-
-void
-Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
-{
-	for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
-					  << vel_ref[i] << "," << vel[i] << '\n';
-	}
-}
-
-void
 Commander::generate_sweep_traj()
 {
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
@@ -444,6 +411,7 @@ Commander::generate_sweep_traj()
 void
 Commander::generate_track_traj()
 {
+	/* fix this */
 	if (t_index < t_size - 1) {
 		for (size_t i = 0; i < motor_count; ++i) {
 
@@ -503,14 +471,60 @@ Commander::sample_traj()
 	traj.push_back(state);
 }
 
+// void
+// Commander::log_traj()
+//{
+//	writematrix(fprefix + traj_fname, traj);
+// }
+
+// void
+// Commander::initialize_csv_file_track_error()
+//{
+//	try {
+
+//		track_realized_control_io.open(track_realized_control_data, std::ios::app);
+
+//		if (!track_realized_control_io.is_open()) {
+//			throw std::runtime_error("Error opening file!");
+//		}
+//	}
+
+//	catch (const std::exception &e) {
+//		std::cerr << "Exception occurred: " << e.what() << '\n';
+//	}
+//}
+
 void
-Commander::set_offset(double (&index_offset)[motor_count])
+Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
 	for (size_t i = 0; i < motor_count; ++i) {
-		mb.motors[i].SetPositionOffset(index_offset[i]);
-		mb.motors[i].set_enable_index_offset_compensation(true);
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
+					  << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
+
+// void
+// Commander::set_offset(double (&index_offset)[motor_count])
+//{
+//	for (size_t i = 0; i < motor_count; ++i) {
+//		mb.motors[i].SetPositionOffset(index_offset[i]);
+//		mb.motors[i].set_enable_index_offset_compensation(true);
+//	}
+// }
+
+// double
+// Commander::saturate_reference(double &num)
+//{
+//	for (size_t i = 0; i < motor_count; ++i) {
+//		// if (num > motor_ang_bound) {
+//		//	return motor_ang_bound;
+//		// } else if (num < -motor_ang_bound) {
+//		//	return -motor_ang_bound;
+//		// } else {
+//		//	return num;
+//		// }
+//	}
+// }
 
 /*******************/
 /* Print functions */
