@@ -61,8 +61,9 @@ class Commander
 	void sample_traj();
 	void update_stats();
 	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void saturate_reference(double (&pos_ref)[motor_count]);
+
 	// void log_traj();
-	// void saturate_reference();
 	// void initialize_csv_file_track_error();
 	// void set_offset(double (&index_offset)[motor_count]);
 
@@ -119,9 +120,6 @@ class Commander
 	/* Stats Vars */
 	double max_amp_stat = 0;
 
-	bool hip_offset_flag = false;
-	double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,
-	                                           0.15, -0.15, 0.0, 0.0, 0.0, 0.0};
 
 	// std::ofstream track_realized_control_io(track_realized_control_data, std::ios_base::app);
 	std::ofstream track_realized_control_io;

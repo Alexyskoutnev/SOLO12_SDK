@@ -179,7 +179,6 @@ Commander::change_to_next_state()
 		break;
 	}
 	case State::hold: {
-		reset();
 		state = State::track;
 		break;
 	}
@@ -295,6 +294,8 @@ Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[m
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
+			saturate_reference(pos_ref);          // position saturation for safety
+			mb.motors[i].SetCurrentReference(0.); // signifies we are using onboard PD
 			mb.motors[i].SetPositionReference(pos_ref[i]);
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
@@ -384,9 +385,6 @@ Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
 		}
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
-
-		/* unnecessary */
-		// toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
 	}
 }
 
@@ -490,7 +488,7 @@ Commander::generate_track_command()
 		command_current(pos_ref, vel_ref);
 	}
 
-	track_error(pos_ref, vel_ref);
+	// track_error(pos_ref, vel_ref);
 
 	if (t_index < t_size - 1) {
 		sample_traj();
@@ -573,19 +571,17 @@ Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_c
 //	}
 // }
 
-// double
-// Commander::saturate_reference(double &num)
-//{
-//	for (size_t i = 0; i < motor_count; ++i) {
-//		// if (num > motor_ang_bound) {
-//		//	return motor_ang_bound;
-//		// } else if (num < -motor_ang_bound) {
-//		//	return -motor_ang_bound;
-//		// } else {
-//		//	return num;
-//		// }
-//	}
-// }
+void
+Commander::saturate_reference(double (&pos_ref)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (pos_ref[i] > max_pos[i]) {
+			pos_ref[i] = max_pos[i];
+		} else if (pos_ref[i] < min_pos[i]) {
+			pos_ref[i] = min_pos[i];
+		}
+	}
+}
 
 /*******************/
 /* Print functions */
