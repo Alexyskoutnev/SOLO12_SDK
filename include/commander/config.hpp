@@ -39,7 +39,7 @@ constexpr bool print_traj = true;
 constexpr bool print_masterboard = false;
 
 /* dimensions */
-constexpr size_t t_dim_expected = 50000;
+constexpr size_t t_dim_expected = 1e4;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;  /** [s] */
 constexpr size_t sweep_duration = 5; /** [s] */
@@ -50,7 +50,7 @@ const std::string ref_traj_fname_default = "gait.csv";
 const std::string track_realized_control_data = "../../data/track_data/realized_control_data.csv";
 const std::string fprefix = "../data/";
 const std::string index_pos_fname = "index_pos.csv";
-const std::string traj_fname = "traj.csv";
+const std::string traj_fname = "real_traj.csv";
 const std::string mb_hostname_default = "enx606d3cd504bf";
 
 constexpr size_t driver_count = 6;

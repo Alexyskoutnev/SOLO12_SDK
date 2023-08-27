@@ -8,7 +8,6 @@ Commander::Commander(const std::string mb_if_name, const std::string ref_traj_fn
     : mb(mb_if_name), ref_traj_fname(ref_traj_fname)
 {
 	reset();
-	// initialize_csv_file_track_error(); // Initializes the tracking of control and realized
 }
 
 Commander::~Commander()
@@ -180,6 +179,7 @@ Commander::change_to_next_state()
 	}
 	case State::hold: {
 		state = State::track;
+		traj_is_sampled = false;
 		break;
 	}
 	case State::sweep: {
@@ -204,6 +204,8 @@ Commander::command()
 	if (mb.IsTimeout()) {
 		is_masterboard_connected = false;
 	}
+
+	update_stats();
 
 	switch (state) {
 	case State::not_ready: {
@@ -277,7 +279,6 @@ Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[m
 		return;
 	}
 
-	// update_stats();
 	mb.ParseSensorData();
 
 	for (size_t i = 0; i < motor_count; ++i) {
@@ -491,9 +492,27 @@ Commander::generate_track_command()
 	// track_error(pos_ref, vel_ref);
 
 	if (t_index < t_size - 1) {
-		sample_traj();
 		++t_index;
+
+		/* sample only during the first trajectory */
+		if (!traj_is_sampled) {
+			sample_traj();
+		}
 	} else if (is_looping_traj) {
+		traj_is_sampled = true;
+		auto thread = std::thread([&] {
+			log_traj();
+			/* clear the old trajectory */
+			// traj.clear();
+			ref_traj.clear();
+			/* read new trajectory */
+			ref_traj.reserve(t_dim_expected);
+			ref_traj_reader(ref_traj_fprefix + ref_traj_fname, ref_traj);
+
+			t_size = ref_traj.size(); /* determine t_dim */
+			traj.reserve(t_size);
+		});
+		thread.detach();
 		t_index = 0;
 	}
 }
@@ -531,45 +550,10 @@ Commander::sample_traj()
 }
 
 void
-Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+Commander::log_traj()
 {
-	for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
-					  << vel_ref[i] << "," << vel[i] << '\n';
-	}
+	writematrix(fprefix + traj_fname, traj);
 }
-
-// void
-// Commander::log_traj()
-//{
-//	writematrix(fprefix + traj_fname, traj);
-// }
-
-// void
-// Commander::initialize_csv_file_track_error()
-//{
-//	try {
-
-//		track_realized_control_io.open(track_realized_control_data, std::ios::app);
-
-//		if (!track_realized_control_io.is_open()) {
-//			throw std::runtime_error("Error opening file!");
-//		}
-//	}
-
-//	catch (const std::exception &e) {
-//		std::cerr << "Exception occurred: " << e.what() << '\n';
-//	}
-//}
-
-// void
-// Commander::set_offset(double (&index_offset)[motor_count])
-//{
-//	for (size_t i = 0; i < motor_count; ++i) {
-//		mb.motors[i].SetPositionOffset(index_offset[i]);
-//		mb.motors[i].set_enable_index_offset_compensation(true);
-//	}
-// }
 
 void
 Commander::saturate_reference(double (&pos_ref)[motor_count])
