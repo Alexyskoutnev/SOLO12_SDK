@@ -6,27 +6,23 @@
 #define COMMANDER_HPP_CINARAL_230403_1507
 
 #include "config.hpp"
+#include "master_board_sdk/defines.h"
+#include "master_board_sdk/master_board_interface.h"
 #include "matrix_rw.hpp"
 #include "timing_stats.hpp"
 #include "types.hpp"
+#include <atomic>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <vector>
-
-#ifndef DRY_BUILD
-	#include <sys/stat.h>
-	#include <unistd.h>
-	#include "master_board_sdk/defines.h"
-	#include "master_board_sdk/master_board_interface.h"
-#else
-	#include "dummy_interface.hpp"
-#endif
 
 namespace commander
 {
-enum State { hold, sweep, track };
+enum State { not_ready, hold, sweep, track };
 
 template <typename T>
 int
@@ -38,51 +34,58 @@ get_sign(T val)
 class Commander
 {
   public:
-	Commander(const std::string ref_traj_fname = ref_traj_fname_default,
-	          const std::string mb_hostname = mb_hostname_default, const double kp = kp_default,
-	          const double kd = kd_default);
+	Commander(const std::string mb_if_name, const std::string ref_traj_fname);
+
 	~Commander();
 
   public:
-	void print_all();
-	void command();
-	void change_to_next_state();
-	void update_stats();
-	TimingStats timing_stats;
-	std::chrono::milliseconds print_time_dur{0};
+	void initialize_masterboard();
+	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
+	void enable_hard_calibration();
+	void disable_onboard_pd();
 
   private:
-	bool is_ready = false;
-
-	void initialize();
-	void initialize_mb();
-	void print_state();
-	void print_traj();
-	void print_offset();
-	void print_stats();
-	void print_timing_stats();
-	void log_traj();
-	bool check_ready();
-	void track(double (&pos_ref)[motor_count]);
-	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
-	           double (&toq_red)[motor_count]);
-	void initialize_csv_file_track_error();
-	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void set_offset(double (&index_offset)[motor_count]);
-	void track_traj();
-	void sweep_traj();
-	void sample_traj();
-
 	void reset();
+	void change_to_next_state();
+	void command();
+	bool command_check_ready();
+	void command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void generate_track_command();
+	void generate_sweep_command();
 
-	matrix_rw::Reader<traj_dim> readmatrix;
+	void get_reference(const size_t t_index, double (&pos_ref)[motor_count],
+	                   double (&vel_ref)[motor_count]);
+	void get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+
+	void sample_traj();
+	void update_stats();
+	void saturate_reference(double (&pos_ref)[motor_count]);
+	void log_traj();
+	void set_offset(double (&index_offset)[motor_count]);
+
+	/* printing functions */
+	void print_info();
+	void print_state();
+	void print_stats();
+	void print_offset();
+	void print_traj();
+	void print_masterboard();
+
+	MasterBoardInterface mb;
+	TimingStats command_timing_stats;
+	TimingStats print_timing_stats;
+
+	bool is_hard_calibrating = false;
+	bool using_masterboard_pd = true;
+
+	State state = not_ready;
+
+	matrix_rw::Reader<traj_dim> ref_traj_reader;
 	matrix_rw::Writer<traj_dim> writematrix;
 
 	double index_pos[motor_count];
 	double motor_pos[motor_count];
-	double index_offset[motor_count] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-	                                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
 	                                        false, false, false, false, false, false};
 
@@ -91,9 +94,8 @@ class Commander
 	size_t t_sweep_index = 0;
 	std::string ref_traj_fname;
 
-	MasterBoardInterface mb;
-	double kp;
-	double kd;
+	double kp = 15;
+	double kd = 1;
 	double init_pos[motor_count];
 
 	std::array<double, 1> imu_logs;
@@ -106,26 +108,15 @@ class Commander
 	double toq_ref[motor_count];
 	double pos[motor_count];
 	double vel[motor_count];
-	bool was_offset_enabled = false;
-	bool sweep_done = false;
-	bool hard_calibrating = false;
-	bool loop_track_traj = true;
-	control_state CONTROLLER_T = P_CONTROL;
 
-	State state = sweep;
+	bool is_masterboard_connected = false;
+	bool is_masterboard_ready = false;
+	bool is_sweep_done = false;
+	bool all_index_detected = false;
+	bool traj_is_sampled = false;
 
 	/* Stats Vars */
-
 	double max_amp_stat = 0;
-	double max_command_exc_stat = 0;
-	double max_print_exc_stat = 0;
-
-	bool hip_offset_flag = true;
-	double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,
-	                                           0.15, -0.15, 0.0, 0.0, 0.0, 0.0};
-
-	// std::ofstream track_realized_control_io(track_realized_control_data, std::ios_base::app);
-	std::ofstream track_realized_control_io;
 };
 
 } // namespace commander

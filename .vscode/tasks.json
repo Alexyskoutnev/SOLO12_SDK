@@ -41,24 +41,6 @@
 			"type": "shell",
 			"command": "./scripts/build/test.sh",
 			//"group": "build",
-		},
-		{
-			"label": "Sync to cinaral@shuksan",
-			"type": "shell",
-			"command": "./scripts/sync_to_shuksan.sh",
-			"args": [
-				"cinaral@10.76.68.219:/home/cinaral/SOLO12_SDK" //* Change this to your remote user's address and where you want to sync to
-			],
-			//"group": "build",
-		},
-		{
-			"label": "Sync from cinaral@shuksan",
-			"type": "shell",
-			"command": "./scripts/sync_from_shuksan.sh",
-			"args": [
-				"cinaral@10.76.68.219:/home/cinaral/SOLO12_SDK/build/data" //* Change this to your remote user's address and where you want to sync to
-			],
-			//"group": "build",
 		}
 	],
 	"version": "2.0.0",

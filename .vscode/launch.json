@@ -5,7 +5,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/build/bin/main",
-			"args": [],
+			"args": ["-d"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}/build/bin",
 			"environment": [],
