@@ -22,7 +22,7 @@
 
 namespace commander
 {
-enum State { hold, sweep, track };
+enum State { not_ready, hold, sweep, track };
 
 template <typename T>
 int
@@ -42,6 +42,8 @@ class Commander
 	void reset();
 	void initialize_masterboard();
 	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
+	void enable_hard_calibration();
+	void disable_onboard_pd();
 
   private:
 	void change_to_next_state();
@@ -49,16 +51,17 @@ class Commander
 
 	void update_stats();
 	void log_traj();
-	bool check_ready();
-	void track(double (&pos_ref)[motor_count]);
-	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
-	           double (&toq_red)[motor_count]);
+	bool command_check_ready();
+	void command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+
+	void generate_track_traj();
+	void generate_sweep_traj();
+
 	void initialize_csv_file_track_error();
 	void track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void set_offset(double (&index_offset)[motor_count]);
-	void track_traj();
-	void sweep_traj();
+
 	void sample_traj();
 
 	/* printing functions */
@@ -70,12 +73,13 @@ class Commander
 	void print_masterboard();
 
 	MasterBoardInterface mb;
-
 	TimingStats command_timing_stats;
 	TimingStats print_timing_stats;
 
-	bool is_masterboard_ready = false;
-	bool is_ready = false;
+	bool is_hard_calibrating = false;
+	bool using_masterboard_pd = true;
+
+	State state = not_ready;
 
 	matrix_rw::Reader<traj_dim> ref_traj_reader;
 	matrix_rw::Writer<traj_dim> writematrix;
@@ -106,19 +110,13 @@ class Commander
 	double toq_ref[motor_count];
 	double pos[motor_count];
 	double vel[motor_count];
-	bool was_offset_enabled = false;
-	bool sweep_done = false;
-	bool hard_calibrating = false;
-	bool loop_track_traj = true;
-	bool torque_control_flag = false;
-	bool PD_control_flag = false;
 
-	State state = sweep;
+	bool is_masterboard_connected = false;
+	bool is_masterboard_ready = false;
+	bool is_sweep_done = false;
 
 	/* Stats Vars */
 	double max_amp_stat = 0;
-	double max_command_exc_stat = 0;
-	double max_print_exc_stat = 0;
 
 	bool hip_offset_flag = true;
 	double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,

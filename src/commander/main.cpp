@@ -21,9 +21,11 @@ main(int argc, char **argv)
 
 	// clang-format off
 	options.add_options()
-		("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
+		("d,debug", "Enable debugging")
 		("i,if-name", "Masterboard interface name", cxxopts::value<std::string>()->default_value(if_name_default))
 		("t,traj-fname", "Trajectory filename", cxxopts::value<std::string>()->default_value(ref_traj_fname_default))
+		("c,calibrate", "Hard calibration")
+		("p,no-onboard-pd", "Enable current control")
 		("h,help", "Print usage")
 	;
 	// clang-format on
@@ -45,6 +47,14 @@ main(int argc, char **argv)
 		printf("Debug mode, skipping masterboard initialization.\n");
 	} else {
 		com.initialize_masterboard();
+	}
+
+	if (result["calibrate"].as<bool>()) {
+		com.enable_hard_calibration();
+	}
+
+	if (result["no-onboard-pd"].as<bool>()) {
+		com.disable_onboard_pd();
 	}
 
 	/* give the process a high priority */

@@ -5,7 +5,7 @@
 namespace commander
 {
 Commander::Commander(const std::string mb_if_name, const std::string ref_traj_fname)
-    : ref_traj_fname(ref_traj_fname), mb(mb_if_name)
+    : mb(mb_if_name), ref_traj_fname(ref_traj_fname)
 {
 	reset();
 	// initialize_csv_file_track_error(); // Initializes the tracking of control and realized
@@ -72,7 +72,7 @@ Commander::initialize_masterboard()
 	if (mb.IsTimeout()) {
 		printf("Timeout while waiting for ack.\n");
 	} else {
-		is_masterboard_ready = true;
+		is_masterboard_connected = true;
 	}
 }
 
@@ -150,11 +150,31 @@ Commander::loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_stat
 	}
 }
 
+void
+Commander::enable_hard_calibration()
+{
+	is_hard_calibrating = true;
+}
+
+void
+Commander::disable_onboard_pd()
+{
+	using_masterboard_pd = false;
+}
+
 /* controls state flow */
 void
 Commander::change_to_next_state()
 {
 	switch (state) {
+	case State::not_ready: {
+		if (is_masterboard_ready) {
+			state = State::hold;
+		} else {
+			printf("Not ready!\n");
+		}
+		break;
+	}
 	case State::hold: {
 		reset();
 		state = State::track;
@@ -175,18 +195,18 @@ Commander::change_to_next_state()
 void
 Commander::command()
 {
-	if (!is_masterboard_ready) {
-		return;
-	}
-
-	if (!is_ready) {
-		is_ready = check_ready();
-		return;
+	if (mb.IsTimeout()) {
+		is_masterboard_connected = false;
 	}
 
 	switch (state) {
-		// case State::not_ready: {
-		// }
+	case State::not_ready: {
+		if (command_check_ready()) { // change to next stage if ready
+			is_masterboard_ready = true;
+			change_to_next_state();
+		};
+		break;
+	}
 	case State::hold: {
 		/* this does not work the second time? */
 		for (size_t i = 0; i < motor_count; ++i) {
@@ -207,43 +227,27 @@ Commander::command()
 			}
 			vel_ref[i] = 0.;
 		}
-		track(pos_ref, vel_ref);
+		command_reference(pos_ref, vel_ref);
 		break;
 	}
 	case State::sweep: {
-		sweep_traj();
+		generate_sweep_traj();
 		break;
 	}
 	case State::track: {
-		track_traj();
+		generate_track_traj();
 		break;
 	}
 	}
 }
 
-void
-Commander::update_stats()
-{
-	/* records the max amp from motor */
-	for (int i = 0; i < N_SLAVES; i++) {
-		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
-		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
-			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])
-			    ? mb.motor_drivers[i].adc[0]
-			    : mb.motor_drivers[i].adc[1];
-		}
-	}
-}
-
-void
-Commander::log_traj()
-{
-	writematrix(fprefix + traj_fname, traj);
-}
-
 bool
-Commander::check_ready()
+Commander::command_check_ready()
 {
+	if (!is_masterboard_connected) {
+		return false;
+	}
+
 	mb.ParseSensorData();
 
 	bool is_ready = true;
@@ -270,16 +274,19 @@ Commander::check_ready()
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-	mb.ParseSensorData();
+	if (!is_masterboard_connected) {
+		return;
+	}
+
+	update_stats();
 
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (i % 2 == 0) {
 			if (!mb.motor_drivers[i / 2].is_connected) {
 				continue;
 			}
-
 			if (mb.motor_drivers[i / 2].error_code == 0xf) {
 				continue;
 			}
@@ -293,14 +300,16 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 			mb.motors[i].SetVelocityReference(vel_ref[i]);
 		}
 	}
-
 	mb.SendCommand();
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
-                 double (&toq_ref)[motor_count])
+Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
+	if (!is_masterboard_connected) {
+		return;
+	}
+
 	mb.ParseSensorData();
 
 	for (size_t i = 0; i < motor_count; ++i) {
@@ -308,7 +317,6 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 			if (!mb.motor_drivers[i / 2].is_connected) {
 				continue;
 			}
-
 			if (mb.motor_drivers[i / 2].error_code == 0xf) {
 				continue;
 			}
@@ -318,9 +326,9 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			mb.motors[i].SetPositionReference(pos_ref[i]);
-			mb.motors[i].SetVelocityReference(vel_ref[i]);
-			mb.motors[i].SetCurrentReference(toq_ref[i]);
+			// calculate current
+			double current = 0;
+			mb.motors[i].SetCurrentReference(current);
 		}
 	}
 
@@ -328,83 +336,23 @@ Commander::track(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count],
 }
 
 void
-Commander::track(double (&pos_ref)[motor_count])
+Commander::update_stats()
 {
-	mb.ParseSensorData();
-
-	for (size_t i = 0; i < motor_count; ++i) {
-		if (i % 2 == 0) {
-			if (!mb.motor_drivers[i / 2].is_connected) {
-				continue;
-			}
-
-			if (mb.motor_drivers[i / 2].error_code == 0xf) {
-				continue;
-			}
-		}
-
-		if (mb.motors[i].IsEnabled()) {
-			pos[i] = mb.motors[i].GetPosition();
-			vel[i] = mb.motors[i].GetVelocity();
-
-			mb.motors[i].SetPositionReference(pos_ref[i]);
+	/* records the max amp from motor */
+	for (size_t i = 0; i < driver_count; ++i) {
+		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
+		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
+			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])
+			    ? mb.motor_drivers[i].adc[0]
+			    : mb.motor_drivers[i].adc[1];
 		}
 	}
-
-	mb.SendCommand();
 }
 
 void
-Commander::track_traj()
+Commander::log_traj()
 {
-
-	if (t_index < t_size - 1) {
-		for (size_t i = 0; i < motor_count; ++i) {
-
-			if (hip_offset_flag) {
-				if (i == 0 || i == 1 || i == 6 || i == 7) {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    (ref_traj[t_index][motor2ref_idx[i]] +
-					     hip_offset_position[i]);
-
-				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    ref_traj[t_index][motor2ref_idx[i]];
-				}
-			} else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_traj[t_index][motor2ref_idx[i]];
-			}
-			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
-			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
-		}
-	} else {
-		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] =
-			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-			vel_ref[i] = 0;
-		}
-	}
-
-	if (torque_control_flag) {
-		track(pos_ref, vel_ref, toq_ref);
-	}
-
-	else if (PD_control_flag) {
-		track(pos_ref, vel_ref);
-	} else {
-		track(pos_ref);
-	}
-
-	track_error(pos_ref, vel_ref);
-
-	if (t_index < t_size - 1) {
-		sample_traj();
-		++t_index;
-	} else if (loop_track_traj) {
-		t_index = 0;
-	}
+	writematrix(fprefix + traj_fname, traj);
 }
 
 void
@@ -435,9 +383,8 @@ Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_c
 }
 
 void
-Commander::sweep_traj()
+Commander::generate_sweep_traj()
 {
-
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
 
@@ -462,16 +409,16 @@ Commander::sweep_traj()
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 
-		track(pos_ref, vel_ref);
+		command_reference(pos_ref, vel_ref);
 	}
 	++t_sweep_index;
 	if (all_ready) {
 
-		is_ready = true;
-		sweep_done = true;
+		is_masterboard_ready = true;
+		is_sweep_done = true;
 
 		for (size_t i = 0; i < motor_count; i++) {
-			if (hard_calibrating) {
+			if (is_hard_calibrating) {
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			} else {
 				mb.motors[i].SetPositionOffset(index_pos[i] - index_offset[i]);
@@ -479,7 +426,7 @@ Commander::sweep_traj()
 			}
 		}
 
-		if (hard_calibrating) {
+		if (is_hard_calibrating) {
 			for (size_t i = 0; i < motor_count; i++) {
 				pos_ref[i] = -index_pos[i];
 				vel_ref[i] = 0.0;
@@ -490,7 +437,55 @@ Commander::sweep_traj()
 				vel_ref[i] = 0.0;
 			}
 		}
-		track(pos_ref, vel_ref);
+		command_reference(pos_ref, vel_ref);
+	}
+}
+
+void
+Commander::generate_track_traj()
+{
+	if (t_index < t_size - 1) {
+		for (size_t i = 0; i < motor_count; ++i) {
+
+			if (hip_offset_flag) {
+				if (i == 0 || i == 1 || i == 6 || i == 7) {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    (ref_traj[t_index][motor2ref_idx[i]] +
+					     hip_offset_position[i]);
+
+				} else {
+					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+					    ref_traj[t_index][motor2ref_idx[i]];
+				}
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_traj[t_index][motor2ref_idx[i]];
+			}
+			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
+			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
+		}
+	} else {
+		for (size_t i = 0; i < motor_count; ++i) {
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
+			vel_ref[i] = 0;
+		}
+	}
+
+	if (using_masterboard_pd) {
+		command_reference(pos_ref, vel_ref);
+	} else {
+		command_current(pos_ref, vel_ref);
+	}
+
+	track_error(pos_ref, vel_ref);
+
+	if (t_index < t_size - 1) {
+		sample_traj();
+		++t_index;
+	} else if (is_looping_traj) {
+		t_index = 0;
 	}
 }
 
@@ -562,10 +557,15 @@ Commander::print_info()
 void
 Commander::print_state()
 {
-	printf("| %8s | %8s |\n", "Robot", "Sweep");
-	printf("| %8s | %8s |\n", state_to_name[state].c_str(), (sweep_done) ? "Done" : "Not Done");
+	printf("| %12s | %12s | %12s | %12s | %12s |\n", "Masterboard", "Robot state",
+	       "Index sweep", "Hard Calibr.", "Track PD");
+	printf("| %12s | %12s | %12s | %12s | %12s | \n",
+	       (is_masterboard_connected) ? "Connected" : "Disconnected",
+	       state_to_name[state].c_str(), (is_sweep_done) ? "Done" : "Not Done",
+	       (is_hard_calibrating) ? "True" : "False",
+	       (using_masterboard_pd) ? "Onboard" : "Current");
 
-	if (hard_calibrating) {
+	if (is_hard_calibrating) {
 		printf("Offset Values: {");
 		for (size_t i = 0; i < motor_count; i++) {
 			if (i == motor_count - 1) {

@@ -33,6 +33,7 @@ constexpr bool print_print_timing = false;
 constexpr bool print_offset = false;
 constexpr bool print_traj = true;
 constexpr bool print_masterboard = false;
+constexpr bool is_looping_traj = true;
 
 constexpr size_t t_dim_expected = 50000;
 constexpr size_t traj_dim = 36;
@@ -74,7 +75,8 @@ constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.21309
                                               0.17087, 1.21532, 4.33566, 4.22832,
                                               4.77109, 1.64702, 4.21985, 5.85839};
 
-static std::map<int, std::string> state_to_name = {{0, "hold"}, {1, "sweep"}, {2, "track"}};
+static std::map<int, std::string> state_to_name = {
+    {0, "Not ready"}, {1, "Holding"}, {2, "Sweeping"}, {3, "Tracking"}};
 
 } // namespace commander
 
