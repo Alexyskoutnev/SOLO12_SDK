@@ -70,9 +70,9 @@ static std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2},   {1, 3
                                                  {2, 4}, {5, 5}, {6, 6},   {8, 7},
                                                  {9, 8}, {7, 9}, {11, 10}, {10, 11}};
 constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., -9., -9., 9., 9.};
-constexpr double index_offset[motor_count] = {4.26065, 3.07198, -3.0243, 0.213095,
+constexpr double index_offset[motor_count] = {1.2, 3.07198, -3.0243, 0.213095,
                                               0.17087, 1.21532, 4.33566, 4.22832,
-                                              4.77109, 1.64702, 4.21985, 5.85839};
+                                              4.77109, 1.64702, 4.21985, .2};
 
 constexpr double max_pos[motor_count] = {3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI,
                                          3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI,
