@@ -471,6 +471,16 @@ Commander::sample_traj()
 	traj.push_back(state);
 }
 
+void
+Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
+					  << vel_ref[i] << "," << vel[i] << '\n';
+	}
+}
+
+
 // void
 // Commander::log_traj()
 //{
@@ -493,15 +503,6 @@ Commander::sample_traj()
 //		std::cerr << "Exception occurred: " << e.what() << '\n';
 //	}
 //}
-
-void
-Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
-{
-	for (size_t i = 0; i < motor_count; ++i) {
-		track_realized_control_io << i << ", " << pos_ref[i] << "," << pos[i] << ","
-					  << vel_ref[i] << "," << vel[i] << '\n';
-	}
-}
 
 // void
 // Commander::set_offset(double (&index_offset)[motor_count])
@@ -661,6 +662,8 @@ void
 Commander::print_traj()
 {
 	bool header_printed = false;
+
+	printf("index: %zu ------\n", t_index);
 
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (!mb.motor_drivers[i / 2].is_connected) {
