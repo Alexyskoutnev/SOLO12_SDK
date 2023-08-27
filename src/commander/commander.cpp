@@ -191,6 +191,10 @@ Commander::change_to_next_state()
 	}
 }
 
+/************************/
+/* commanding functions */
+/************************/
+
 /* commands the masterboard */
 void
 Commander::command()
@@ -208,39 +212,22 @@ Commander::command()
 		break;
 	}
 	case State::hold: {
-		/* this does not work the second time? */
-		for (size_t i = 0; i < motor_count; ++i) {
-			if (hip_offset_flag) {
-				if (i == 0 || i == 1 || i == 6 || i == 7) {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    (ref_traj[t_index][motor2ref_idx[i]] +
-					     hip_offset_position[i]);
-
-				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    ref_hold_position[motor2ref_idx[i]];
-				}
-
-			} else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_hold_position[motor2ref_idx[i]];
-			}
-			vel_ref[i] = 0.;
-		}
+		get_hold_reference(pos_ref, vel_ref);
 		command_reference(pos_ref, vel_ref);
 		break;
 	}
 	case State::sweep: {
-		generate_sweep_traj();
+		generate_sweep_command();
 		break;
 	}
 	case State::track: {
-		generate_track_traj();
+		generate_track_command();
 		break;
 	}
 	}
 }
 
+/* command ready up sequence */
 bool
 Commander::command_check_ready()
 {
@@ -273,6 +260,7 @@ Commander::command_check_ready()
 	return is_ready;
 }
 
+/* command pos and vel reference for the onboard PD controller */
 void
 Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
@@ -303,6 +291,7 @@ Commander::command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[m
 	mb.SendCommand();
 }
 
+/* UNIMPLEMENTED: command current */
 void
 Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
@@ -326,7 +315,8 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 			pos[i] = mb.motors[i].GetPosition();
 			vel[i] = mb.motors[i].GetVelocity();
 
-			// calculate current
+			// to be implemented
+			// calculate current here !!!!! 
 			double current = 0;
 			mb.motors[i].SetCurrentReference(current);
 		}
@@ -335,22 +325,66 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 	mb.SendCommand();
 }
 
+/******************/
+/* Read reference */
+/******************/
+
 void
-Commander::update_stats()
+Commander::get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
-	/* records the max amp from motor */
-	for (size_t i = 0; i < driver_count; ++i) {
-		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
-		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
-			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])
-			    ? mb.motor_drivers[i].adc[0]
-			    : mb.motor_drivers[i].adc[1];
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (hip_offset_flag) {
+			if (i == 0 || i == 1 || i == 6 || i == 7) {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    (ref_traj[0][motor2ref_idx[i]] + hip_offset_position[i]);
+
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_hold_position[motor2ref_idx[i]];
+			}
+		} else {
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
 		}
+
+		/* override velocity */
+		vel_ref[i] = 0.;
 	}
 }
 
 void
-Commander::generate_sweep_traj()
+Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
+                         double (&vel_ref)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+
+		if (hip_offset_flag) {
+			if (i == 0 || i == 1 || i == 6 || i == 7) {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
+
+			} else {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+				    ref_traj[t_index][motor2ref_idx[i]];
+			}
+		} else {
+			pos_ref[i] =
+			    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
+		}
+		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
+		    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
+
+		/* unnecessary */
+		// toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
+	}
+}
+
+/********************************/
+/* command generation functions */
+/********************************/
+
+void
+Commander::generate_sweep_command()
 {
 	constexpr size_t t_sweep_size = static_cast<size_t>(1. / idx_sweep_freq * command_freq);
 	bool all_ready = true;
@@ -380,7 +414,6 @@ Commander::generate_sweep_traj()
 	}
 	++t_sweep_index;
 	if (all_ready) {
-
 		is_masterboard_ready = true;
 		is_sweep_done = true;
 
@@ -409,36 +442,12 @@ Commander::generate_sweep_traj()
 }
 
 void
-Commander::generate_track_traj()
+Commander::generate_track_command()
 {
-	/* fix this */
 	if (t_index < t_size - 1) {
-		for (size_t i = 0; i < motor_count; ++i) {
-
-			if (hip_offset_flag) {
-				if (i == 0 || i == 1 || i == 6 || i == 7) {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    (ref_traj[t_index][motor2ref_idx[i]] +
-					     hip_offset_position[i]);
-
-				} else {
-					pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-					    ref_traj[t_index][motor2ref_idx[i]];
-				}
-			} else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_traj[t_index][motor2ref_idx[i]];
-			}
-			vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
-			    ref_traj[t_index][velocity_shift + motor2ref_idx[i]];
-			toq_ref[i] = ref_traj[t_index][torque_shift + motor2ref_idx[i]];
-		}
+		get_reference(t_index, pos_ref, vel_ref);
 	} else {
-		for (size_t i = 0; i < motor_count; ++i) {
-			pos_ref[i] =
-			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
-			vel_ref[i] = 0;
-		}
+		get_hold_reference(pos_ref, vel_ref);
 	}
 
 	if (using_masterboard_pd) {
@@ -454,6 +463,24 @@ Commander::generate_track_traj()
 		++t_index;
 	} else if (is_looping_traj) {
 		t_index = 0;
+	}
+}
+
+/*********************/
+/* utility functions */
+/*********************/
+
+void
+Commander::update_stats()
+{
+	/* records the max amp from motor */
+	for (size_t i = 0; i < driver_count; ++i) {
+		if (mb.motor_drivers[i].adc[0] > max_amp_stat ||
+		    mb.motor_drivers[i].adc[1] > max_amp_stat) {
+			max_amp_stat = (mb.motor_drivers[i].adc[0] > mb.motor_drivers[i].adc[1])
+			    ? mb.motor_drivers[i].adc[0]
+			    : mb.motor_drivers[i].adc[1];
+		}
 	}
 }
 
@@ -479,7 +506,6 @@ Commander::track_error(double (&pos_ref)[motor_count], double (&vel_ref)[motor_c
 					  << vel_ref[i] << "," << vel[i] << '\n';
 	}
 }
-
 
 // void
 // Commander::log_traj()

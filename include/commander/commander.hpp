@@ -51,8 +51,12 @@ class Commander
 	bool command_check_ready();
 	void command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-	void generate_track_traj();
-	void generate_sweep_traj();
+	void generate_track_command();
+	void generate_sweep_command();
+
+	void get_reference(const size_t t_index, double (&pos_ref)[motor_count],
+	                   double (&vel_ref)[motor_count]);
+	void get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 
 	void sample_traj();
 	void update_stats();
