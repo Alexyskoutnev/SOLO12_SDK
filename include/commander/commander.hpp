@@ -43,6 +43,7 @@ class Commander
 	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
 	void enable_hard_calibration();
 	void disable_onboard_pd();
+	void set_integer_offset(int (&offset)[motor_count]);
 
   private:
 	void reset();
@@ -88,6 +89,9 @@ class Commander
 	double motor_pos[motor_count];
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
 	                                        false, false, false, false, false, false};
+	int integer_offset[motor_count] = {
+	    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	};
 
 	size_t t_index;
 	size_t t_size;

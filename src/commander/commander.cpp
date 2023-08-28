@@ -217,6 +217,7 @@ Commander::command()
 	}
 	case State::hold: {
 		get_hold_reference(pos_ref, vel_ref);
+		/* commanding current here does not work well */
 		command_reference(pos_ref, vel_ref);
 		break;
 	}
@@ -330,8 +331,16 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 
 			// to be implemented
 			// calculate current here !!!!!
-			double current = 0;
-			mb.motors[i].SetCurrentReference(current);
+			saturate_reference(pos_ref); // position saturation for safety
+			double p_err = pos_ref[i] - pos[i];
+			double v_err = vel_ref[i] - vel[i];
+			double cur = 5 * p_err + .1 * v_err;
+			if (cur > max_current)
+				cur = max_current;
+			if (cur < -max_current)
+				cur = -max_current;
+
+			mb.motors[i].SetCurrentReference(cur);
 		}
 	}
 
@@ -433,6 +442,7 @@ Commander::generate_sweep_command()
 		vel_ref[i] = gear_ratio[motor2ref_idx[i]] *
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 
+		/* commanding current here does not work well */
 		command_reference(pos_ref, vel_ref);
 	}
 	++t_sweep_index;
@@ -446,7 +456,8 @@ Commander::generate_sweep_command()
 			if (is_hard_calibrating) {
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			} else {
-				mb.motors[i].SetPositionOffset(index_offset[i]);
+				mb.motors[i].SetPositionOffset(index_offset[i] +
+				                               integer_offset[i] * 2 * M_PI);
 				mb.motors[i].set_enable_index_offset_compensation(true);
 			}
 		}
@@ -471,6 +482,7 @@ Commander::generate_sweep_command()
 			write_index_pos(fprefix + index_pos_fname, index_pos_vec);
 		}
 	}
+	/* commanding current here does not work well */
 	command_reference(pos_ref, vel_ref);
 }
 
@@ -503,7 +515,7 @@ Commander::generate_track_command()
 		auto thread = std::thread([&] {
 			log_traj();
 			/* clear the old trajectory */
-			// traj.clear();
+			traj.clear();
 			ref_traj.clear();
 			/* read new trajectory */
 			ref_traj.reserve(t_dim_expected);
@@ -520,6 +532,14 @@ Commander::generate_track_command()
 /*********************/
 /* utility functions */
 /*********************/
+
+void
+Commander::set_integer_offset(int (&offset)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+		integer_offset[i] = offset[i];
+	}
+}
 
 void
 Commander::update_stats()

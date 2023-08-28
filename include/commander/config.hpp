@@ -23,11 +23,11 @@ constexpr double idx_sweep_freq = 0.05;              /** [hz] */
 constexpr double idx_sweep_ampl = M_PI / 9;          /** [rad] */
 
 /* options */
-constexpr std::uint8_t masterboard_timeout = 5; /** [s] */
+constexpr std::uint8_t masterboard_timeout = 0; /** [s]  disable timeout: 0 */
 constexpr bool is_looping_traj = true;
 constexpr bool hip_offset_flag = false;
-constexpr double kp_default = 15.0; // 20, 5;
-constexpr double kd_default = 1.0;
+constexpr double kp_default = 15; // 20, 5;
+constexpr double kd_default = 1;
 constexpr double max_current = 5.0; /** [A] */
 
 /* printing options */

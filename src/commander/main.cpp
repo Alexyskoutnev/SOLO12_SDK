@@ -1,4 +1,5 @@
 #include "commander.hpp"
+#include "commander/config.hpp"
 #include "master_board_sdk/defines.h"
 #include "master_board_sdk/master_board_interface.h"
 #include <atomic>
@@ -25,6 +26,7 @@ main(int argc, char **argv)
 		("t,traj-fname", "Trajectory filename", cxxopts::value<std::string>()->default_value(ref_traj_fname_default))
 		("c,calibrate", "Hard calibration")
 		("p,no-onboard-pd", "Enable current control")
+		("o,offset-index", "Set index offset in integer increments of one full rotation", cxxopts::value<std::vector<int>>()->default_value("0,0,0,0,0,0,0,0,0,0,0,0"))
 		("h,help", "Print usage")
 	;
 	// clang-format on
@@ -73,6 +75,21 @@ main(int argc, char **argv)
 
 	if (result["no-onboard-pd"].as<bool>()) {
 		com.disable_onboard_pd();
+	}
+
+	if (result.count("offset-index")) {
+		auto offset_vec = result["offset-index"].as<std::vector<int>>();
+		if (offset_vec.size() != commander::motor_count) {
+			printf("Invalid offset vector size! Hint: \n$ ./main -o 0,1,2,3,4,5,6,7,8,9,10,11\n");
+			exit(1);
+		}
+		int offset[commander::motor_count];
+
+		for (size_t i = 0; i < commander::motor_count; ++i) {
+			offset[i] = offset_vec[i];
+		}
+
+		com.set_integer_offset(offset);
 	}
 
 	/* main loop */
