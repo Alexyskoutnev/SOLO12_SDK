@@ -80,7 +80,7 @@ main(int argc, char **argv)
 	if (result.count("offset-index")) {
 		auto offset_vec = result["offset-index"].as<std::vector<int>>();
 		if (offset_vec.size() != commander::motor_count) {
-			printf("Invalid offset vector size! Hint: \n$ ./main -o 0,1,2,3,4,5,6,7,8,9,10,11\n");
+			printf("%66s\n%66s","Invalid offset vector size! Hint: motor: 0,1,2,3,4,5,6,7,8,9,10,11", "$ ./main -o 0,0,0,0,0,0,0,0,0,0,0,0 \n");
 			exit(1);
 		}
 		int offset[commander::motor_count];
@@ -89,7 +89,7 @@ main(int argc, char **argv)
 			offset[i] = offset_vec[i];
 		}
 
-		com.set_integer_offset(offset);
+		com.set_int_index_offset(offset);
 	}
 
 	/* main loop */

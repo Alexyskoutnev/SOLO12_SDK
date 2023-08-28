@@ -43,22 +43,30 @@ class Commander
 	void loop(std::atomic_bool &is_running, std::atomic_bool &is_changing_state);
 	void enable_hard_calibration();
 	void disable_onboard_pd();
-	void set_integer_offset(int (&offset)[motor_count]);
+	void set_int_index_offset(int (&offset)[motor_count]);
 
   private:
 	void reset();
 	void change_to_next_state();
+
+	/* commanding functions */
 	void command();
 	bool command_check_ready();
 	void command_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
 	void command_current(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+
+	/* read reference */
+	void get_zero_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
+	void get_reference(const size_t t_index, double (&pos_ref)[motor_count],
+	                   double (&vel_ref)[motor_count]);
+
+	/* command generation function */
+	void generate_step_single_motor_command(const size_t motor_idx, const double amplitude);
 	void generate_track_command();
 	void generate_sweep_command();
 
-	void get_reference(const size_t t_index, double (&pos_ref)[motor_count],
-	                   double (&vel_ref)[motor_count]);
-	void get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count]);
-
+	/* utility functions */
 	void sample_traj();
 	void update_stats();
 	void saturate_reference(double (&pos_ref)[motor_count]);
@@ -89,27 +97,23 @@ class Commander
 	double motor_pos[motor_count];
 	bool was_index_detected[motor_count] = {false, false, false, false, false, false,
 	                                        false, false, false, false, false, false};
-	int integer_offset[motor_count] = {
-	    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-	};
+	int integer_offset[motor_count] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-	size_t t_index;
 	size_t t_size;
+	size_t t_index = 0;
 	size_t t_sweep_index = 0;
+	size_t t_step_index = 0;
+	const size_t max_t_step_index = 2e3;
 	std::string ref_traj_fname;
 
 	double kp = commander::kp_default;
 	double kd = commander::kd_default;
-	double init_pos[motor_count];
 
-	std::array<double, 1> imu_logs;
 	std::vector<Row<traj_dim>> traj;
 	std::vector<Row<traj_dim>> ref_traj;
-	std::vector<Row<traj_dim + 1>> logs;
 
 	double pos_ref[motor_count];
 	double vel_ref[motor_count];
-	double toq_ref[motor_count];
 	double pos[motor_count];
 	double vel[motor_count];
 

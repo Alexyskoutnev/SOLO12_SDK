@@ -1,5 +1,6 @@
 #include "commander/commander.hpp"
 #include "commander/config.hpp"
+#include <cassert>
 #include <math.h>
 
 namespace commander
@@ -216,6 +217,8 @@ Commander::command()
 		break;
 	}
 	case State::hold: {
+		/* for debug */
+		// get_zero_reference(pos_ref, vel_ref);
 		get_hold_reference(pos_ref, vel_ref);
 		/* commanding current here does not work well */
 		command_reference(pos_ref, vel_ref);
@@ -226,6 +229,8 @@ Commander::command()
 		break;
 	}
 	case State::track: {
+		/* for debug */
+		// generate_step_single_motor_command(4, M_PI / 4);
 		generate_track_command();
 		break;
 	}
@@ -254,7 +259,6 @@ Commander::command_check_ready()
 		if (!(mb.motors[i].IsEnabled() && mb.motors[i].IsReady())) {
 			is_ready = false;
 		}
-		init_pos[i] = mb.motors[i].GetPosition(); // initial position
 
 		// not sure if this is needed?
 		mb.motors[i].SetCurrentReference(0.);
@@ -352,6 +356,15 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 /******************/
 
 void
+Commander::get_zero_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
+{
+	for (size_t i = 0; i < motor_count; ++i) {
+		pos_ref[i] = 0.;
+		vel_ref[i] = 0.;
+	}
+}
+
+void
 Commander::get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[motor_count])
 {
 	for (size_t i = 0; i < motor_count; ++i) {
@@ -401,6 +414,44 @@ Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
 /********************************/
 /* command generation functions */
 /********************************/
+
+void
+Commander::generate_step_single_motor_command(const size_t motor_idx, const double amplitude)
+{
+	assert(motor_idx < motor_count);
+
+	for (size_t i = 0; i < motor_count; ++i) {
+		if (i == motor_idx) {
+			if (t_step_index < max_t_step_index / 2) {
+				pos_ref[i] = gear_ratio[motor2ref_idx[i]] * amplitude;
+				vel_ref[i] = 0.;
+				continue;
+			}
+		}
+		pos_ref[i] = 0.;
+		vel_ref[i] = 0.;
+	}
+
+	if (using_masterboard_pd) {
+		command_reference(pos_ref, vel_ref);
+	} else {
+		command_current(pos_ref, vel_ref);
+	}
+
+	++t_step_index;
+
+	if (t_step_index > max_t_step_index) {
+		auto thread = std::thread([&] {
+			log_traj();
+			traj.clear();
+		});
+		thread.detach();
+		t_step_index = 0;
+		change_to_next_state();
+	} else {
+		sample_traj();
+	}
+}
 
 void
 Commander::generate_sweep_command()
@@ -472,9 +523,8 @@ Commander::generate_sweep_command()
 
 			for (size_t i = 0; i < motor_count; ++i) {
 				index_pos_row[i] = index_pos[i];
-				pos_ref[i] = 0.0;
-				vel_ref[i] = 0.0;
 			}
+			get_zero_reference(pos_ref, vel_ref);
 			/* write index position to file */
 			std::vector<Row<motor_count>> index_pos_vec;
 			index_pos_vec.push_back(index_pos_row);
@@ -501,8 +551,7 @@ Commander::generate_track_command()
 		command_current(pos_ref, vel_ref);
 	}
 
-	// track_error(pos_ref, vel_ref);
-
+	/* will require thinking later 2023-08-28 */
 	if (t_index < t_size - 1) {
 		++t_index;
 
@@ -511,20 +560,23 @@ Commander::generate_track_command()
 			sample_traj();
 		}
 	} else if (is_looping_traj) {
-		traj_is_sampled = true;
-		auto thread = std::thread([&] {
-			log_traj();
-			/* clear the old trajectory */
-			traj.clear();
-			ref_traj.clear();
-			/* read new trajectory */
-			ref_traj.reserve(t_dim_expected);
-			ref_traj_reader(ref_traj_fprefix + ref_traj_fname, ref_traj);
 
-			t_size = ref_traj.size(); /* determine t_dim */
-			traj.reserve(t_size);
-		});
-		thread.detach();
+		if (!traj_is_sampled) {
+			auto thread = std::thread([&] {
+				log_traj();
+				/* clear the old trajectory */
+				traj.clear();
+				ref_traj.clear();
+				/* read new trajectory */
+				ref_traj.reserve(t_dim_expected);
+				ref_traj_reader(ref_traj_fprefix + ref_traj_fname, ref_traj);
+
+				t_size = ref_traj.size(); /* determine t_dim */
+				traj.reserve(t_size);
+			});
+			thread.detach();
+			traj_is_sampled = true;
+		}
 		t_index = 0;
 	}
 }
@@ -534,7 +586,7 @@ Commander::generate_track_command()
 /*********************/
 
 void
-Commander::set_integer_offset(int (&offset)[motor_count])
+Commander::set_int_index_offset(int (&offset)[motor_count])
 {
 	for (size_t i = 0; i < motor_count; ++i) {
 		integer_offset[i] = offset[i];
@@ -562,8 +614,8 @@ Commander::sample_traj()
 
 	for (size_t i = 0; i < motor_count; ++i) {
 
-		state[ref2motor_idx[i]] = pos[i];
-		state[ref2motor_idx[velocity_shift + i]] = vel[i];
+		state[ref2motor_idx[i]] = pos[i] / gear_ratio[motor2ref_idx[i]];
+		state[ref2motor_idx[velocity_shift + i]] = vel[i] / gear_ratio[motor2ref_idx[i]];
 	}
 
 	traj.push_back(state);

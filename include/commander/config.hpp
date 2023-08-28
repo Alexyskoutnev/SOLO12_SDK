@@ -26,8 +26,8 @@ constexpr double idx_sweep_ampl = M_PI / 9;          /** [rad] */
 constexpr std::uint8_t masterboard_timeout = 0; /** [s]  disable timeout: 0 */
 constexpr bool is_looping_traj = true;
 constexpr bool hip_offset_flag = false;
-constexpr double kp_default = 15; // 20, 5;
-constexpr double kd_default = 1;
+constexpr double kp_default = 1e2; // 20, 5;
+constexpr double kd_default = .1;
 constexpr double max_current = 5.0; /** [A] */
 
 /* printing options */
@@ -39,7 +39,7 @@ constexpr bool print_traj = true;
 constexpr bool print_masterboard = false;
 
 /* dimensions */
-constexpr size_t t_dim_expected = 1e4;
+constexpr size_t t_dim_expected = 5e3;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;  /** [s] */
 constexpr size_t sweep_duration = 5; /** [s] */
@@ -64,6 +64,13 @@ constexpr double ref_hold_position[motor_count] = {
     -0.02994342123001601, 0.8417958506858044,  -1.4680598092208696,   0.034703827464225616,
     0.6965753517673012,   -1.5201062852793965, -0.030430423734251956, -0.8427529306923185,
     1.472304968271508,    0.03471242623251419, -0.6956731237807676,   1.520772243209184};
+
+/*  motor gains */
+constexpr double kp_gains[motor_count] = {10., 10., 10., 10., 10., 10.,
+                                          10., 10., 10., 10., 10., 10.};
+
+constexpr double kd_gains[motor_count] = {10., 10., 10., 10., 10., 10.,
+                                          10., 10., 10., 10., 10., 10.};
 
 /* convert traj convention when iterating through motors */
 static std::map<size_t, size_t> ref2motor_idx = {{0, 0}, {1, 3}, {2, 4},   {3, 1},
