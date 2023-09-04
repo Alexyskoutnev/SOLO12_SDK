@@ -52,15 +52,26 @@ You may use the included scripts or the VS Code tasks to configure and build:
 
 ## 3.2. Quick Start:
 
-1. Navigate to `/build/` directory: `cd build/`
-2. Run main executable: `./bin/main`
-3. Start the main script and wait for the sweep sequence to finish.
-4. Press `enter` and the robot will be in the hold state.
-5. Press `enter` again and the robot will be tracking the test trajectory found in `/data/active/gait.csv`.
+1. Navigate to `/build` directory and run the main executable: `./bin/main`
+2. Start the main script and wait for the sweep sequence to finish.
+3. Press `enter` and the robot will be in the hold state.
+4. Press `enter` again and the robot will be tracking the test trajectory found in `/data/active/gait.csv`.
 
 ## 3.3. User Interface:
 
 The `SOLO12_SDK` executable takes command line arguments and keyboard inputs. The available command line arguments can be viewed using the `-h` or `--help` flag.
+ <p align="center">
+<img src=./data/assets/flags.png width="576" height="231">
+<caption="a">
+</p>
+
+You will need the interface name for the SOLO12 robot. You can view this information using `ifconfig` in your terminal.
+
+The user interface prints important information in real time to the terminal. The printed information options can be changed in `include/commander/config.hpp`.
+ <p align="center">
+<img src=./data/assets/ui_example.png width="696" height="232">
+<caption="a">
+</p>
 
 ### 3.3.1. States
 The interface commands three robot states: 

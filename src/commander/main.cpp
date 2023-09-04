@@ -16,7 +16,7 @@ int
 main(int argc, char **argv)
 {
 	/* parse arguments */
-	cxxopts::Options options("SOLO12_SDK",
+	cxxopts::Options options("main",
 	                         "A wrapper for the Solo12 robot masterboard interface.");
 
 	// clang-format off
