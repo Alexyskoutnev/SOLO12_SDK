@@ -47,7 +47,6 @@ You may use the included scripts or the VS Code tasks to configure and build:
 2. Power on the robot and launch the `build/bin/main` executable.
 <p align="center">
 <img src=./data/assets/IMG_5731.png width="403" height="302">
-<caption="a">
 </p>
 
 ## 3.2. Quick Start:
@@ -62,7 +61,6 @@ You may use the included scripts or the VS Code tasks to configure and build:
 The `SOLO12_SDK` executable takes command line arguments and keyboard inputs. The available command line arguments can be viewed using the `-h` or `--help` flag.
  <p align="center">
 <img src=./data/assets/flags.png width="576" height="231">
-<caption="a">
 </p>
 
 You will need the interface name for the SOLO12 robot. You can view this information using `ifconfig` in your terminal.
@@ -70,7 +68,6 @@ You will need the interface name for the SOLO12 robot. You can view this informa
 The user interface prints important information in real time to the terminal. The printed information options can be changed in `include/commander/config.hpp`.
  <p align="center">
 <img src=./data/assets/ui_example.png width="696" height="232">
-<caption="a">
 </p>
 
 ### 3.3.1. States
