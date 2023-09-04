@@ -27,9 +27,7 @@
 You will need build essentials, cmake and eigen3 to build:
 ```bash
 sudo apt-get update
-sudo apt-get install cmake
-sudo apt-get install build-essential
-sudo apt-get install libeigen3-dev
+sudo apt-get install build-essential cmake  libeigen3-dev
 ```
 You may use the included scripts or the VS Code tasks to configure and build:
 
