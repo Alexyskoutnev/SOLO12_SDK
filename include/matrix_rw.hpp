@@ -1,4 +1,4 @@
-/* Copyright 2022, Cinar, A. L.
+/* Copyright 2023, Cinar, A. L., Skoutnev, A.
  * SPDX-License-Identifier: MIT
  */
 

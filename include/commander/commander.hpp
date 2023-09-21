@@ -1,4 +1,4 @@
-/* Copyright 2023, Cinar, A. L.
+/* Copyright 2023, Cinar, A. L., Skoutnev, A.
  * SPDX-License-Identifier: MIT
  */
 
@@ -11,6 +11,7 @@
 #include "matrix_rw.hpp"
 #include "timing_stats.hpp"
 #include "types.hpp"
+#include "utils.hpp"
 #include <atomic>
 #include <fstream>
 #include <iostream>

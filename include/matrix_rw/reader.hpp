@@ -6,11 +6,13 @@
 #define READ_HPP_CINARAL_220924_0017
 
 #include "types.hpp"
+// #include "../commander/utils.hpp"
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cmath>
 
 namespace matrix_rw
 {
@@ -53,6 +55,8 @@ template <Size M_COL> class Reader
 			if (str_pos != std::string::npos) {
 				/** an */
 				item = line.substr(0, str_pos);
+				// if (isWhitespace(item))
+				// 	continue;
 				line.erase(0, str_pos + delimiter.length());
 #ifdef USE_SINGLE_PRECISION
 				row[i] = std::stof(item);

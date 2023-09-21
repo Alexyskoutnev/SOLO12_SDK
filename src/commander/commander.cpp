@@ -338,7 +338,7 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 			saturate_reference(pos_ref); // position saturation for safety
 			double p_err = pos_ref[i] - pos[i];
 			double v_err = vel_ref[i] - vel[i];
-			double cur = 5 * p_err + .1 * v_err;
+			double cur = kp_default * p_err + kd_default * v_err;
 			if (cur > max_current)
 				cur = max_current;
 			if (cur < -max_current)
@@ -522,7 +522,7 @@ Commander::generate_sweep_command()
 			Row<motor_count> index_pos_row;
 
 			for (size_t i = 0; i < motor_count; ++i) {
-				index_pos_row[i] = index_pos[i];
+				index_pos_row[i] = reduce_2_zero(index_pos[i]); //issue
 			}
 			get_zero_reference(pos_ref, vel_ref);
 			/* write index position to file */
