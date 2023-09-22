@@ -25,7 +25,7 @@ constexpr double idx_sweep_ampl = M_PI / 9;          /** [rad] */
 /* options */
 constexpr std::uint8_t masterboard_timeout = 0; /** [s]  disable timeout: 0 */
 constexpr bool is_looping_traj = true;
-constexpr bool hip_offset_flag = false;
+constexpr bool hip_offset_flag = true;
 constexpr double kp_default = 20.0; // 20, 5;
 constexpr double kd_default = .1;
 constexpr double kp_current_default = 5.; // 20, 5;
@@ -41,7 +41,7 @@ constexpr bool print_traj = true;
 constexpr bool print_masterboard = false;
 
 /* dimensions */
-constexpr size_t t_dim_expected = 5e3;
+constexpr size_t t_dim_expected = 40e3;
 constexpr size_t traj_dim = 36;
 constexpr size_t init_duration = 1;  /** [s] */
 constexpr size_t sweep_duration = 5; /** [s] */
@@ -60,8 +60,8 @@ constexpr size_t motor_count = 2 * driver_count;
 constexpr size_t velocity_shift = 12;
 constexpr size_t torque_shift = 24;
 
-constexpr double hip_offset_position[motor_count] = {0.01, -0.01, 0.0, 0.0, 0.0, 0.0,
-                                                     0.01, -0.01, 0.0, 0.0, 0.0, 0.0};
+constexpr double hip_offset_position[motor_count] = {-0.15, 0.15, 0.0, 0.0, 0.0, 0.0,
+                                                     -0.15, 0.15, .25, 0.0, 0.0, .25};
 constexpr double ref_hold_position[motor_count] = {
     -0.02994342123001601, 0.8417958506858044,  -1.4680598092208696,   0.034703827464225616,
     0.6965753517673012,   -1.5201062852793965, -0.030430423734251956, -0.8427529306923185,

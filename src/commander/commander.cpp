@@ -380,13 +380,8 @@ Commander::get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[
 {
 	for (size_t i = 0; i < motor_count; ++i) {
 		if (hip_offset_flag) {
-			if (i == 0 || i == 1 || i == 6 || i == 7) {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    (ref_traj[0][motor2ref_idx[i]] + hip_offset_position[i]);
-			} else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_traj[0][motor2ref_idx[i]];
-			}
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+			    (ref_traj[0][motor2ref_idx[i]] + hip_offset_position[i]);
 		} else {
 			pos_ref[i] =
 			    gear_ratio[motor2ref_idx[i]] * ref_hold_position[motor2ref_idx[i]];
@@ -404,13 +399,8 @@ Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
 	for (size_t i = 0; i < motor_count; ++i) {
 
 		if (hip_offset_flag) {
-			if (i == 0 || i == 1 || i == 6 || i == 7) {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
-			} else {
-				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_traj[t_index][motor2ref_idx[i]];
-			}
+			pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
+			    (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
 		} else {
 			pos_ref[i] =
 			    gear_ratio[motor2ref_idx[i]] * ref_traj[t_index][motor2ref_idx[i]];
