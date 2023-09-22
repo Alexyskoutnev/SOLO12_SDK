@@ -26,9 +26,11 @@ constexpr double idx_sweep_ampl = M_PI / 9;          /** [rad] */
 constexpr std::uint8_t masterboard_timeout = 0; /** [s]  disable timeout: 0 */
 constexpr bool is_looping_traj = true;
 constexpr bool hip_offset_flag = false;
-constexpr double kp_default = 8.5; // 20, 5;
+constexpr double kp_default = 20.0; // 20, 5;
 constexpr double kd_default = .1;
-constexpr double max_current = 5.0; /** [A] */
+constexpr double kp_current_default = 5.; // 20, 5;
+constexpr double kd_current_default = .1;
+constexpr double max_current = 8.0; /** [A] */
 
 /* printing options */
 constexpr bool print_stats = true;
@@ -58,8 +60,8 @@ constexpr size_t motor_count = 2 * driver_count;
 constexpr size_t velocity_shift = 12;
 constexpr size_t torque_shift = 24;
 
-constexpr double hip_offset_position[motor_count] = {0.15, -0.15, 0.0, 0.0, 0.0, 0.0,
-                                                     0.15, -0.15, 0.0, 0.0, 0.0, 0.0};
+constexpr double hip_offset_position[motor_count] = {0.01, -0.01, 0.0, 0.0, 0.0, 0.0,
+                                                     0.01, -0.01, 0.0, 0.0, 0.0, 0.0};
 constexpr double ref_hold_position[motor_count] = {
     -0.02994342123001601, 0.8417958506858044,  -1.4680598092208696,   0.034703827464225616,
     0.6965753517673012,   -1.5201062852793965, -0.030430423734251956, -0.8427529306923185,
@@ -84,8 +86,9 @@ static std::map<size_t, size_t> motor2ref_idx = {{0, 0}, {3, 1}, {4, 2},   {1, 3
 constexpr double gear_ratio[motor_count] = {9., -9., -9., -9., 9., 9., 9., -9., -9., -9., 9., 9.};
 
 /* index offset */
-constexpr double index_offset[motor_count] = {1.2,     3.07198, -3.0243, 0.213095, 0.17087, 1.21532,
-                                              4.33566, 4.22832, 4.77109, 1.64702,  4.21985, .2};
+constexpr double index_offset[motor_count] = {1.11977,  3.58872, -1.98254-1, 5.86419,
+                                              -4.02638-1.5, 4.872-3,   4.8447-0.2,   1.08947,
+                                              4.77109,  3.20913-1.5, 6.04544-1.75,  5.89229};
 
 /*  position saturation limits */
 constexpr double max_pos[motor_count] = {3 * M_PI, 3 * M_PI, 3 * M_PI, 3 * M_PI,

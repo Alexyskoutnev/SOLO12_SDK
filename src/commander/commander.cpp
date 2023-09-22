@@ -46,10 +46,17 @@ Commander::initialize_masterboard()
 		mb.motor_drivers[i].motor2->Enable();
 
 		// Set the gains for the PD controller running on the cards.
-		mb.motor_drivers[i].motor1->set_kp(kp);
-		mb.motor_drivers[i].motor2->set_kp(kp);
-		mb.motor_drivers[i].motor1->set_kd(kd);
-		mb.motor_drivers[i].motor2->set_kd(kd);
+		if (using_masterboard_pd) {
+			mb.motor_drivers[i].motor1->set_kp(kp);
+			mb.motor_drivers[i].motor2->set_kp(kp);
+			mb.motor_drivers[i].motor1->set_kd(kd);
+			mb.motor_drivers[i].motor2->set_kd(kd);
+		} else {
+			mb.motor_drivers[i].motor1->set_kp(0.);
+			mb.motor_drivers[i].motor2->set_kp(0.);
+			mb.motor_drivers[i].motor1->set_kd(0.);
+			mb.motor_drivers[i].motor2->set_kd(0.);
+		}
 
 		// Set the maximum current controlled by the card.
 		mb.motor_drivers[i].motor1->set_current_sat(max_current);
@@ -221,7 +228,12 @@ Commander::command()
 		// get_zero_reference(pos_ref, vel_ref);
 		get_hold_reference(pos_ref, vel_ref);
 		/* commanding current here does not work well */
-		command_reference(pos_ref, vel_ref);
+		if (using_masterboard_pd) {
+			command_reference(pos_ref, vel_ref);
+		} else {
+			command_current(pos_ref, vel_ref);
+		}
+		// command_reference(pos_ref, vel_ref);
 		break;
 	}
 	case State::sweep: {
@@ -338,12 +350,11 @@ Commander::command_current(double (&pos_ref)[motor_count], double (&vel_ref)[mot
 			saturate_reference(pos_ref); // position saturation for safety
 			double p_err = pos_ref[i] - pos[i];
 			double v_err = vel_ref[i] - vel[i];
-			double cur = kp_default * p_err + kd_default * v_err;
+			double cur = kp_current_default * p_err + kd_current_default * v_err;
 			if (cur > max_current)
 				cur = max_current;
 			if (cur < -max_current)
 				cur = -max_current;
-
 			mb.motors[i].SetCurrentReference(cur);
 		}
 	}
@@ -372,10 +383,9 @@ Commander::get_hold_reference(double (&pos_ref)[motor_count], double (&vel_ref)[
 			if (i == 0 || i == 1 || i == 6 || i == 7) {
 				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
 				    (ref_traj[0][motor2ref_idx[i]] + hip_offset_position[i]);
-
 			} else {
 				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
-				    ref_hold_position[motor2ref_idx[i]];
+				    ref_traj[0][motor2ref_idx[i]];
 			}
 		} else {
 			pos_ref[i] =
@@ -397,7 +407,6 @@ Commander::get_reference(const size_t t_index, double (&pos_ref)[motor_count],
 			if (i == 0 || i == 1 || i == 6 || i == 7) {
 				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
 				    (ref_traj[t_index][motor2ref_idx[i]] + hip_offset_position[i]);
-
 			} else {
 				pos_ref[i] = gear_ratio[motor2ref_idx[i]] *
 				    ref_traj[t_index][motor2ref_idx[i]];
@@ -494,7 +503,12 @@ Commander::generate_sweep_command()
 		    (-2. * M_PI * idx_sweep_ampl * sin(2. * M_PI * t)) * get_sign(gear_ratio[i]);
 
 		/* commanding current here does not work well */
-		command_reference(pos_ref, vel_ref);
+		if (using_masterboard_pd) {
+			command_reference(pos_ref, vel_ref);
+		} else {
+			command_current(pos_ref, vel_ref);
+		}
+		// command_reference(pos_ref, vel_ref);
 	}
 	++t_sweep_index;
 
@@ -522,7 +536,7 @@ Commander::generate_sweep_command()
 			Row<motor_count> index_pos_row;
 
 			for (size_t i = 0; i < motor_count; ++i) {
-				index_pos_row[i] = reduce_2_zero(index_pos[i]); //issue
+				index_pos_row[i] = reduce_2_zero(index_pos[i]); // issue
 			}
 			get_zero_reference(pos_ref, vel_ref);
 			/* write index position to file */
@@ -533,7 +547,12 @@ Commander::generate_sweep_command()
 		}
 	}
 	/* commanding current here does not work well */
-	command_reference(pos_ref, vel_ref);
+	if (using_masterboard_pd) {
+		command_reference(pos_ref, vel_ref);
+	} else {
+		command_current(pos_ref, vel_ref);
+	}
+	// command_reference(pos_ref, vel_ref);
 }
 
 void
